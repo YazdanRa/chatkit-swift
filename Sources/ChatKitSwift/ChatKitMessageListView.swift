@@ -13,8 +13,12 @@ struct ChatKitMessageListView: View {
                             .id(item.id)
                     }
 
-                    if let progress = session.state.progress, session.state.isResponding {
-                        ChatKitProgressView(progress: progress)
+                    if session.state.isResponding {
+                        if let progress = session.state.progress {
+                            ChatKitProgressView(progress: progress)
+                        } else {
+                            ChatKitWaitingView()
+                        }
                     }
 
                     if let error = session.state.error {

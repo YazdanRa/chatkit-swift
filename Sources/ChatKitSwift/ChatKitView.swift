@@ -167,7 +167,7 @@ private struct ChatKitConversationBody: View {
     let session: ChatKitSession
 
     var body: some View {
-        if session.state.items.isEmpty {
+        if session.state.items.isEmpty && !session.state.isResponding && session.state.error == nil {
             ChatKitStartScreenView(session: session)
         } else {
             ChatKitMessageListView(session: session)

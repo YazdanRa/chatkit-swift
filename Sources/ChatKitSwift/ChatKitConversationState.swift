@@ -38,7 +38,11 @@ public struct ChatKitConversationState: Equatable, Sendable {
         case let .threadCreated(event):
             currentThread = event.thread
             upsertThread(event.thread)
-            items = event.thread.items.data
+            items = mergedItems(
+                serverItems: event.thread.items.data,
+                preservingOptimisticItemsFrom: items,
+                threadID: event.thread.id
+            )
         case let .threadUpdated(event):
             currentThread = event.thread
             upsertThread(event.thread)
@@ -76,6 +80,26 @@ public struct ChatKitConversationState: Equatable, Sendable {
         }
     }
 
+    mutating func addOptimisticUserMessage(
+        id: String,
+        threadID: String,
+        createdAt: Date,
+        input: ChatKitUserMessageInput,
+        attachments: [ChatKitAttachment]
+    ) {
+        error = nil
+        progress = nil
+        upsertItem(.userMessage(.init(
+            id: id,
+            threadID: threadID,
+            createdAt: createdAt,
+            content: input.content,
+            attachments: attachments,
+            quotedText: input.quotedText,
+            inferenceOptions: input.inferenceOptions
+        )))
+    }
+
     public mutating func replaceThreads(_ threads: [ChatKitThread]) {
         self.threads = threads
         if let currentThread,
@@ -105,9 +129,60 @@ public struct ChatKitConversationState: Equatable, Sendable {
     private mutating func upsertItem(_ item: ChatKitThreadItem) {
         if let index = items.firstIndex(where: { $0.id == item.id }) {
             items[index] = item
+        } else if let index = items.firstIndex(where: { $0.isOptimisticUserMessageEquivalent(to: item) }) {
+            items[index] = item
         } else {
             items.append(item)
             items.sort { $0.createdAt < $1.createdAt }
         }
+    }
+
+    private func mergedItems(
+        serverItems: [ChatKitThreadItem],
+        preservingOptimisticItemsFrom existingItems: [ChatKitThreadItem],
+        threadID: String
+    ) -> [ChatKitThreadItem] {
+        let optimisticItems = existingItems
+            .filter(\.isOptimisticUserMessage)
+            .compactMap { $0.updatingThreadID(threadID) }
+            .filter { optimisticItem in
+                !serverItems.contains { $0.isUserMessageEquivalent(to: optimisticItem) }
+            }
+
+        return (serverItems + optimisticItems).sorted { $0.createdAt < $1.createdAt }
+    }
+}
+
+private extension ChatKitThreadItem {
+    var isOptimisticUserMessage: Bool {
+        if case let .userMessage(message) = self {
+            message.id.hasPrefix("local_")
+        } else {
+            false
+        }
+    }
+
+    func isOptimisticUserMessageEquivalent(to other: ChatKitThreadItem) -> Bool {
+        isOptimisticUserMessage && isUserMessageEquivalent(to: other)
+    }
+
+    func isUserMessageEquivalent(to other: ChatKitThreadItem) -> Bool {
+        guard case let .userMessage(lhs) = self,
+              case let .userMessage(rhs) = other else {
+            return false
+        }
+
+        return lhs.content == rhs.content &&
+            lhs.attachments == rhs.attachments &&
+            lhs.quotedText == rhs.quotedText &&
+            lhs.inferenceOptions == rhs.inferenceOptions
+    }
+
+    func updatingThreadID(_ threadID: String) -> ChatKitThreadItem? {
+        guard case var .userMessage(message) = self else {
+            return nil
+        }
+        message.threadID = threadID
+        return .userMessage(message)
     }
 }

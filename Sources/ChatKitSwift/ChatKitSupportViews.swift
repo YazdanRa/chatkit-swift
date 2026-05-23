@@ -93,6 +93,23 @@ struct ChatKitProgressView: View {
     }
 }
 
+struct ChatKitWaitingView: View {
+    var body: some View {
+        HStack(spacing: 10) {
+            ProgressView()
+                .controlSize(.small)
+            Text("Waiting for response")
+                .font(.footnote)
+        }
+        .foregroundStyle(.secondary)
+        .padding(.horizontal, 14)
+        .padding(.vertical, 8)
+        .background(.regularMaterial, in: Capsule())
+        .accessibilityElement(children: .combine)
+        .accessibilityLabel("Waiting for response")
+    }
+}
+
 struct ChatKitErrorView: View {
     let error: ChatKitEvent.ErrorEvent
 
@@ -102,6 +119,9 @@ struct ChatKitErrorView: View {
             .foregroundStyle(.red)
             .padding(12)
             .background(.red.opacity(0.08), in: RoundedRectangle(cornerRadius: 12))
+            .frame(maxWidth: 620, alignment: .leading)
+            .accessibilityElement(children: .combine)
+            .accessibilityLabel(error.message ?? "Something went wrong")
     }
 }
 

@@ -93,6 +93,13 @@ public final class ChatKitSession {
             throw ChatKitTransportError.missingCurrentThread
         }
 
+        state.addOptimisticUserMessage(
+            id: "local_\(UUID().uuidString)",
+            threadID: state.currentThread?.id ?? "local_thread",
+            createdAt: Date(),
+            input: input,
+            attachments: attachments
+        )
         composer.text = ""
         composer.content = []
         if options.composer.tools.first(where: { $0.id == composer.selectedToolID })?.persistent != true {
