@@ -27,30 +27,22 @@ public struct ChatKitHTTPTransport: ChatKitTransport {
                     let (bytes, response) = try await urlSession.bytes(for: urlRequest)
                     try validate(response: response, data: Data())
 
-                    var dataLines: [String] = []
-                    for try await line in bytes.lines {
-                        if line.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
-                            if !dataLines.isEmpty {
-                                try yieldEvent(from: dataLines.joined(separator: "\n"), to: continuation)
-                                dataLines.removeAll(keepingCapacity: true)
-                            }
+                    var parser = ChatKitSSEParser()
+                    var lineBytes: [UInt8] = []
+                    for try await byte in bytes {
+                        lineBytes.append(byte)
+                        guard byte == Self.lineFeedByte else {
                             continue
                         }
 
-                        guard line.hasPrefix("data:") else {
-                            continue
-                        }
-
-                        var value = String(line.dropFirst("data:".count))
-                        if value.first == " " {
-                            value.removeFirst()
-                        }
-                        dataLines.append(value)
+                        try yieldEvents(from: String(decoding: lineBytes, as: UTF8.self), parser: &parser, to: continuation)
+                        lineBytes.removeAll(keepingCapacity: true)
                     }
 
-                    if !dataLines.isEmpty {
-                        try yieldEvent(from: dataLines.joined(separator: "\n"), to: continuation)
+                    if !lineBytes.isEmpty {
+                        try yieldEvents(from: String(decoding: lineBytes, as: UTF8.self), parser: &parser, to: continuation)
                     }
+                    try yieldEvents(parser.finish(), to: continuation)
                     continuation.finish()
                 } catch {
                     continuation.finish(throwing: error)
@@ -109,12 +101,35 @@ public struct ChatKitHTTPTransport: ChatKitTransport {
         }
     }
 
+    private func yieldEvents(
+        from chunk: String,
+        parser: inout ChatKitSSEParser,
+        to continuation: AsyncThrowingStream<ChatKitEvent, Error>.Continuation
+    ) throws {
+        try yieldEvents(parser.append(chunk), to: continuation)
+    }
+
+    private func yieldEvents(
+        _ payloads: [String],
+        to continuation: AsyncThrowingStream<ChatKitEvent, Error>.Continuation
+    ) throws {
+        for payload in payloads {
+            try yieldEvent(from: payload, to: continuation)
+        }
+    }
+
     private func yieldEvent(from payload: String, to continuation: AsyncThrowingStream<ChatKitEvent, Error>.Continuation) throws {
         guard let data = payload.data(using: .utf8) else {
             throw ChatKitTransportError.invalidPayload(payload)
         }
-        continuation.yield(try ChatKitJSON.decoder.decode(ChatKitEvent.self, from: data))
+        do {
+            continuation.yield(try ChatKitJSON.decoder.decode(ChatKitEvent.self, from: data))
+        } catch {
+            throw ChatKitTransportError.eventDecodingFailed(payload: payload, reason: error.localizedDescription)
+        }
     }
+
+    private static let lineFeedByte = UInt8(ascii: "\n")
 }
 
 private actor ChatKitHostedSecretStore {

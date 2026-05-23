@@ -93,6 +93,26 @@ final class ChatKitSessionTests: XCTestCase {
         XCTAssertEqual(session.state.userMessageTexts, ["Hi"])
         XCTAssertEqual(session.state.error?.message, "HTTP 401: Invalid token")
     }
+
+    func testSendUserMessageStoresReadablePayloadErrorWhenStreamEventCannotDecode() async throws {
+        let payload = #"{"type":"thread.item.done","item":{"type":"assistant_message","created_at":"not-a-date"}}"#
+        let transport = RecordingTransport(error: ChatKitTransportError.eventDecodingFailed(payload: payload, reason: "Invalid ISO-8601 date"))
+        let session = ChatKitSession(
+            options: .init(api: .custom(url: URL(string: "https://example.com/chatkit")!)),
+            transport: transport
+        )
+
+        do {
+            try await session.sendUserMessage(text: "Hi")
+            XCTFail("Expected send to fail")
+        } catch {}
+
+        XCTAssertEqual(session.state.userMessageTexts, ["Hi"])
+        XCTAssertEqual(
+            session.state.error?.message,
+            #"Invalid ChatKit event payload: Invalid ISO-8601 date. Payload: {"type":"thread.item.done","item":{"type":"assistant_message","created_at":"not-a-date"}}"#
+        )
+    }
 }
 
 private actor RecordingTransport: ChatKitTransport {

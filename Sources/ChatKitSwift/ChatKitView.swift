@@ -19,13 +19,19 @@ public struct ChatKitView: View {
         if let session = injectedSession ?? ownedSession {
             #if os(iOS)
             if session.options.glassEffect {
-                NavigationStack {
-                    ChatKitContainerView(session: session)
-                        .navigationBarTitleDisplayMode(.inline)
-                        .toolbarBackground(.hidden, for: .navigationBar)
-                        .toolbar {
-                            ChatKitToolbarContent(session: session)
-                        }
+                let container = ChatKitContainerView(session: session)
+                    .navigationBarTitleDisplayMode(.inline)
+                    .toolbarBackground(.hidden, for: .navigationBar)
+                    .toolbar {
+                        ChatKitToolbarContent(session: session)
+                    }
+
+                if session.options.usesNavigationStack {
+                    NavigationStack {
+                        container
+                    }
+                } else {
+                    container
                 }
             } else {
                 ChatKitContainerView(session: session)

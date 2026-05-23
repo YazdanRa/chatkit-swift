@@ -10,6 +10,7 @@ public enum ChatKitTransportError: Error, Equatable, Sendable {
     case httpStatus(Int, Data)
     case missingCurrentThread
     case invalidPayload(String)
+    case eventDecodingFailed(payload: String, reason: String)
 }
 
 extension ChatKitTransportError: LocalizedError {
@@ -27,6 +28,8 @@ extension ChatKitTransportError: LocalizedError {
             "No active ChatKit thread"
         case let .invalidPayload(payload):
             "Invalid ChatKit payload: \(payload)"
+        case let .eventDecodingFailed(payload, reason):
+            "Invalid ChatKit event payload: \(reason). Payload: \(Self.truncated(payload))"
         }
     }
 
@@ -58,6 +61,13 @@ extension ChatKitTransportError: LocalizedError {
             }
         }
         return nil
+    }
+
+    private static func truncated(_ value: String, limit: Int = 600) -> String {
+        if value.count <= limit {
+            return value
+        }
+        return "\(value.prefix(limit))..."
     }
 }
 
