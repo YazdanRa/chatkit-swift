@@ -99,10 +99,17 @@ private struct ChatKitToolbarContent: ToolbarContent {
                 }
 
             }
+        }
 
+        if session.options.header.enabled || ChatKitComposerControls.showsOptionsMenu(for: session.options) {
             ToolbarItemGroup(placement: .topBarTrailing) {
-                if !session.isHistoryVisible, let action = session.options.header.rightAction {
+                if session.options.header.enabled, !session.isHistoryVisible, let action = session.options.header.rightAction {
                     Button(action.accessibilityLabel, systemImage: ChatKitStyle.systemImage(for: action.icon), action: action.perform)
+                        .labelStyle(.iconOnly)
+                }
+
+                if ChatKitComposerControls.showsOptionsMenu(for: session.options) {
+                    ChatKitComposerOptionsMenu(session: session)
                         .labelStyle(.iconOnly)
                 }
             }

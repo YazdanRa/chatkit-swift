@@ -249,8 +249,7 @@ let options = ChatKitOptions(
         radius: .round,
         density: .normal,
         color: .init(
-            accent: .init(primary: "#2563EB", level: 600),
-            surface: .init(background: "#FFFFFF", foreground: "#111827")
+            accent: .init(primary: "#2563EB", level: 600)
         )
     ),
     frameTitle: "Support",
@@ -273,7 +272,9 @@ let options = ChatKitOptions(
     threadItemActions: .init(feedback: true, retry: true),
     composer: .init(
         placeholder: "Ask support",
-        attachments: .init(enabled: true),
+        attachments: .init(enabled: true, onRequest: {
+            // Present your app's file picker, then call session.setComposerValue(...)
+        }),
         tools: [.init(id: "tickets", label: "Tickets", icon: "tray.full", pinned: true)],
         models: [.init(id: "fast", label: "Fast", isDefault: true)],
         dictation: .init(enabled: true)
@@ -452,7 +453,7 @@ ChatKitView(
 
 ## Attachments and Dictation
 
-The package models attachments, local file state, attachment request types, and dictation configuration. Host apps still own platform permission flows, file picking, audio capture, upload byte transfer, and backend storage policy. Keep that work in the app or backend layer, then pass `ChatKitAttachment` values into the session when sending messages. The protocol request sends their IDs.
+The package models attachments, local file state, attachment request types, and dictation configuration. Host apps still own platform permission flows, file picking, audio capture, upload byte transfer, and backend storage policy. Use `AttachmentConfiguration.onRequest` to present the host file picker, then pass `ChatKitAttachment` values into the session when sending messages. The protocol request sends their IDs.
 
 ## Development
 

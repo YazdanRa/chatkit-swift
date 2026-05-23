@@ -37,6 +37,11 @@ struct ChatKitHeaderView: View {
                 Button(action.accessibilityLabel, systemImage: ChatKitStyle.systemImage(for: action.icon), action: action.perform)
                     .chatKitHeaderButtonStyle()
             }
+
+            if ChatKitComposerControls.showsOptionsMenu(for: session.options) {
+                ChatKitComposerOptionsMenu(session: session)
+                    .chatKitHeaderButtonStyle()
+            }
         }
         .padding(.horizontal, 24)
         .padding(.vertical, 10)

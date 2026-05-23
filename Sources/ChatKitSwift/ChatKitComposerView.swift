@@ -17,56 +17,14 @@ struct ChatKitComposerView: View {
             }
 
             HStack(alignment: .bottom, spacing: 16) {
-                if hasComposerOptions {
-                    Menu("Composer options", systemImage: "plus") {
-                        if session.options.entities.showComposerMenu, session.options.entities.onTagSearch != nil {
-                            Button("Mention", systemImage: "at") {
-                                entityQuery = "@"
-                                Task { await searchEntities(query: "") }
-                            }
-                        }
-
-                        if !session.options.composer.tools.isEmpty {
-                            Section("Tools") {
-                                Button("No tool", systemImage: "xmark.circle") {
-                                    Task { await session.setComposerValue(selectedToolID: nil) }
-                                }
-                                ForEach(session.options.composer.tools) { tool in
-                                    Button(tool.label, systemImage: ChatKitStyle.systemImage(for: tool.icon)) {
-                                        Task {
-                                            await session.setComposerValue(
-                                                text: tool.placeholderOverride ?? session.composer.text,
-                                                selectedToolID: tool.id
-                                            )
-                                        }
-                                    }
-                                }
-                            }
-                        }
-
-                        if !session.options.composer.models.isEmpty {
-                            Section("Models") {
-                                ForEach(session.options.composer.models) { model in
-                                    if model.id == session.composer.selectedModelID {
-                                        Button(model.label, systemImage: "checkmark") {
-                                            Task { await session.setComposerValue(selectedModelID: model.id) }
-                                        }
-                                        .disabled(model.disabled)
-                                    } else {
-                                        Button(model.label) {
-                                            Task { await session.setComposerValue(selectedModelID: model.id) }
-                                        }
-                                        .disabled(model.disabled)
-                                    }
-                                }
-                            }
-                        }
-                    }
-                    .labelStyle(.iconOnly)
-                    .buttonStyle(.plain)
-                    .font(.title2)
-                    .frame(width: 44, height: 44)
-                    .background(.regularMaterial, in: Circle())
+                if ChatKitComposerControls.showsAttachmentButton(for: session.options) {
+                    Button("Add attachment", systemImage: "plus", action: requestAttachment)
+                        .labelStyle(.iconOnly)
+                        .buttonStyle(.plain)
+                        .font(.title2)
+                        .frame(width: 44, height: 44)
+                        .background(.regularMaterial, in: Circle())
+                        .disabled(!canRequestAttachment)
                 }
 
                 ZStack(alignment: .bottomTrailing) {
@@ -93,9 +51,9 @@ struct ChatKitComposerView: View {
                         .labelStyle(.iconOnly)
                         .font(.body)
                         .bold()
-                        .foregroundStyle(Color.black)
+                        .foregroundStyle(.white)
                         .frame(width: 30, height: 30)
-                        .background(Color.white, in: Circle())
+                        .background(Color.accentColor, in: Circle())
                         .opacity(canSend ? 1 : 0.35)
                         .disabled(!canSend)
                         .padding(.trailing, 5)
@@ -114,14 +72,20 @@ struct ChatKitComposerView: View {
         .background(.clear)
     }
 
-    private var hasComposerOptions: Bool {
-        !session.options.composer.tools.isEmpty ||
-            !session.options.composer.models.isEmpty ||
-            (session.options.entities.showComposerMenu && session.options.entities.onTagSearch != nil)
-    }
-
     private var canSend: Bool {
         !session.composer.text.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty || !session.composer.content.isEmpty
+    }
+
+    private var canRequestAttachment: Bool {
+        guard let attachments = session.options.composer.attachments else {
+            return false
+        }
+        return attachments.onRequest != nil &&
+            session.composer.attachments.count + session.composer.files.count < attachments.maxCount
+    }
+
+    private func requestAttachment() {
+        session.options.composer.attachments?.onRequest?()
     }
 
     private func send() {

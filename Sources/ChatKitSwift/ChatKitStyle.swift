@@ -5,7 +5,14 @@ enum ChatKitStyle {
         if let background = theme.color.surface?.background {
             return Color(hex: background) ?? .clear
         }
-        return theme.colorScheme == .dark ? .black : .white
+        switch theme.colorScheme {
+        case .light:
+            return .white
+        case .dark:
+            return .black
+        case .system:
+            return .clear
+        }
     }
 
     static func foreground(for theme: ChatKitTheme) -> Color {

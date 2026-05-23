@@ -171,12 +171,20 @@ public struct ChatKitOptions: Sendable {
         public var maxSize: AttachmentSizeLimit
         public var maxCount: Int
         public var accept: [String: [String]]
+        public var onRequest: (@MainActor @Sendable () -> Void)?
 
-        public init(enabled: Bool, maxSize: AttachmentSizeLimit = .bytes(100 * 1024 * 1024), maxCount: Int = 10, accept: [String: [String]] = [:]) {
+        public init(
+            enabled: Bool,
+            maxSize: AttachmentSizeLimit = .bytes(100 * 1024 * 1024),
+            maxCount: Int = 10,
+            accept: [String: [String]] = [:],
+            onRequest: (@MainActor @Sendable () -> Void)? = nil
+        ) {
             self.enabled = enabled
             self.maxSize = maxSize
             self.maxCount = maxCount
             self.accept = accept
+            self.onRequest = onRequest
         }
     }
 
@@ -282,7 +290,7 @@ public struct ChatKitTheme: Equatable, Sendable {
     public var density: Density
     public var color: Color
 
-    public init(colorScheme: ColorScheme = .light, typography: Typography = .init(), radius: Radius = .pill, density: Density = .normal, color: Color = .init()) {
+    public init(colorScheme: ColorScheme = .system, typography: Typography = .init(), radius: Radius = .pill, density: Density = .normal, color: Color = .init()) {
         self.colorScheme = colorScheme
         self.typography = typography
         self.radius = radius
