@@ -5,7 +5,7 @@ enum ChatKitStyle {
         if let background = theme.color.surface?.background {
             return Color(hex: background) ?? .clear
         }
-        return theme.colorScheme == .dark ? .black : .clear
+        return theme.colorScheme == .dark ? .black : .white
     }
 
     static func foreground(for theme: ChatKitTheme) -> Color {
@@ -15,11 +15,24 @@ enum ChatKitStyle {
         return .primary
     }
 
+    static func preferredColorScheme(for theme: ChatKitTheme) -> SwiftUI.ColorScheme? {
+        switch theme.colorScheme {
+        case .light:
+            .light
+        case .dark:
+            .dark
+        case .system:
+            nil
+        }
+    }
+
     static func systemImage(for icon: String) -> String {
         let normalized = icon.replacing("lucide:", with: "")
         return switch normalized {
         case "agent": "sparkles"
-        case "analytics", "chart": "chart.bar"
+        case "analytics", "chart", "chart.bar": "chart.bar"
+        case "arrow.right": "arrow.right"
+        case "arrow.up": "arrow.up"
         case "atom": "atom"
         case "batch": "square.stack.3d.up"
         case "bolt": "bolt"
@@ -28,7 +41,7 @@ enum ChatKitStyle {
         case "book-clock": "clock"
         case "bug": "ladybug"
         case "calendar": "calendar"
-        case "check", "check-circle", "check-circle-filled": "checkmark.circle"
+        case "check", "check-circle", "check-circle-filled", "checkmark.circle": "checkmark.circle"
         case "chevron-left": "chevron.left"
         case "chevron-right": "chevron.right"
         case "circle-question": "questionmark.circle"
@@ -46,9 +59,11 @@ enum ChatKitStyle {
         case "keys": "key"
         case "lab": "flask"
         case "images", "square-image": "photo"
-        case "info": "info.circle"
-        case "lifesaver": "questionmark.life.ar"
+        case "exclamationmark.triangle": "exclamationmark.triangle"
+        case "info", "info.circle": "info.circle"
+        case "lifesaver": "questionmark.life"
         case "lightbulb": "lightbulb"
+        case "line.3.horizontal": "line.3.horizontal"
         case "mail": "envelope"
         case "map-pin", "maps": "mappin"
         case "mobile", "phone": "iphone"
@@ -64,15 +79,17 @@ enum ChatKitStyle {
         case "square-code": "chevron.left.forwardslash.chevron.right"
         case "suitcase": "briefcase"
         case "settings-slider", "settings-cog": "slider.horizontal.3"
-        case "write", "write-alt", "write-alt2", "compose": "square.and.pencil"
-        case "sidebar-left", "sidebar-open-left", "history": "sidebar.left"
+        case "write", "write-alt", "write-alt2", "compose", "square.and.pencil": "square.and.pencil"
+        case "pencil": "pencil"
+        case "sidebar-left", "sidebar-open-left", "history", "sidebar.left": "sidebar.left"
         case "sidebar-right", "sidebar-open-right": "sidebar.right"
         case "close": "xmark"
+        case "circle.dashed": "circle.dashed"
         case "home", "home-alt": "house"
         case "share": "square.and.arrow.up"
         case "dark-mode": "moon"
         case "light-mode": "sun.max"
-        default: normalized
+        default: "sparkles"
         }
     }
 }

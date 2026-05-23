@@ -4,6 +4,7 @@ public struct ChatKitOptions: Sendable {
     public var api: ChatKitAPI
     public var locale: String?
     public var theme: ChatKitTheme
+    public var glassEffect: Bool
     public var frameTitle: String
     public var initialThread: String?
     public var onClientTool: (@Sendable (ChatKitClientToolCall) async throws -> [String: JSONValue])?
@@ -22,6 +23,7 @@ public struct ChatKitOptions: Sendable {
         api: ChatKitAPI,
         locale: String? = nil,
         theme: ChatKitTheme = .init(),
+        glassEffect: Bool = true,
         frameTitle: String = "Chat",
         initialThread: String? = nil,
         onClientTool: (@Sendable (ChatKitClientToolCall) async throws -> [String: JSONValue])? = nil,
@@ -39,6 +41,7 @@ public struct ChatKitOptions: Sendable {
         self.api = api
         self.locale = locale
         self.theme = theme
+        self.glassEffect = glassEffect
         self.frameTitle = frameTitle
         self.initialThread = initialThread
         self.onClientTool = onClientTool

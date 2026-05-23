@@ -4,30 +4,34 @@ struct ChatKitStartScreenView: View {
     let session: ChatKitSession
 
     var body: some View {
-        ScrollView {
-            VStack(alignment: .leading, spacing: 16) {
-                Text(session.options.startScreen.greeting)
-                    .font(.title2)
-                    .fontWeight(.semibold)
-                    .frame(maxWidth: .infinity, alignment: .leading)
+        GeometryReader { proxy in
+            ScrollView {
+                VStack(alignment: .leading, spacing: 20) {
+                    Text(session.options.startScreen.greeting)
+                        .font(.title2)
+                        .bold()
+                        .frame(maxWidth: .infinity, alignment: .leading)
 
-                if !session.options.startScreen.prompts.isEmpty {
-                    LazyVGrid(columns: [GridItem(.adaptive(minimum: 180), spacing: 12)], spacing: 12) {
-                        ForEach(session.options.startScreen.prompts) { prompt in
-                            Button {
-                                Task { await send(prompt) }
-                            } label: {
-                                Label(prompt.label, systemImage: ChatKitStyle.systemImage(for: prompt.icon ?? "sparkle"))
-                                    .font(.body)
-                                    .frame(maxWidth: .infinity, alignment: .leading)
-                                    .padding(12)
+                    if !session.options.startScreen.prompts.isEmpty {
+                        VStack(alignment: .leading, spacing: 22) {
+                            ForEach(session.options.startScreen.prompts) { prompt in
+                                Button(action: { Task { await send(prompt) } }) {
+                                    Label(prompt.label, systemImage: ChatKitStyle.systemImage(for: prompt.icon ?? "sparkle"))
+                                        .font(.body)
+                                        .frame(maxWidth: .infinity, alignment: .leading)
+                                        .contentShape(.rect)
+                                }
+                                .buttonStyle(.plain)
                             }
-                            .buttonStyle(.bordered)
                         }
                     }
                 }
+                .padding(.horizontal, 24)
+                .padding(.top, startContentTopPadding(for: proxy.size.height))
+                .padding(.bottom, 112)
+                .frame(maxWidth: 720, alignment: .leading)
+                .frame(maxWidth: .infinity, alignment: .topLeading)
             }
-            .padding(20)
         }
     }
 
@@ -38,5 +42,9 @@ struct ChatKitStartScreenView: View {
         case let .content(content):
             try? await session.sendUserMessage(content: content, newThread: true)
         }
+    }
+
+    private func startContentTopPadding(for height: CGFloat) -> CGFloat {
+        min(max(height * 0.32, 220), 300)
     }
 }

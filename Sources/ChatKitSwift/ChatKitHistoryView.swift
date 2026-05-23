@@ -10,18 +10,16 @@ struct ChatKitHistoryView: View {
                 Button {
                     Task { try? await session.setThreadId(thread.id) }
                 } label: {
-                    VStack(alignment: .leading, spacing: 4) {
-                        Text(thread.title ?? "Untitled thread")
-                            .font(.body)
-                            .lineLimit(2)
-                        Text(thread.createdAt, format: .dateTime.month().day().hour().minute())
-                            .font(.caption)
-                            .foregroundStyle(.secondary)
-                    }
+                    Text(thread.title ?? "Untitled thread")
+                        .font(.title3)
+                        .lineLimit(2)
+                    .padding(.vertical, 6)
                     .frame(maxWidth: .infinity, alignment: .leading)
                 }
                 .buttonStyle(.plain)
                 .accessibilityLabel(thread.title ?? "Untitled thread")
+                .listRowInsets(.init(top: 0, leading: 24, bottom: 0, trailing: 24))
+                .listRowBackground(Color.clear)
                 .swipeActions(edge: .trailing, allowsFullSwipe: true) {
                     if session.options.history.showRename {
                         Button("Rename", systemImage: "pencil") {
@@ -34,10 +32,15 @@ struct ChatKitHistoryView: View {
                         }
                     }
                 }
+                .listRowSeparator(.hidden)
             }
         }
-        .listStyle(.sidebar)
-        .frame(minWidth: 220, idealWidth: 280, maxWidth: 340)
+        .listStyle(.plain)
+        .listRowSeparator(.hidden)
+        .listSectionSeparator(.hidden)
+        .environment(\.defaultMinListRowHeight, 44)
+        .scrollContentBackground(.hidden)
+        .contentMargins(.top, 8, for: .scrollContent)
         .task {
             guard !isLoading else { return }
             isLoading = true

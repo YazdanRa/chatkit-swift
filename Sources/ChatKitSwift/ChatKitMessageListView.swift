@@ -21,7 +21,10 @@ struct ChatKitMessageListView: View {
                         ChatKitErrorView(error: error)
                     }
                 }
-                .padding(16)
+                .padding(.horizontal, 18)
+                .padding(.vertical, 20)
+                .frame(maxWidth: 820, alignment: .leading)
+                .frame(maxWidth: .infinity, alignment: .top)
             }
             .scrollContentBackground(.visible)
             .onChange(of: session.state.items.count) {

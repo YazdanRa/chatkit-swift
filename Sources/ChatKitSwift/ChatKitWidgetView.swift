@@ -17,7 +17,7 @@ private struct ChatKitWidgetNodeView: View {
     var body: some View {
         switch node.type {
         case "Basic", "Box", "Col", "Form":
-            VStack(alignment: .leading, spacing: 8) {
+            VStack(alignment: .leading, spacing: 10) {
                 children
             }
         case "Row":
@@ -25,15 +25,14 @@ private struct ChatKitWidgetNodeView: View {
                 children
             }
         case "Card":
-            VStack(alignment: .leading, spacing: 10) {
+            VStack(alignment: .leading, spacing: 12) {
                 children
             }
-            .padding(12)
-            .background(.background)
-            .clipShape(.rect(cornerRadius: 8))
+            .padding(16)
+            .background(.background, in: RoundedRectangle(cornerRadius: 16))
             .overlay {
-                RoundedRectangle(cornerRadius: 8)
-                    .stroke(.secondary.opacity(0.2))
+                RoundedRectangle(cornerRadius: 16)
+                    .stroke(.tertiary)
             }
         case "ListView":
             VStack(alignment: .leading, spacing: 8) {
@@ -48,10 +47,11 @@ private struct ChatKitWidgetNodeView: View {
             }
         case "Title":
             Text(node.value ?? "")
-                .font(.headline)
+                .font(.title3)
+                .bold()
         case "Caption":
             Text(node.value ?? "")
-                .font(.caption)
+                .font(.footnote)
                 .foregroundStyle(.secondary)
         case "Text":
             Text(node.value ?? "")
@@ -61,11 +61,14 @@ private struct ChatKitWidgetNodeView: View {
                 .font(.body)
         case "Badge":
             Text(node.label ?? node.value ?? "")
-                .font(.caption)
-                .padding(.horizontal, 8)
-                .padding(.vertical, 4)
-                .background(.secondary.opacity(0.14))
-                .clipShape(.capsule)
+                .font(.footnote)
+                .padding(.horizontal, 10)
+                .padding(.vertical, 6)
+                .background(.quaternary, in: Capsule())
+                .overlay {
+                    Capsule()
+                        .stroke(.tertiary)
+                }
         case "Icon":
             Image(systemName: ChatKitStyle.systemImage(for: node.name ?? node.value ?? "sparkle"))
                 .accessibilityHidden(true)
@@ -80,14 +83,14 @@ private struct ChatKitWidgetNodeView: View {
         case "Input", "Textarea", "Select", "DatePicker", "Checkbox", "RadioGroup", "Label", "Table", "Table.Row", "Table.Cell", "Transition":
             VStack(alignment: .leading, spacing: 6) {
                 Text(node.label ?? node.name ?? node.type)
-                    .font(.caption)
+                    .font(.footnote)
                     .foregroundStyle(.secondary)
                 children
             }
         default:
             VStack(alignment: .leading, spacing: 8) {
                 Text(node.type)
-                    .font(.caption)
+                    .font(.footnote)
                     .foregroundStyle(.secondary)
                 children
             }

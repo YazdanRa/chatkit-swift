@@ -7,40 +7,60 @@ struct ChatKitHeaderView: View {
         HStack(spacing: 12) {
             if let action = session.options.header.leftAction {
                 Button(action.accessibilityLabel, systemImage: ChatKitStyle.systemImage(for: action.icon), action: action.perform)
-                    .buttonStyle(.borderless)
+                    .chatKitHeaderButtonStyle()
             } else if session.options.history.enabled {
-                Button("History", systemImage: "sidebar.left") {
-                    Task { await session.showHistory() }
+                Button("History", systemImage: "line.3.horizontal") {
+                    Task { await toggleHistory() }
                 }
-                .buttonStyle(.borderless)
+                .chatKitHeaderButtonStyle()
             }
 
             if session.options.header.title.enabled {
                 Text(title)
-                    .font(.headline)
+                    .font(.title3)
+                    .bold()
                     .lineLimit(1)
-                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .padding(.horizontal, 18)
+                    .frame(minHeight: 44)
+                    .background(.regularMaterial, in: Capsule())
+                    .overlay {
+                        Capsule()
+                            .stroke(.tertiary)
+                    }
             } else {
-                Spacer()
+                EmptyView()
             }
 
-            if session.isHistoryVisible {
-                Button("Hide history", systemImage: "xmark") {
-                    Task { await session.hideHistory() }
-                }
-                .buttonStyle(.borderless)
-            }
+            Spacer()
 
-            if let action = session.options.header.rightAction {
+            if !session.isHistoryVisible, let action = session.options.header.rightAction {
                 Button(action.accessibilityLabel, systemImage: ChatKitStyle.systemImage(for: action.icon), action: action.perform)
-                    .buttonStyle(.borderless)
+                    .chatKitHeaderButtonStyle()
             }
         }
-        .padding(.horizontal, 16)
-        .padding(.vertical, 12)
+        .padding(.horizontal, 24)
+        .padding(.vertical, 10)
     }
 
     private var title: String {
         session.options.header.title.text ?? session.state.currentThread?.title ?? "Chat"
+    }
+
+    private func toggleHistory() async {
+        if session.isHistoryVisible {
+            await session.hideHistory()
+        } else {
+            await session.showHistory()
+        }
+    }
+}
+
+private extension View {
+    func chatKitHeaderButtonStyle() -> some View {
+        labelStyle(.iconOnly)
+            .buttonStyle(.plain)
+            .font(.title3)
+            .frame(width: 44, height: 44)
+            .background(.regularMaterial, in: Circle())
     }
 }

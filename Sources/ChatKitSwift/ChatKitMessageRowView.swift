@@ -7,7 +7,7 @@ struct ChatKitMessageRowView: View {
     var body: some View {
         switch item {
         case let .userMessage(message):
-            messageBubble(alignment: .trailing, role: "You") {
+            messageBubble(alignment: .trailing) {
                 VStack(alignment: .leading, spacing: 6) {
                     ForEach(Array(message.content.enumerated()), id: \.offset) { _, content in
                         Text(content.displayText)
@@ -16,7 +16,7 @@ struct ChatKitMessageRowView: View {
                 }
             }
         case let .assistantMessage(message):
-            messageBubble(alignment: .leading, role: "Assistant") {
+            plainMessage {
                 VStack(alignment: .leading, spacing: 8) {
                     ForEach(Array(message.content.enumerated()), id: \.offset) { _, content in
                         Text(content.text)
@@ -30,20 +30,20 @@ struct ChatKitMessageRowView: View {
                 }
             }
         case let .widget(widget):
-            messageBubble(alignment: .leading, role: "Widget") {
+            plainMessage {
                 ChatKitWidgetView(item: widget, session: session)
             }
         case let .clientToolCall(tool):
-            messageBubble(alignment: .leading, role: "Client tool") {
+            plainMessage {
                 Label(tool.name, systemImage: tool.status == "completed" ? "checkmark.circle" : "wrench.and.screwdriver")
                     .font(.body)
             }
         case let .structuredInput(item):
-            messageBubble(alignment: .leading, role: "Structured input") {
+            plainMessage {
                 ChatKitStructuredInputView(item: item, session: session)
             }
         case let .generatedImage(item):
-            messageBubble(alignment: .leading, role: "Generated image") {
+            plainMessage {
                 if let image = item.image {
                     AsyncImage(url: image.url) { phase in
                         if let image = phase.image {
@@ -64,24 +64,41 @@ struct ChatKitMessageRowView: View {
         }
     }
 
-    private func messageBubble<Content: View>(alignment: HorizontalAlignment, role: String, @ViewBuilder content: () -> Content) -> some View {
+    private func messageBubble<Content: View>(alignment: HorizontalAlignment, @ViewBuilder content: () -> Content) -> some View {
         HStack {
             if alignment == .trailing {
-                Spacer(minLength: 40)
+                Spacer(minLength: 56)
             }
-            VStack(alignment: alignment, spacing: 6) {
-                Text(role)
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
-                content()
-                    .padding(12)
-                    .background(alignment == .trailing ? .blue.opacity(0.16) : .secondary.opacity(0.10))
-                    .clipShape(.rect(cornerRadius: 12))
-            }
+            content()
+                .padding(.horizontal, 14)
+                .padding(.vertical, 12)
+                .background {
+                    RoundedRectangle(cornerRadius: 18)
+                        .fill(bubbleStyle(for: alignment))
+                }
+                .overlay {
+                    if alignment == .leading {
+                        RoundedRectangle(cornerRadius: 18)
+                            .stroke(.tertiary)
+                    }
+                }
+                .frame(maxWidth: 620, alignment: alignment == .trailing ? .trailing : .leading)
             if alignment == .leading {
-                Spacer(minLength: 40)
+                Spacer(minLength: 56)
             }
         }
         .accessibilityElement(children: .combine)
+    }
+
+    private func plainMessage<Content: View>(@ViewBuilder content: () -> Content) -> some View {
+        content()
+        .frame(maxWidth: 620, alignment: .leading)
+        .accessibilityElement(children: .combine)
+    }
+
+    private func bubbleStyle(for alignment: HorizontalAlignment) -> AnyShapeStyle {
+        alignment == .trailing
+            ? AnyShapeStyle(Color.accentColor.opacity(0.14))
+            : AnyShapeStyle(.regularMaterial)
     }
 }

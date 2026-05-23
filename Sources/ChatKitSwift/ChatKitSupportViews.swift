@@ -22,7 +22,9 @@ struct ChatKitThreadItemActionsView: View {
             }
         }
         .buttonStyle(.borderless)
-        .font(.caption)
+        .labelStyle(.iconOnly)
+        .font(.body)
+        .controlSize(.regular)
     }
 }
 
@@ -83,9 +85,11 @@ struct ChatKitProgressView: View {
 
     var body: some View {
         Label(progress.text, systemImage: ChatKitStyle.systemImage(for: progress.icon ?? "sparkle"))
-            .font(.caption)
+            .font(.footnote)
             .foregroundStyle(.secondary)
-            .padding(.horizontal, 12)
+            .padding(.horizontal, 14)
+            .padding(.vertical, 8)
+            .background(.regularMaterial, in: Capsule())
     }
 }
 
@@ -97,8 +101,7 @@ struct ChatKitErrorView: View {
             .font(.body)
             .foregroundStyle(.red)
             .padding(12)
-            .background(.red.opacity(0.08))
-            .clipShape(.rect(cornerRadius: 8))
+            .background(.red.opacity(0.08), in: RoundedRectangle(cornerRadius: 12))
     }
 }
 
@@ -110,7 +113,7 @@ struct ChatKitDisclaimerView: View {
             .font(.caption)
             .foregroundStyle(disclaimer.highContrast ? .primary : .secondary)
             .padding(.horizontal, 12)
-            .padding(.top, 8)
+            .padding(.vertical, 6)
     }
 }
 
@@ -124,8 +127,7 @@ struct ChatKitAttachmentStripView: View {
                     Label(label(for: attachment), systemImage: icon(for: attachment))
                         .font(.caption)
                         .padding(8)
-                        .background(.secondary.opacity(0.12))
-                        .clipShape(.capsule)
+                        .background(.quaternary, in: Capsule())
                 }
             }
         }
