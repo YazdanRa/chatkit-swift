@@ -1,5 +1,8 @@
 # ChatKitSwift
 
+> [!CAUTION]
+> This project is still in early stages and under heavy development. Anything and everything can change. Most of the code is AI generated and hasn't been fully reviewed yet!
+
 ChatKitSwift is a native SwiftUI client for OpenAI ChatKit. It mirrors the client concepts from [openai/chatkit-js](https://github.com/openai/chatkit-js) while using SwiftUI views, Swift concurrency, `Observation`, and Swift Package Manager.
 
 The package provides:
