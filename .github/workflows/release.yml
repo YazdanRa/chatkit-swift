@@ -79,6 +79,11 @@ jobs:
             --transform-for-static-hosting \
             --hosting-base-path "${{ github.event.repository.name }}"
 
+      - name: Add GitHub Pages root redirect
+        run: |
+          cp .github/pages-root-index.html .build/docc-site/index.html
+          touch .build/docc-site/.nojekyll
+
       - name: Upload GitHub Pages artifact
         uses: actions/upload-pages-artifact@v4
         with:
