@@ -70,22 +70,7 @@ jobs:
         uses: actions/configure-pages@v5
 
       - name: Generate DocC static site
-        run: |
-          swift package \
-            --allow-writing-to-directory .build/docc-site \
-            generate-documentation \
-            --target ChatKitSwift \
-            --output-path .build/docc-site \
-            --transform-for-static-hosting \
-            --experimental-transform-for-static-hosting-with-content \
-            --hosting-base-path "${{ github.event.repository.name }}"
-
-      - name: Promote DocC module page to site root
-        run: |
-          python3 .github/scripts/promote_docc_root_index.py \
-            .build/docc-site/documentation/chatkitswift/index.html \
-            .build/docc-site/index.html
-          touch .build/docc-site/.nojekyll
+        run: scripts/make-docs.sh .build/docc-site "${{ github.event.repository.name }}"
 
       - name: Upload GitHub Pages artifact
         uses: actions/upload-pages-artifact@v4
