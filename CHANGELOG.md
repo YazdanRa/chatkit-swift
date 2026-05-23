@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.1.0](https://github.com/YazdanRa/chatkit-swift/compare/v1.0.1...v1.1.0) (2026-05-23)
+
+
+### Features
+
+* **rendering:** render assistant responses with Textual ([a0d6639](https://github.com/YazdanRa/chatkit-swift/commit/a0d6639f80ed0b56d5db5bb112ae2a3324c8f4f4))
+
 ## [1.0.1](https://github.com/YazdanRa/chatkit-swift/compare/v1.0.0...v1.0.1) (2026-05-23)
 
 
