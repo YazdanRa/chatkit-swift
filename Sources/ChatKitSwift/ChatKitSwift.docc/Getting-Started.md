@@ -4,7 +4,7 @@ Install ChatKitSwift, configure a backend endpoint, and embed the SwiftUI chat s
 
 ## Requirements
 
-ChatKitSwift requires Swift 6.3 or newer and supports iOS 17, macOS 14, and visionOS 1. The repository root is the Swift package root.
+ChatKitSwift requires Swift 6.3 or newer and supports iOS 18, macOS 15, and visionOS 2. The repository root is the Swift package root.
 
 ## Add the Package
 

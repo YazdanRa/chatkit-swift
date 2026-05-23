@@ -19,9 +19,7 @@ struct ChatKitMessageRowView: View {
             plainMessage {
                 VStack(alignment: .leading, spacing: 8) {
                     ForEach(Array(message.content.enumerated()), id: \.offset) { _, content in
-                        Text(content.text)
-                            .font(.body)
-                            .textSelection(.enabled)
+                        ChatKitAssistantResponseTextView(markdown: content.text)
                     }
 
                     if session.options.threadItemActions.feedback || session.options.threadItemActions.retry {

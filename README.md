@@ -17,7 +17,7 @@ The package provides:
 
 - Swift 6.3 or newer
 - Xcode with Swift 6.3 toolchain support
-- iOS 17, macOS 14, or visionOS 1
+- iOS 18, macOS 15, or visionOS 2
 - A backend endpoint that implements the ChatKit protocol and keeps OpenAI API keys server-side
 
 The repository root is the Swift package root.

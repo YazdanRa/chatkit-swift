@@ -6,9 +6,9 @@ import PackageDescription
 let package = Package(
     name: "ChatKitSwift",
     platforms: [
-        .iOS(.v17),
-        .macOS(.v14),
-        .visionOS(.v1),
+        .iOS(.v18),
+        .macOS(.v15),
+        .visionOS(.v2),
     ],
     products: [
         // Products define the executables and libraries a package produces, making them visible to other packages.
@@ -18,13 +18,17 @@ let package = Package(
         ),
     ],
     dependencies: [
+        .package(url: "https://github.com/gonzalezreal/textual", from: "0.3.1"),
         .package(url: "https://github.com/swiftlang/swift-docc-plugin", from: "1.1.0"),
     ],
     targets: [
         // Targets are the basic building blocks of a package, defining a module or a test suite.
         // Targets can depend on other targets in this package and products from dependencies.
         .target(
-            name: "ChatKitSwift"
+            name: "ChatKitSwift",
+            dependencies: [
+                .product(name: "Textual", package: "textual"),
+            ]
         ),
         .testTarget(
             name: "ChatKitSwiftTests",
