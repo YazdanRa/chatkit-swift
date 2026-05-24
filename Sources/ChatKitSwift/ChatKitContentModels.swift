@@ -1,5 +1,6 @@
 import Foundation
 
+/// User-authored input sent to a ChatKit thread.
 public struct ChatKitUserMessageInput: Codable, Equatable, Sendable {
     public var content: [ChatKitUserMessageContent]
     public var attachments: [String]
@@ -14,6 +15,11 @@ public struct ChatKitUserMessageInput: Codable, Equatable, Sendable {
     }
 }
 
+/// A content part in a user message.
+///
+/// `inputText` carries plain text. `inputTag` carries an entity mention or rich tag
+/// selected through the composer. Unknown content parts are preserved as raw JSON so
+/// clients remain compatible with newer protocol fields.
 public enum ChatKitUserMessageContent: Codable, Equatable, Sendable {
     case inputText(ChatKitInputTextContent)
     case inputTag(ChatKitInputTagContent)
@@ -47,6 +53,7 @@ public enum ChatKitUserMessageContent: Codable, Equatable, Sendable {
         }
     }
 
+    /// Text suitable for rendering in the local transcript.
     public var displayText: String {
         switch self {
         case let .inputText(value):

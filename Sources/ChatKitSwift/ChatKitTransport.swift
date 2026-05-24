@@ -1,10 +1,21 @@
 import Foundation
 
+/// Transport contract used by ``ChatKitSession``.
+///
+/// Custom transports are useful for tests, previews, fixtures, or backends that do
+/// not use the default single-endpoint HTTP shape. ``send(_:)`` handles
+/// non-streaming requests and returns response bytes for the expected model.
+/// ``stream(_:)`` handles streaming requests and yields decoded ``ChatKitEvent``
+/// values until completion or cancellation.
 public protocol ChatKitTransport: Sendable {
+    /// Sends a non-streaming ChatKit request and returns the raw response body.
     func send(_ request: ChatKitRequest) async throws -> Data
+
+    /// Sends a streaming ChatKit request and yields decoded events.
     func stream(_ request: ChatKitRequest) async throws -> AsyncThrowingStream<ChatKitEvent, Error>
 }
 
+/// Errors produced by the built-in transport and session request helpers.
 public enum ChatKitTransportError: Error, Equatable, Sendable {
     case invalidResponse
     case httpStatus(Int, Data)

@@ -1,5 +1,12 @@
 import Foundation
 
+/// Configuration for a ChatKitSwift chat surface and session.
+///
+/// `ChatKitOptions` collects the backend API mode, appearance, thread history,
+/// composer controls, entity search, widget actions, client tools, and lifecycle
+/// callbacks used by ``ChatKitView`` and ``ChatKitSession``. Keep OpenAI API keys
+/// on your server; client apps should pass only backend URLs, user-scoped headers,
+/// or short-lived ChatKit client secrets.
 public struct ChatKitOptions: Sendable {
     public var api: ChatKitAPI
     public var locale: String?
@@ -60,6 +67,11 @@ public struct ChatKitOptions: Sendable {
         self.events = events
     }
 
+    /// Header configuration for the chat surface.
+    ///
+    /// Header actions use SF Symbol names for icons and run in the host app when
+    /// selected. On iOS with `glassEffect` enabled, these actions are shown in the
+    /// navigation toolbar.
     public struct Header: Sendable {
         public var enabled: Bool
         public var title: Title
@@ -96,6 +108,7 @@ public struct ChatKitOptions: Sendable {
         }
     }
 
+    /// Controls whether the built-in thread history UI is available.
     public struct History: Sendable {
         public var enabled: Bool
         public var showDelete: Bool
@@ -108,6 +121,7 @@ public struct ChatKitOptions: Sendable {
         }
     }
 
+    /// Content displayed before the current thread has visible messages.
     public struct StartScreen: Sendable {
         public var greeting: String
         public var prompts: [Prompt]
@@ -137,6 +151,7 @@ public struct ChatKitOptions: Sendable {
         }
     }
 
+    /// Enables built-in per-message actions for assistant items.
     public struct ThreadItemActions: Sendable {
         public var feedback: Bool
         public var retry: Bool
@@ -147,6 +162,11 @@ public struct ChatKitOptions: Sendable {
         }
     }
 
+    /// Configuration for the message composer.
+    ///
+    /// Host apps own platform-specific file picking, microphone permission prompts,
+    /// and upload byte transfer. ChatKitSwift stores selected attachments and sends
+    /// their IDs through the ChatKit protocol.
     public struct Composer: Sendable {
         public var placeholder: String
         public var attachments: AttachmentConfiguration?
@@ -250,6 +270,11 @@ public struct ChatKitOptions: Sendable {
         }
     }
 
+    /// Entity search and mention behavior for the composer.
+    ///
+    /// Use `onTagSearch` to return app-specific entities for tag search. Optional
+    /// click and preview handlers let the host app respond to selected entities or
+    /// provide a lightweight widget preview.
     public struct Entities: Sendable {
         public var onTagSearch: (@Sendable (String) async throws -> [ChatKitEntity])?
         public var showComposerMenu: Bool
@@ -269,6 +294,10 @@ public struct ChatKitOptions: Sendable {
         }
     }
 
+    /// Widget interaction callbacks.
+    ///
+    /// Widget payloads are streamed from the backend as ``ChatKitWidgetNode`` values.
+    /// `onAction` is called when a rendered widget exposes and triggers an action.
     public struct Widgets: Sendable {
         public var onAction: (@Sendable (ChatKitAction, ChatKitWidgetItem) async throws -> Void)?
 
@@ -277,6 +306,7 @@ public struct ChatKitOptions: Sendable {
         }
     }
 
+    /// Thread presentation behavior.
     public struct Thread: Sendable {
         public var autoScroll: Bool
 
@@ -286,6 +316,10 @@ public struct ChatKitOptions: Sendable {
     }
 }
 
+/// Visual theme values used by the built-in SwiftUI views.
+///
+/// Colors that accept strings should be CSS-style hex colors such as `"#2563EB"`.
+/// Icon names elsewhere in the configuration are SF Symbol names.
 public struct ChatKitTheme: Equatable, Sendable {
     public var colorScheme: ColorScheme
     public var typography: Typography
@@ -397,19 +431,42 @@ public struct ChatKitTheme: Equatable, Sendable {
     }
 }
 
+/// Backend API mode for ChatKitSwift.
+///
+/// Use ``custom(url:domainKey:uploadStrategy:additionalHeaders:)`` for the
+/// recommended production setup: your app calls your backend, and that backend owns
+/// user authorization, OpenAI calls, storage, and streaming ChatKit events. Use
+/// ``hosted(getClientSecret:endpoint:)`` only when your server can mint and refresh
+/// short-lived ChatKit client secrets for the app.
 public enum ChatKitAPI: Sendable {
     case custom(ChatKitCustomAPI)
     case hosted(ChatKitHostedAPI)
 
+    /// Uses a custom backend endpoint that implements the ChatKit protocol.
+    ///
+    /// - Parameters:
+    ///   - url: Backend endpoint that receives ChatKit request envelopes.
+    ///   - domainKey: Optional domain key sent with requests when your backend
+    ///     requires one.
+    ///   - uploadStrategy: Optional attachment upload strategy advertised to the
+    ///     host app.
+    ///   - additionalHeaders: Async provider for user-scoped headers such as
+    ///     authorization tokens.
     public static func custom(url: URL, domainKey: String? = nil, uploadStrategy: ChatKitUploadStrategy? = nil, additionalHeaders: @escaping @Sendable () async throws -> [String: String] = { [:] }) -> ChatKitAPI {
         .custom(.init(url: url, domainKey: domainKey, uploadStrategy: uploadStrategy, additionalHeaders: additionalHeaders))
     }
 
+    /// Uses the hosted ChatKit endpoint with short-lived client secrets.
+    ///
+    /// The secret provider receives the currently cached secret, if any, and should
+    /// return a valid replacement from your server. Do not embed provider API keys in
+    /// the app.
     public static func hosted(getClientSecret: @escaping @Sendable (_ currentClientSecret: String?) async throws -> String, endpoint: URL = URL(string: "https://api.openai.com/v1/chatkit")!) -> ChatKitAPI {
         .hosted(.init(endpoint: endpoint, getClientSecret: getClientSecret))
     }
 }
 
+/// Configuration for a custom ChatKit-compatible backend endpoint.
 public struct ChatKitCustomAPI: Sendable {
     public var url: URL
     public var domainKey: String?
@@ -417,21 +474,32 @@ public struct ChatKitCustomAPI: Sendable {
     public var additionalHeaders: @Sendable () async throws -> [String: String]
 }
 
+/// Configuration for the hosted ChatKit endpoint.
 public struct ChatKitHostedAPI: Sendable {
     public var endpoint: URL
     public var getClientSecret: @Sendable (_ currentClientSecret: String?) async throws -> String
 }
 
+/// Attachment upload strategy advertised by the configured API.
 public enum ChatKitUploadStrategy: Equatable, Sendable {
     case twoPhase
     case direct(uploadURL: URL)
 }
 
+/// A client tool call requested by the backend.
+///
+/// Return a JSON object from ``ChatKitOptions/onClientTool`` and ChatKitSwift sends
+/// it back to the current thread as `threads.add_client_tool_output`.
 public struct ChatKitClientToolCall: Equatable, Sendable {
     public var name: String
     public var params: [String: JSONValue]
 }
 
+/// Lifecycle and telemetry callbacks emitted by ``ChatKitSession``.
+///
+/// Callbacks are invoked on the main actor because `ChatKitSession` is main-actor
+/// isolated. Use them to update host UI, observe response lifecycle events, report
+/// errors, or handle backend-emitted effects such as deeplinks.
 public struct ChatKitEventHandlers: Sendable {
     public var onReady: (@Sendable () -> Void)?
     public var onError: (@Sendable (ChatKitEvent.ErrorEvent) -> Void)?

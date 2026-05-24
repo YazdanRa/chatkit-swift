@@ -1,14 +1,31 @@
 import SwiftUI
 
+/// A native SwiftUI chat surface for ChatKit conversations.
+///
+/// Use ``init(options:transport:)`` when the view can own its own ``ChatKitSession``.
+/// Use ``init(session:)`` when surrounding app UI needs to drive the conversation,
+/// inspect state, or coordinate actions such as loading threads and pre-filling the
+/// composer.
 public struct ChatKitView: View {
     private let injectedSession: ChatKitSession?
     @State private var ownedSession: ChatKitSession?
 
+    /// Creates a chat view backed by an existing session.
+    ///
+    /// Pass an injected session when the host app needs imperative control through
+    /// ``ChatKitSession`` methods or wants to share one session across multiple views.
     public init(session: ChatKitSession) {
         injectedSession = session
         _ownedSession = State(initialValue: nil)
     }
 
+    /// Creates a chat view that owns its session.
+    ///
+    /// - Parameters:
+    ///   - options: Configuration for API access, appearance, composer behavior,
+    ///     widgets, callbacks, and thread presentation.
+    ///   - transport: Optional transport for previews, tests, or non-standard backend
+    ///     shapes. When omitted, the view uses ``ChatKitHTTPTransport``.
     @MainActor
     public init(options: ChatKitOptions, transport: (any ChatKitTransport)? = nil) {
         injectedSession = nil

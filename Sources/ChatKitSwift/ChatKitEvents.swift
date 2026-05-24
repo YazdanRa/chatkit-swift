@@ -1,5 +1,10 @@
 import Foundation
 
+/// Streaming event emitted by a ChatKit-compatible backend.
+///
+/// Events mutate ``ChatKitConversationState`` in arrival order. Known event types
+/// decode into strongly typed cases, while unknown event payloads are preserved in
+/// ``unknown(type:raw:)`` so newer backend events do not break older clients.
 public enum ChatKitEvent: Codable, Equatable, Sendable {
     case threadCreated(ThreadCreated)
     case threadUpdated(ThreadUpdated)

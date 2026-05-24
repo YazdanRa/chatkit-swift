@@ -1,11 +1,25 @@
 import Foundation
 
+/// Default HTTP transport for ChatKit-compatible endpoints.
+///
+/// The transport posts every ``ChatKitRequest`` to the configured endpoint. Custom
+/// API requests include optional domain keys and async additional headers. Hosted
+/// API requests fetch a short-lived client secret and send it as bearer
+/// authorization. Streaming requests use server-sent events and decode each payload
+/// into ``ChatKitEvent``.
 public struct ChatKitHTTPTransport: ChatKitTransport {
     private let api: ChatKitAPI
     private let urlSession: URLSession
     private let betaHeader: String
     private let hostedSecretStore = ChatKitHostedSecretStore()
 
+    /// Creates an HTTP transport.
+    ///
+    /// - Parameters:
+    ///   - api: API mode and endpoint configuration.
+    ///   - urlSession: URL session used for requests. Inject a custom session for
+    ///     tests or app-specific networking policies.
+    ///   - betaHeader: Value sent in the `OpenAI-Beta` header.
     public init(api: ChatKitAPI, urlSession: URLSession = .shared, betaHeader: String = "chatkit_beta=v1") {
         self.api = api
         self.urlSession = urlSession

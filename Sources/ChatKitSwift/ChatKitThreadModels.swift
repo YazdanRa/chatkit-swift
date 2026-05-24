@@ -1,5 +1,6 @@
 import Foundation
 
+/// A ChatKit conversation thread and its initial page of items.
 public struct ChatKitThread: Codable, Equatable, Identifiable, Sendable {
     public var title: String?
     public var id: String
@@ -28,6 +29,9 @@ public struct ChatKitThread: Codable, Equatable, Identifiable, Sendable {
     }
 }
 
+/// Status for a ChatKit thread.
+///
+/// Unknown statuses preserve their raw payload for forward compatibility.
 public enum ChatKitThreadStatus: Codable, Equatable, Sendable {
     case active(Active)
     case locked(Locked)
@@ -91,6 +95,12 @@ public enum ChatKitThreadStatus: Codable, Equatable, Sendable {
     }
 }
 
+/// Polymorphic item that appears in a ChatKit thread.
+///
+/// Items include user messages, assistant messages, tool calls, widgets, generated
+/// images, structured inputs, task/workflow payloads, and hidden context markers.
+/// Unknown item payloads are retained as ``ChatKitUnknownThreadItem``. Use
+/// ``applying(_:)`` to apply streaming item deltas from ``ChatKitThreadItemUpdate``.
 public enum ChatKitThreadItem: Codable, Equatable, Identifiable, Sendable {
     case userMessage(ChatKitUserMessageItem)
     case assistantMessage(ChatKitAssistantMessageItem)

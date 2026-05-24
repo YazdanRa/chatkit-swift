@@ -12,7 +12,7 @@ Add the package in Xcode with **File > Add Package Dependencies**, or add it to 
 
 ```swift
 .dependencies([
-    .package(url: "https://github.com/YazdanRa/chatkit-swift.git", from: "0.1.0")
+    .package(url: "https://github.com/YazdanRa/chatkit-swift.git", from: "1.1.0")
 ])
 ```
 

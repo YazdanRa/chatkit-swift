@@ -1,5 +1,6 @@
 import Foundation
 
+/// A paginated ChatKit response.
 public struct ChatKitPage<Element: Codable & Equatable & Sendable>: Codable, Equatable, Sendable {
     public var data: [Element]
     public var hasMore: Bool
@@ -12,11 +13,18 @@ public struct ChatKitPage<Element: Codable & Equatable & Sendable>: Codable, Equ
     }
 }
 
+/// Sort order used by list requests.
 public enum ChatKitOrder: String, Codable, Equatable, Sendable {
     case ascending = "asc"
     case descending = "desc"
 }
 
+/// Encodable request envelope sent to a ChatKit-compatible backend.
+///
+/// The encoded JSON contains a `type` string such as `threads.create` and a `params`
+/// object whose shape is defined by the associated request payload. ``isStreaming``
+/// indicates whether ``ChatKitTransport/stream(_:)`` or ``ChatKitTransport/send(_:)``
+/// should be used.
 public enum ChatKitRequest: Encodable, Sendable {
     case threadsGetByID(ThreadsGetByID)
     case threadsCreate(ThreadsCreate)

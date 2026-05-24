@@ -1,5 +1,11 @@
 import Foundation
 
+/// Forward-compatible widget tree node decoded from backend JSON.
+///
+/// Known fields such as `type`, `id`, `key`, `children`, `value`, and common action
+/// keys are exposed as typed helpers. All original fields remain in ``raw`` so host
+/// apps and future renderers can inspect fields that ChatKitSwift does not yet
+/// understand.
 public struct ChatKitWidgetNode: Codable, Equatable, Identifiable, Sendable {
     public var type: String
     public var key: String?
@@ -33,6 +39,10 @@ public struct ChatKitWidgetNode: Codable, Equatable, Identifiable, Sendable {
         try encoded.encode(to: encoder)
     }
 
+    /// Stable identity for SwiftUI rendering.
+    ///
+    /// Prefers `id`, then `key`, then a fallback derived from the node type and raw
+    /// payload.
     public var stableID: String {
         id ?? key ?? "\(type)-\(raw.description)"
     }
@@ -79,10 +89,15 @@ public struct ChatKitWidgetNode: Codable, Equatable, Identifiable, Sendable {
         }
     }
 
+    /// First supported action on the node, if one is present.
+    ///
+    /// This checks `onClickAction`, `onSubmitAction`, and `onChangeAction` in that
+    /// order.
     public var action: ChatKitAction? {
         action(named: "onClickAction") ?? action(named: "onSubmitAction") ?? action(named: "onChangeAction")
     }
 
+    /// Returns an action stored under a specific raw widget key.
     public func action(named key: String) -> ChatKitAction? {
         guard case let .object(object)? = raw[key],
               let type = object["type"]?.stringValue else {
@@ -93,6 +108,7 @@ public struct ChatKitWidgetNode: Codable, Equatable, Identifiable, Sendable {
     }
 }
 
+/// Action payload emitted by a widget node.
 public struct ChatKitAction: Codable, Equatable, Sendable {
     public var type: String
     public var payload: [String: JSONValue]?

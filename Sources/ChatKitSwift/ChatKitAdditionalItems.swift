@@ -115,6 +115,12 @@ public struct ChatKitStructuredInputItem: Codable, Equatable, Sendable {
     }
 }
 
+/// Answers submitted for a structured input item.
+///
+/// Use this with ``ChatKitSession/submitStructuredInput(_:itemID:)``. `status`
+/// defaults to `"answered"`; backends may also use other statuses for skipped or
+/// deferred submissions. Each entry in ``answers`` is keyed by the structured input
+/// field ID.
 public struct ChatKitStructuredInputSubmission: Codable, Equatable, Sendable {
     public var status: String
     public var answers: [String: Answer]

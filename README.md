@@ -27,20 +27,26 @@ The repository root is the Swift package root.
 ### Xcode
 
 1. Choose `File > Add Package Dependencies`.
-2. For local development, select the repository root from this checkout.
-3. Add the `ChatKitSwift` library product to your app target.
+2. Enter the package URL:
+
+   ```text
+   https://github.com/YazdanRa/chatkit-swift.git
+   ```
+
+3. Select the released version rule, starting from `1.1.0`.
+4. Add the `ChatKitSwift` library product to your app target.
 
 ### Swift Package Manager
 
-For a local checkout:
+Add the released GitHub package to your `Package.swift` dependencies:
 
 ```swift
 .dependencies([
-    .package(path: "../chatkit-swift")
+    .package(url: "https://github.com/YazdanRa/chatkit-swift.git", from: "1.1.0")
 ])
 ```
 
-Then add the product to your target:
+Then add the `ChatKitSwift` product to the target that owns your chat UI:
 
 ```swift
 .target(
@@ -51,7 +57,17 @@ Then add the product to your target:
 )
 ```
 
-For a Git dependency, use this repository URL in `.package(url:branch:)` or `.package(url:from:)`.
+The Swift package identity is `chatkit-swift`, while the package name, library
+product, and importable module are `ChatKitSwift`.
+
+For local development against a checkout of this repository, use a path
+dependency instead:
+
+```swift
+.dependencies([
+    .package(path: "../chatkit-swift")
+])
+```
 
 ## Quick Start
 
