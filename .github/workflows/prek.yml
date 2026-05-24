@@ -18,13 +18,18 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v6
 
-      - name: Set up Homebrew
-        uses: Homebrew/actions/setup-homebrew@master
-
-      - name: Install hook tools
-        run: brew install swiftlint swiftformat
-
       - name: Run prek
         uses: j178/prek-action@v2
         with:
           prek-version: "0.4.1"
+          extra-args: "--all-files --skip swiftlint --skip swiftformat"
+
+      - name: Run SwiftLint
+        uses: norio-nomura/action-swiftlint@3.2.1
+        with:
+          args: "--force-exclude"
+
+      - name: Run SwiftFormat
+        uses: docker://ghcr.io/nicklockwood/swiftformat:0.61.1
+        with:
+          args: ". --lint --swift-version 6.3"
