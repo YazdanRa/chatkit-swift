@@ -20,7 +20,7 @@ public struct ChatKitConversationState: Equatable, Sendable {
         progress: ChatKitEvent.ProgressUpdate? = nil,
         error: ChatKitEvent.ErrorEvent? = nil,
         notices: [ChatKitEvent.Notice] = [],
-        effects: [ChatKitEvent.ClientEffect] = []
+        effects: [ChatKitEvent.ClientEffect] = [],
     ) {
         self.currentThread = currentThread
         self.threads = threads
@@ -41,7 +41,7 @@ public struct ChatKitConversationState: Equatable, Sendable {
             items = mergedItems(
                 serverItems: event.thread.items.data,
                 preservingOptimisticItemsFrom: items,
-                threadID: event.thread.id
+                threadID: event.thread.id,
             )
         case let .threadUpdated(event):
             currentThread = event.thread
@@ -85,7 +85,7 @@ public struct ChatKitConversationState: Equatable, Sendable {
         threadID: String,
         createdAt: Date,
         input: ChatKitUserMessageInput,
-        attachments: [ChatKitAttachment]
+        attachments: [ChatKitAttachment],
     ) {
         error = nil
         progress = nil
@@ -96,14 +96,15 @@ public struct ChatKitConversationState: Equatable, Sendable {
             content: input.content,
             attachments: attachments,
             quotedText: input.quotedText,
-            inferenceOptions: input.inferenceOptions
+            inferenceOptions: input.inferenceOptions,
         )))
     }
 
     public mutating func replaceThreads(_ threads: [ChatKitThread]) {
         self.threads = threads
         if let currentThread,
-           let refreshed = threads.first(where: { $0.id == currentThread.id }) {
+           let refreshed = threads.first(where: { $0.id == currentThread.id })
+        {
             self.currentThread = refreshed
         }
     }
@@ -140,7 +141,7 @@ public struct ChatKitConversationState: Equatable, Sendable {
     private func mergedItems(
         serverItems: [ChatKitThreadItem],
         preservingOptimisticItemsFrom existingItems: [ChatKitThreadItem],
-        threadID: String
+        threadID: String,
     ) -> [ChatKitThreadItem] {
         let optimisticItems = existingItems
             .filter(\.isOptimisticUserMessage)
@@ -168,7 +169,8 @@ private extension ChatKitThreadItem {
 
     func isUserMessageEquivalent(to other: ChatKitThreadItem) -> Bool {
         guard case let .userMessage(lhs) = self,
-              case let .userMessage(rhs) = other else {
+              case let .userMessage(rhs) = other
+        else {
             return false
         }
 

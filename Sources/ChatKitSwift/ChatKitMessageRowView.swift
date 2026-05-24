@@ -62,7 +62,7 @@ struct ChatKitMessageRowView: View {
         }
     }
 
-    private func messageBubble<Content: View>(alignment: HorizontalAlignment, @ViewBuilder content: () -> Content) -> some View {
+    private func messageBubble(alignment: HorizontalAlignment, @ViewBuilder content: () -> some View) -> some View {
         HStack {
             if alignment == .trailing {
                 Spacer(minLength: 56)
@@ -88,10 +88,10 @@ struct ChatKitMessageRowView: View {
         .accessibilityElement(children: .combine)
     }
 
-    private func plainMessage<Content: View>(@ViewBuilder content: () -> Content) -> some View {
+    private func plainMessage(@ViewBuilder content: () -> some View) -> some View {
         content()
-        .frame(maxWidth: 620, alignment: .leading)
-        .accessibilityElement(children: .combine)
+            .frame(maxWidth: 620, alignment: .leading)
+            .accessibilityElement(children: .combine)
     }
 
     private func bubbleStyle(for alignment: HorizontalAlignment) -> AnyShapeStyle {

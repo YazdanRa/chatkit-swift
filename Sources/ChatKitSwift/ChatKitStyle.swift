@@ -105,7 +105,8 @@ private extension Color {
     init?(hex: String) {
         let value = hex.trimmingCharacters(in: CharacterSet.alphanumerics.inverted)
         guard value.count == 6 || value.count == 8,
-              let integer = UInt64(value, radix: 16) else {
+              let integer = UInt64(value, radix: 16)
+        else {
             return nil
         }
 
@@ -115,14 +116,14 @@ private extension Color {
         let alpha: Double
 
         if value.count == 8 {
-            red = Double((integer & 0xff00_0000) >> 24) / 255
-            green = Double((integer & 0x00ff_0000) >> 16) / 255
-            blue = Double((integer & 0x0000_ff00) >> 8) / 255
-            alpha = Double(integer & 0x0000_00ff) / 255
+            red = Double((integer & 0xFF00_0000) >> 24) / 255
+            green = Double((integer & 0x00FF_0000) >> 16) / 255
+            blue = Double((integer & 0x0000_FF00) >> 8) / 255
+            alpha = Double(integer & 0x0000_00FF) / 255
         } else {
-            red = Double((integer & 0xff0000) >> 16) / 255
-            green = Double((integer & 0x00ff00) >> 8) / 255
-            blue = Double(integer & 0x0000ff) / 255
+            red = Double((integer & 0xFF0000) >> 16) / 255
+            green = Double((integer & 0x00FF00) >> 8) / 255
+            blue = Double(integer & 0x0000FF) / 255
             alpha = 1
         }
 

@@ -110,7 +110,7 @@ public final class ChatKitSession {
         attachments: [ChatKitAttachment] = [],
         newThread: Bool = false,
         toolChoice: ChatKitToolChoice? = nil,
-        model: String? = nil
+        model: String? = nil,
     ) async throws {
         let messageContent = content ?? [ChatKitUserMessageContent.inputText(.init(text: text ?? composer.text))]
         let attachmentIDs = attachments.map(\.id)
@@ -118,7 +118,7 @@ public final class ChatKitSession {
             content: messageContent,
             attachments: attachmentIDs,
             quotedText: reply,
-            inferenceOptions: .init(toolChoice: toolChoice ?? selectedToolChoice, model: model ?? composer.selectedModelID)
+            inferenceOptions: .init(toolChoice: toolChoice ?? selectedToolChoice, model: model ?? composer.selectedModelID),
         )
         let request: ChatKitRequest
         if newThread || state.currentThread == nil {
@@ -134,7 +134,7 @@ public final class ChatKitSession {
             threadID: state.currentThread?.id ?? "local_thread",
             createdAt: Date(),
             input: input,
-            attachments: attachments
+            attachments: attachments,
         )
         composer.text = ""
         composer.content = []
@@ -155,7 +155,7 @@ public final class ChatKitSession {
         attachments: [ChatKitAttachment]? = nil,
         files: [ChatKitLocalFile]? = nil,
         selectedToolID: String? = nil,
-        selectedModelID: String? = nil
+        selectedModelID: String? = nil,
     ) async {
         if let text {
             composer.text = text
@@ -278,7 +278,8 @@ public final class ChatKitSession {
 
         if case let .threadItemDone(done) = event,
            case let .clientToolCall(toolCall) = done.item,
-           toolCall.status == "pending" {
+           toolCall.status == "pending"
+        {
             await fulfillClientToolCall(toolCall)
         }
     }

@@ -17,7 +17,7 @@ public struct ChatKitThread: Codable, Equatable, Identifiable, Sendable {
         status: ChatKitThreadStatus = .active(.init()),
         allowedImageDomains: [String]? = nil,
         metadata: [String: JSONValue] = [:],
-        items: ChatKitPage<ChatKitThreadItem> = .init()
+        items: ChatKitPage<ChatKitThreadItem> = .init(),
     ) {
         self.title = title
         self.id = id
@@ -65,11 +65,11 @@ public enum ChatKitThreadStatus: Codable, Equatable, Sendable {
 
         switch type {
         case "active":
-            self = .active(try ChatKitJSON.decoder.decode(Active.self, from: data))
+            self = try .active(ChatKitJSON.decoder.decode(Active.self, from: data))
         case "locked":
-            self = .locked(try ChatKitJSON.decoder.decode(Locked.self, from: data))
+            self = try .locked(ChatKitJSON.decoder.decode(Locked.self, from: data))
         case "closed":
-            self = .closed(try ChatKitJSON.decoder.decode(Closed.self, from: data))
+            self = try .closed(ChatKitJSON.decoder.decode(Closed.self, from: data))
         default:
             self = .unknown(type: type, raw: raw)
         }
@@ -178,29 +178,29 @@ public enum ChatKitThreadItem: Codable, Equatable, Identifiable, Sendable {
 
         switch type {
         case "user_message":
-            self = .userMessage(try ChatKitJSON.decoder.decode(ChatKitUserMessageItem.self, from: data))
+            self = try .userMessage(ChatKitJSON.decoder.decode(ChatKitUserMessageItem.self, from: data))
         case "assistant_message":
-            self = .assistantMessage(try ChatKitJSON.decoder.decode(ChatKitAssistantMessageItem.self, from: data))
+            self = try .assistantMessage(ChatKitJSON.decoder.decode(ChatKitAssistantMessageItem.self, from: data))
         case "client_tool_call":
-            self = .clientToolCall(try ChatKitJSON.decoder.decode(ChatKitClientToolCallItem.self, from: data))
+            self = try .clientToolCall(ChatKitJSON.decoder.decode(ChatKitClientToolCallItem.self, from: data))
         case "widget":
-            self = .widget(try ChatKitJSON.decoder.decode(ChatKitWidgetItem.self, from: data))
+            self = try .widget(ChatKitJSON.decoder.decode(ChatKitWidgetItem.self, from: data))
         case "generated_image":
-            self = .generatedImage(try ChatKitJSON.decoder.decode(ChatKitGeneratedImageItem.self, from: data))
+            self = try .generatedImage(ChatKitJSON.decoder.decode(ChatKitGeneratedImageItem.self, from: data))
         case "structured_input":
-            self = .structuredInput(try ChatKitJSON.decoder.decode(ChatKitStructuredInputItem.self, from: data))
+            self = try .structuredInput(ChatKitJSON.decoder.decode(ChatKitStructuredInputItem.self, from: data))
         case "task":
-            self = .task(try ChatKitJSON.decoder.decode(ChatKitTaskItem.self, from: data))
+            self = try .task(ChatKitJSON.decoder.decode(ChatKitTaskItem.self, from: data))
         case "workflow":
-            self = .workflow(try ChatKitJSON.decoder.decode(ChatKitWorkflowItem.self, from: data))
+            self = try .workflow(ChatKitJSON.decoder.decode(ChatKitWorkflowItem.self, from: data))
         case "end_of_turn":
-            self = .endOfTurn(try ChatKitJSON.decoder.decode(ChatKitEndOfTurnItem.self, from: data))
+            self = try .endOfTurn(ChatKitJSON.decoder.decode(ChatKitEndOfTurnItem.self, from: data))
         case "hidden_context_item":
-            self = .hiddenContext(try ChatKitJSON.decoder.decode(ChatKitHiddenContextItem.self, from: data))
+            self = try .hiddenContext(ChatKitJSON.decoder.decode(ChatKitHiddenContextItem.self, from: data))
         case "sdk_hidden_context":
-            self = .sdkHiddenContext(try ChatKitJSON.decoder.decode(ChatKitHiddenContextItem.self, from: data))
+            self = try .sdkHiddenContext(ChatKitJSON.decoder.decode(ChatKitHiddenContextItem.self, from: data))
         default:
-            self = .unknown(try ChatKitJSON.decoder.decode(ChatKitUnknownThreadItem.self, from: data))
+            self = try .unknown(ChatKitJSON.decoder.decode(ChatKitUnknownThreadItem.self, from: data))
         }
     }
 

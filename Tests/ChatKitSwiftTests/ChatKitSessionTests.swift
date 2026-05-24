@@ -1,5 +1,5 @@
-import XCTest
 @testable import ChatKitSwift
+import XCTest
 
 @MainActor
 final class ChatKitSessionTests: XCTestCase {
@@ -9,18 +9,18 @@ final class ChatKitSessionTests: XCTestCase {
                 title: "New",
                 id: "thread_1",
                 createdAt: Date(timeIntervalSince1970: 1),
-                items: .init()
+                items: .init(),
             ))),
             .threadItemDone(.init(item: .assistantMessage(.init(
                 id: "msg_1",
                 threadID: "thread_1",
                 createdAt: Date(timeIntervalSince1970: 2),
-                content: [.init(text: "Hello")]
+                content: [.init(text: "Hello")],
             )))),
         ])
-        let session = ChatKitSession(
-            options: .init(api: .custom(url: URL(string: "https://example.com/chatkit")!)),
-            transport: transport
+        let session = try ChatKitSession(
+            options: .init(api: .custom(url: XCTUnwrap(URL(string: "https://example.com/chatkit")))),
+            transport: transport,
         )
 
         try await session.sendUserMessage(text: "Hi")
@@ -37,12 +37,12 @@ final class ChatKitSessionTests: XCTestCase {
                 title: "New",
                 id: "thread_1",
                 createdAt: Date(timeIntervalSince1970: 1),
-                items: .init()
+                items: .init(),
             ))),
         ])
-        let session = ChatKitSession(
-            options: .init(api: .custom(url: URL(string: "https://example.com/chatkit")!)),
-            transport: transport
+        let session = try ChatKitSession(
+            options: .init(api: .custom(url: XCTUnwrap(URL(string: "https://example.com/chatkit")))),
+            transport: transport,
         )
 
         try await session.sendUserMessage(text: "Hi")
@@ -56,19 +56,19 @@ final class ChatKitSessionTests: XCTestCase {
             id: "msg_user_1",
             threadID: "thread_1",
             createdAt: Date(timeIntervalSince1970: 2),
-            content: [.inputText(.init(text: "Hi"))]
+            content: [.inputText(.init(text: "Hi"))],
         ))
         let transport = RecordingTransport(events: [
             .threadCreated(.init(thread: .init(
                 title: "New",
                 id: "thread_1",
                 createdAt: Date(timeIntervalSince1970: 1),
-                items: .init(data: [echoedMessage])
+                items: .init(data: [echoedMessage]),
             ))),
         ])
-        let session = ChatKitSession(
-            options: .init(api: .custom(url: URL(string: "https://example.com/chatkit")!)),
-            transport: transport
+        let session = try ChatKitSession(
+            options: .init(api: .custom(url: XCTUnwrap(URL(string: "https://example.com/chatkit")))),
+            transport: transport,
         )
 
         try await session.sendUserMessage(text: "Hi")
@@ -80,9 +80,9 @@ final class ChatKitSessionTests: XCTestCase {
     func testSendUserMessageKeepsUserMessageAndStoresReadableErrorWhenStreamFails() async throws {
         let errorPayload = Data(#"{"detail":"Invalid token"}"#.utf8)
         let transport = RecordingTransport(error: ChatKitTransportError.httpStatus(401, errorPayload))
-        let session = ChatKitSession(
-            options: .init(api: .custom(url: URL(string: "https://example.com/chatkit")!)),
-            transport: transport
+        let session = try ChatKitSession(
+            options: .init(api: .custom(url: XCTUnwrap(URL(string: "https://example.com/chatkit")))),
+            transport: transport,
         )
 
         do {
@@ -97,9 +97,9 @@ final class ChatKitSessionTests: XCTestCase {
     func testSendUserMessageStoresReadablePayloadErrorWhenStreamEventCannotDecode() async throws {
         let payload = #"{"type":"thread.item.done","item":{"type":"assistant_message","created_at":"not-a-date"}}"#
         let transport = RecordingTransport(error: ChatKitTransportError.eventDecodingFailed(payload: payload, reason: "Invalid ISO-8601 date"))
-        let session = ChatKitSession(
-            options: .init(api: .custom(url: URL(string: "https://example.com/chatkit")!)),
-            transport: transport
+        let session = try ChatKitSession(
+            options: .init(api: .custom(url: XCTUnwrap(URL(string: "https://example.com/chatkit")))),
+            transport: transport,
         )
 
         do {
@@ -110,7 +110,7 @@ final class ChatKitSessionTests: XCTestCase {
         XCTAssertEqual(session.state.userMessageTexts, ["Hi"])
         XCTAssertEqual(
             session.state.error?.message,
-            #"Invalid ChatKit event payload: Invalid ISO-8601 date. Payload: {"type":"thread.item.done","item":{"type":"assistant_message","created_at":"not-a-date"}}"#
+            #"Invalid ChatKit event payload: Invalid ISO-8601 date. Payload: {"type":"thread.item.done","item":{"type":"assistant_message","created_at":"not-a-date"}}"#,
         )
     }
 }
@@ -125,7 +125,7 @@ private actor RecordingTransport: ChatKitTransport {
         self.error = error
     }
 
-    func send(_ request: ChatKitRequest) async throws -> Data {
+    func send(_: ChatKitRequest) async throws -> Data {
         Data("{}".utf8)
     }
 

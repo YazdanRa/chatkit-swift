@@ -13,8 +13,8 @@ struct ChatKitHistoryView: View {
                     Text(thread.title ?? "Untitled thread")
                         .font(.title3)
                         .lineLimit(2)
-                    .padding(.vertical, 6)
-                    .frame(maxWidth: .infinity, alignment: .leading)
+                        .padding(.vertical, 6)
+                        .frame(maxWidth: .infinity, alignment: .leading)
                 }
                 .buttonStyle(.plain)
                 .accessibilityLabel(thread.title ?? "Untitled thread")

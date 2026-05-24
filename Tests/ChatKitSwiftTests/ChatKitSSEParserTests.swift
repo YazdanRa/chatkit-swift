@@ -1,8 +1,8 @@
-import XCTest
 @testable import ChatKitSwift
+import XCTest
 
 final class ChatKitSSEParserTests: XCTestCase {
-    func testParserEmitsJSONPayloadsFromSplitDataFrames() throws {
+    func testParserEmitsJSONPayloadsFromSplitDataFrames() {
         var parser = ChatKitSSEParser()
 
         let first = parser.append("data: {\"type\":\"progress_update\",")
@@ -12,7 +12,7 @@ final class ChatKitSSEParserTests: XCTestCase {
         XCTAssertEqual(second, ["{\"type\":\"progress_update\",\"text\":\"Thinking\"}"])
     }
 
-    func testParserIgnoresCommentsAndConcatenatesMultilineData() throws {
+    func testParserIgnoresCommentsAndConcatenatesMultilineData() {
         var parser = ChatKitSSEParser()
 
         let events = parser.append("""
@@ -25,7 +25,7 @@ final class ChatKitSSEParserTests: XCTestCase {
         XCTAssertEqual(events, ["{\"type\":\"notice\",\n\"level\":\"info\",\"message\":\"Saved\"}"])
     }
 
-    func testParserWaitsForBlankLineBeforeEmittingDataLine() throws {
+    func testParserWaitsForBlankLineBeforeEmittingDataLine() {
         var parser = ChatKitSSEParser()
 
         let first = parser.append("data: {\"type\":\"thread.created\"}\n")
@@ -35,7 +35,7 @@ final class ChatKitSSEParserTests: XCTestCase {
         XCTAssertEqual(second, ["{\"type\":\"thread.created\"}"])
     }
 
-    func testParserFlushesRemainingFrameAtEndOfStream() throws {
+    func testParserFlushesRemainingFrameAtEndOfStream() {
         var parser = ChatKitSSEParser()
 
         let first = parser.append("data: {\"type\":\"stream_options\",\"stream_options\":{\"allow_cancel\":true}}")

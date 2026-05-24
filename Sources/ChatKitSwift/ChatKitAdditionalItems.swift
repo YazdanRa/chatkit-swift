@@ -186,7 +186,8 @@ public struct ChatKitUnknownThreadItem: Codable, Equatable, Sendable {
         threadID = raw["thread_id"]?.stringValue ?? ""
         if let createdAtString = raw["created_at"]?.stringValue,
            let data = "\"\(createdAtString)\"".data(using: .utf8),
-           let date = try? ChatKitJSON.decoder.decode(Date.self, from: data) {
+           let date = try? ChatKitJSON.decoder.decode(Date.self, from: data)
+        {
             createdAt = date
         } else {
             createdAt = .now

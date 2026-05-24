@@ -68,13 +68,13 @@ struct ChatKitStructuredInputView: View {
     private func binding(for id: String) -> Binding<String> {
         Binding(
             get: { answers[id, default: ""] },
-            set: { answers[id] = $0 }
+            set: { answers[id] = $0 },
         )
     }
 
     private func submit() async {
         let payload = ChatKitStructuredInputSubmission(
-            answers: answers.mapValues { .init(values: [$0]) }
+            answers: answers.mapValues { .init(values: [$0]) },
         )
         try? await session.submitStructuredInput(payload, itemID: item.id)
     }
@@ -203,8 +203,8 @@ private struct ChatKitEntitySuggestionButton: View {
                         id: entity.id,
                         group: entity.group,
                         data: entity.data.mapValues(JSONValue.string),
-                        interactive: entity.interactive
-                    ))]
+                        interactive: entity.interactive,
+                    ))],
                 )
             }
         }
@@ -216,7 +216,8 @@ private struct ChatKitEntitySuggestionButton: View {
         .task {
             guard entity.interactive == true,
                   let requestPreview = session.options.entities.onRequestPreview,
-                  preview == nil else {
+                  preview == nil
+            else {
                 return
             }
             preview = try? await requestPreview(entity)
@@ -226,7 +227,7 @@ private struct ChatKitEntitySuggestionButton: View {
     private var previewBinding: Binding<ChatKitWidgetNode?> {
         Binding(
             get: { preview },
-            set: { preview = $0 }
+            set: { preview = $0 },
         )
     }
 }

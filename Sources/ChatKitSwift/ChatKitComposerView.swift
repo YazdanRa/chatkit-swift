@@ -30,7 +30,7 @@ struct ChatKitComposerView: View {
                 ZStack(alignment: .bottomTrailing) {
                     TextField(session.options.composer.placeholder, text: $session.composer.text, axis: .vertical)
                         .textFieldStyle(.plain)
-                        .lineLimit(1...6)
+                        .lineLimit(1 ... 6)
                         .frame(minHeight: 24, alignment: .center)
                         .padding(.leading, 16)
                         .padding(.trailing, 42)
@@ -99,7 +99,7 @@ struct ChatKitComposerView: View {
                 text: text,
                 content: content,
                 reply: reply,
-                attachments: attachments
+                attachments: attachments,
             )
         }
     }

@@ -32,9 +32,9 @@ public enum ChatKitUserMessageContent: Codable, Equatable, Sendable {
 
         switch type {
         case "input_text":
-            self = .inputText(try ChatKitJSON.decoder.decode(ChatKitInputTextContent.self, from: data))
+            self = try .inputText(ChatKitJSON.decoder.decode(ChatKitInputTextContent.self, from: data))
         case "input_tag":
-            self = .inputTag(try ChatKitJSON.decoder.decode(ChatKitInputTagContent.self, from: data))
+            self = try .inputTag(ChatKitJSON.decoder.decode(ChatKitInputTagContent.self, from: data))
         default:
             self = .unknown(type: type, raw: raw)
         }
@@ -158,7 +158,7 @@ public enum ChatKitAttachment: Codable, Equatable, Identifiable, Sendable {
             case id
             case previewURL = "previewUrl"
             case name
-            case mimeType = "mimeType"
+            case mimeType
         }
     }
 
@@ -169,9 +169,9 @@ public enum ChatKitAttachment: Codable, Equatable, Identifiable, Sendable {
 
         switch type {
         case "file":
-            self = .file(try ChatKitJSON.decoder.decode(File.self, from: data))
+            self = try .file(ChatKitJSON.decoder.decode(File.self, from: data))
         case "image":
-            self = .image(try ChatKitJSON.decoder.decode(Image.self, from: data))
+            self = try .image(ChatKitJSON.decoder.decode(Image.self, from: data))
         default:
             self = .unknown(id: raw["id"]?.stringValue ?? UUID().uuidString, type: type, raw: raw)
         }

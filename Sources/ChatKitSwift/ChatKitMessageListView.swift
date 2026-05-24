@@ -33,7 +33,8 @@ struct ChatKitMessageListView: View {
             .scrollContentBackground(.visible)
             .onChange(of: session.state.items.count) {
                 guard session.options.thread.autoScroll,
-                      let lastID = session.state.items.last?.id else {
+                      let lastID = session.state.items.last?.id
+                else {
                     return
                 }
                 if reduceMotion {

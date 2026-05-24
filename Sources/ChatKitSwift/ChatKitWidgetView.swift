@@ -97,7 +97,6 @@ private struct ChatKitWidgetNodeView: View {
         }
     }
 
-    @ViewBuilder
     private var children: some View {
         ForEach(node.children, id: \.stableID) { child in
             ChatKitWidgetNodeView(node: child, item: item, session: session)
@@ -140,7 +139,7 @@ private struct ChatKitWidgetNodeView: View {
     }
 
     @ViewBuilder
-    private func actionButtonOrContent<Content: View>(@ViewBuilder content: () -> Content) -> some View {
+    private func actionButtonOrContent(@ViewBuilder content: () -> some View) -> some View {
         if node.action != nil {
             Button(action: { Task { await performActionIfPossible() } }) {
                 content()

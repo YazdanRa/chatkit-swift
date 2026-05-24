@@ -35,26 +35,26 @@ public struct ChatKitView: View {
     public var body: some View {
         if let session = injectedSession ?? ownedSession {
             #if os(iOS)
-            if session.options.glassEffect {
-                let container = ChatKitContainerView(session: session)
-                    .navigationBarTitleDisplayMode(.inline)
-                    .toolbarBackground(.hidden, for: .navigationBar)
-                    .toolbar {
-                        ChatKitToolbarContent(session: session)
-                    }
+                if session.options.glassEffect {
+                    let container = ChatKitContainerView(session: session)
+                        .navigationBarTitleDisplayMode(.inline)
+                        .toolbarBackground(.hidden, for: .navigationBar)
+                        .toolbar {
+                            ChatKitToolbarContent(session: session)
+                        }
 
-                if session.options.usesNavigationStack {
-                    NavigationStack {
+                    if session.options.usesNavigationStack {
+                        NavigationStack {
+                            container
+                        }
+                    } else {
                         container
                     }
                 } else {
-                    container
+                    ChatKitContainerView(session: session)
                 }
-            } else {
-                ChatKitContainerView(session: session)
-            }
             #else
-            ChatKitContainerView(session: session)
+                ChatKitContainerView(session: session)
             #endif
         }
     }
@@ -73,7 +73,7 @@ private struct ChatKitContainerView: View {
                     session: session,
                     usesCompactHistory: usesCompactHistory,
                     sidebarWidth: min(max(proxy.size.width * 0.32, 240), 340),
-                    includesComposer: false
+                    includesComposer: false,
                 )
                 .safeAreaInset(edge: .bottom, spacing: 0) {
                     if !usesCompactHistory {
@@ -90,7 +90,7 @@ private struct ChatKitContainerView: View {
                         session: session,
                         usesCompactHistory: usesCompactHistory,
                         sidebarWidth: min(max(proxy.size.width * 0.32, 240), 340),
-                        includesComposer: true
+                        includesComposer: true,
                     )
                 }
             }
@@ -105,48 +105,47 @@ private struct ChatKitContainerView: View {
 }
 
 #if os(iOS)
-private struct ChatKitToolbarContent: ToolbarContent {
-    let session: ChatKitSession
+    private struct ChatKitToolbarContent: ToolbarContent {
+        let session: ChatKitSession
 
-    var body: some ToolbarContent {
-        if session.options.header.enabled {
-            ToolbarItemGroup(placement: .topBarLeading) {
-                if let action = session.options.header.leftAction {
-                    Button(action.accessibilityLabel, systemImage: ChatKitStyle.systemImage(for: action.icon), action: action.perform)
+        var body: some ToolbarContent {
+            if session.options.header.enabled {
+                ToolbarItemGroup(placement: .topBarLeading) {
+                    if let action = session.options.header.leftAction {
+                        Button(action.accessibilityLabel, systemImage: ChatKitStyle.systemImage(for: action.icon), action: action.perform)
+                            .labelStyle(.iconOnly)
+                    } else if session.options.history.enabled {
+                        Button("History", systemImage: "line.3.horizontal") {
+                            Task { await toggleHistory() }
+                        }
                         .labelStyle(.iconOnly)
-                } else if session.options.history.enabled {
-                    Button("History", systemImage: "line.3.horizontal") {
-                        Task { await toggleHistory() }
                     }
-                    .labelStyle(.iconOnly)
                 }
+            }
 
+            if session.options.header.enabled || ChatKitComposerControls.showsOptionsMenu(for: session.options) {
+                ToolbarItemGroup(placement: .topBarTrailing) {
+                    if session.options.header.enabled, !session.isHistoryVisible, let action = session.options.header.rightAction {
+                        Button(action.accessibilityLabel, systemImage: ChatKitStyle.systemImage(for: action.icon), action: action.perform)
+                            .labelStyle(.iconOnly)
+                    }
+
+                    if ChatKitComposerControls.showsOptionsMenu(for: session.options) {
+                        ChatKitComposerOptionsMenu(session: session)
+                            .labelStyle(.iconOnly)
+                    }
+                }
             }
         }
 
-        if session.options.header.enabled || ChatKitComposerControls.showsOptionsMenu(for: session.options) {
-            ToolbarItemGroup(placement: .topBarTrailing) {
-                if session.options.header.enabled, !session.isHistoryVisible, let action = session.options.header.rightAction {
-                    Button(action.accessibilityLabel, systemImage: ChatKitStyle.systemImage(for: action.icon), action: action.perform)
-                        .labelStyle(.iconOnly)
-                }
-
-                if ChatKitComposerControls.showsOptionsMenu(for: session.options) {
-                    ChatKitComposerOptionsMenu(session: session)
-                        .labelStyle(.iconOnly)
-                }
+        private func toggleHistory() async {
+            if session.isHistoryVisible {
+                await session.hideHistory()
+            } else {
+                await session.showHistory()
             }
         }
     }
-
-    private func toggleHistory() async {
-        if session.isHistoryVisible {
-            await session.hideHistory()
-        } else {
-            await session.showHistory()
-        }
-    }
-}
 #endif
 
 private struct ChatKitPrimaryContent: View {
@@ -190,7 +189,7 @@ private struct ChatKitConversationBody: View {
     let session: ChatKitSession
 
     var body: some View {
-        if session.state.items.isEmpty && !session.state.isResponding && session.state.error == nil {
+        if session.state.items.isEmpty, !session.state.isResponding, session.state.error == nil {
             ChatKitStartScreenView(session: session)
         } else {
             ChatKitMessageListView(session: session)

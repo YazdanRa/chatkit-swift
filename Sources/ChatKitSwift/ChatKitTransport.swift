@@ -54,7 +54,8 @@ extension ChatKitTransportError: LocalizedError {
                 return message
             }
             if let error = object["error"] as? [String: Any],
-               let message = firstString(in: error, keys: ["detail", "message", "error"]) {
+               let message = firstString(in: error, keys: ["detail", "message", "error"])
+            {
                 return message
             }
         }
@@ -67,7 +68,8 @@ extension ChatKitTransportError: LocalizedError {
     private static func firstString(in object: [String: Any], keys: [String]) -> String? {
         for key in keys {
             if let value = object[key] as? String,
-               !value.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+               !value.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+            {
                 return value
             }
         }

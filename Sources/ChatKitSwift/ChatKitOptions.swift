@@ -45,7 +45,7 @@ public struct ChatKitOptions: Sendable {
         entities: Entities = .init(),
         widgets: Widgets = .init(),
         thread: Thread = .init(),
-        events: ChatKitEventHandlers = .init()
+        events: ChatKitEventHandlers = .init(),
     ) {
         self.api = api
         self.locale = locale
@@ -179,7 +179,7 @@ public struct ChatKitOptions: Sendable {
             attachments: AttachmentConfiguration? = nil,
             tools: [ToolOption] = [],
             models: [ModelOption] = [],
-            dictation: Dictation? = nil
+            dictation: Dictation? = nil,
         ) {
             self.placeholder = placeholder
             self.attachments = attachments
@@ -201,7 +201,7 @@ public struct ChatKitOptions: Sendable {
             maxSize: AttachmentSizeLimit = .bytes(100 * 1024 * 1024),
             maxCount: Int = 10,
             accept: [String: [String]] = [:],
-            onRequest: (@MainActor @Sendable () -> Void)? = nil
+            onRequest: (@MainActor @Sendable () -> Void)? = nil,
         ) {
             self.enabled = enabled
             self.maxSize = maxSize
@@ -285,7 +285,7 @@ public struct ChatKitOptions: Sendable {
             onTagSearch: (@Sendable (String) async throws -> [ChatKitEntity])? = nil,
             showComposerMenu: Bool = false,
             onClick: (@Sendable (ChatKitEntity) -> Void)? = nil,
-            onRequestPreview: (@Sendable (ChatKitEntity) async throws -> ChatKitWidgetNode?)? = nil
+            onRequestPreview: (@Sendable (ChatKitEntity) async throws -> ChatKitWidgetNode?)? = nil,
         ) {
             self.onTagSearch = onTagSearch
             self.showComposerMenu = showComposerMenu
@@ -524,7 +524,7 @@ public struct ChatKitEventHandlers: Sendable {
         onToolChange: (@Sendable (String?) -> Void)? = nil,
         onLog: (@Sendable (_ name: String, _ data: [String: JSONValue]?) -> Void)? = nil,
         onEffect: (@Sendable (_ name: String, _ data: [String: JSONValue]?) -> Void)? = nil,
-        onDeeplink: (@Sendable (_ name: String, _ data: [String: JSONValue]?) -> Void)? = nil
+        onDeeplink: (@Sendable (_ name: String, _ data: [String: JSONValue]?) -> Void)? = nil,
     ) {
         self.onReady = onReady
         self.onError = onError

@@ -14,7 +14,7 @@ let package = Package(
         // Products define the executables and libraries a package produces, making them visible to other packages.
         .library(
             name: "ChatKitSwift",
-            targets: ["ChatKitSwift"]
+            targets: ["ChatKitSwift"],
         ),
     ],
     dependencies: [
@@ -28,12 +28,12 @@ let package = Package(
             name: "ChatKitSwift",
             dependencies: [
                 .product(name: "Textual", package: "textual"),
-            ]
+            ],
         ),
         .testTarget(
             name: "ChatKitSwiftTests",
-            dependencies: ["ChatKitSwift"]
+            dependencies: ["ChatKitSwift"],
         ),
     ],
-    swiftLanguageModes: [.v6]
+    swiftLanguageModes: [.v6],
 )

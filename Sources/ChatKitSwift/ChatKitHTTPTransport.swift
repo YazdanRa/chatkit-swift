@@ -71,7 +71,7 @@ public struct ChatKitHTTPTransport: ChatKitTransport {
 
     private func makeURLRequest(for request: ChatKitRequest, acceptsStream: Bool) async throws -> URLRequest {
         let body = try ChatKitJSON.encoder.encode(request)
-        var urlRequest = URLRequest(url: try await endpointURL())
+        var urlRequest = try await URLRequest(url: endpointURL())
         urlRequest.httpMethod = "POST"
         urlRequest.httpBody = body
         urlRequest.setValue("application/json", forHTTPHeaderField: "Content-Type")
@@ -110,7 +110,7 @@ public struct ChatKitHTTPTransport: ChatKitTransport {
             throw ChatKitTransportError.invalidResponse
         }
 
-        guard (200..<300).contains(response.statusCode) else {
+        guard (200 ..< 300).contains(response.statusCode) else {
             throw ChatKitTransportError.httpStatus(response.statusCode, data)
         }
     }
@@ -118,14 +118,14 @@ public struct ChatKitHTTPTransport: ChatKitTransport {
     private func yieldEvents(
         from chunk: String,
         parser: inout ChatKitSSEParser,
-        to continuation: AsyncThrowingStream<ChatKitEvent, Error>.Continuation
+        to continuation: AsyncThrowingStream<ChatKitEvent, Error>.Continuation,
     ) throws {
         try yieldEvents(parser.append(chunk), to: continuation)
     }
 
     private func yieldEvents(
         _ payloads: [String],
-        to continuation: AsyncThrowingStream<ChatKitEvent, Error>.Continuation
+        to continuation: AsyncThrowingStream<ChatKitEvent, Error>.Continuation,
     ) throws {
         for payload in payloads {
             try yieldEvent(from: payload, to: continuation)
@@ -137,7 +137,7 @@ public struct ChatKitHTTPTransport: ChatKitTransport {
             throw ChatKitTransportError.invalidPayload(payload)
         }
         do {
-            continuation.yield(try ChatKitJSON.decoder.decode(ChatKitEvent.self, from: data))
+            try continuation.yield(ChatKitJSON.decoder.decode(ChatKitEvent.self, from: data))
         } catch {
             throw ChatKitTransportError.eventDecodingFailed(payload: payload, reason: error.localizedDescription)
         }

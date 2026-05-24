@@ -1,5 +1,5 @@
-import XCTest
 @testable import ChatKitSwift
+import XCTest
 
 final class ChatKitProtocolTests: XCTestCase {
     func testDecodesThreadCreatedWithServerTimestamp() throws {
@@ -45,7 +45,8 @@ final class ChatKitProtocolTests: XCTestCase {
         let event = try ChatKitJSON.decoder.decode(ChatKitEvent.self, from: data)
 
         guard case let .threadItemDone(done) = event,
-              case let .userMessage(message) = done.item else {
+              case let .userMessage(message) = done.item
+        else {
             return XCTFail("Expected user thread.item.done")
         }
         XCTAssertEqual(message.id, "msg_9af59887")
@@ -111,11 +112,13 @@ final class ChatKitProtocolTests: XCTestCase {
         XCTAssertEqual(streamOptionsEvent, .streamOptions(.init(streamOptions: .init(allowCancel: true))))
 
         guard case let .threadItemUpdated(contentAdded) = contentAddedEvent,
-              case let .assistantMessageContentPartAdded(added) = contentAdded.update else {
+              case let .assistantMessageContentPartAdded(added) = contentAdded.update
+        else {
             return XCTFail("Expected assistant content part added")
         }
         guard case let .threadItemUpdated(contentDone) = contentDoneEvent,
-              case let .assistantMessageContentPartDone(done) = contentDone.update else {
+              case let .assistantMessageContentPartDone(done) = contentDone.update
+        else {
             return XCTFail("Expected assistant content part done")
         }
         XCTAssertEqual(contentAdded.itemID, "msg_0840b7cadc11da96006a1229a4edb48193930356d0ddd10ec4")
@@ -156,11 +159,13 @@ final class ChatKitProtocolTests: XCTestCase {
         let doneEvent = try ChatKitJSON.decoder.decode(ChatKitEvent.self, from: doneData)
 
         guard case let .threadItemAdded(added) = addedEvent,
-              case let .assistantMessage(addedMessage) = added.item else {
+              case let .assistantMessage(addedMessage) = added.item
+        else {
             return XCTFail("Expected assistant thread.item.added")
         }
         guard case let .threadItemDone(done) = doneEvent,
-              case let .assistantMessage(doneMessage) = done.item else {
+              case let .assistantMessage(doneMessage) = done.item
+        else {
             return XCTFail("Expected assistant thread.item.done")
         }
         XCTAssertEqual(addedMessage.content, [])
@@ -174,9 +179,9 @@ final class ChatKitProtocolTests: XCTestCase {
                     content: [.inputText(.init(text: "Hello"))],
                     attachments: [],
                     quotedText: nil,
-                    inferenceOptions: .init(toolChoice: .init(id: "search"), model: "gpt-5.1")
-                )
-            )
+                    inferenceOptions: .init(toolChoice: .init(id: "search"), model: "gpt-5.1"),
+                ),
+            ),
         )
 
         let data = try ChatKitJSON.encoder.encode(request)

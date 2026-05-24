@@ -11,7 +11,7 @@ public struct ChatKitSSEParser: Sendable {
         var payloads: [String] = []
         while let range = buffer.range(of: #"\r?\n[ \t\r]*\r?\n"#, options: .regularExpression) {
             let frame = String(buffer[..<range.lowerBound])
-            buffer.removeSubrange(buffer.startIndex..<range.upperBound)
+            buffer.removeSubrange(buffer.startIndex ..< range.upperBound)
 
             appendPayload(from: frame, to: &payloads)
         }

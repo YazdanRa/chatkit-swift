@@ -6,9 +6,10 @@ This repository contains a standalone Swift package at the repository root. The 
 
 - macOS with Xcode and the Swift 6.3 toolchain
 - Git
+- Prek, SwiftLint 0.63.2, and SwiftFormat 0.61.1 when running hooks locally
 - Network access only if future dependencies or backend integration tests require it
 
-No Makefile, SwiftLint config, SwiftFormat config, or PR template is currently present. If those are added later, run the repo-specific checks before opening a pull request.
+No Makefile, SwiftFormat config, or PR template is currently present. If those config files are added later, run the repo-specific checks before opening a pull request.
 
 ## Setup
 
@@ -74,6 +75,7 @@ Tests/ChatKitSwiftTests/
 ## Code Standards
 
 - Use SwiftUI and Swift concurrency directly. Do not add UIKit or AppKit dependencies to the package unless there is a deliberate platform-specific API boundary.
+- SwiftLint uses `.swiftlint.baseline` for existing violations so hook adoption does not require unrelated source churn. Pull requests run `prek run --all-files` in GitHub Actions.
 - Keep observable UI state in `@Observable` main-actor models or SwiftUI value state.
 - Keep public API types `Sendable` where possible.
 - Preserve unknown protocol fields with `JSONValue` or raw payload storage when compatibility matters.

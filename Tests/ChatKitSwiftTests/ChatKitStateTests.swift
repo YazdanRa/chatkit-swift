@@ -1,5 +1,5 @@
-import XCTest
 @testable import ChatKitSwift
+import XCTest
 
 final class ChatKitStateTests: XCTestCase {
     func testAppliesThreadAndAssistantMessageEvents() {
@@ -11,20 +11,20 @@ final class ChatKitStateTests: XCTestCase {
             status: .active(.init()),
             allowedImageDomains: nil,
             metadata: [:],
-            items: .init(data: [], hasMore: false, after: nil)
+            items: .init(data: [], hasMore: false, after: nil),
         )
         let message = ChatKitAssistantMessageItem(
             id: "msg_1",
             threadID: "thread_1",
             createdAt: Date(timeIntervalSince1970: 2),
-            content: [.init(text: "Hi", annotations: [])]
+            content: [.init(text: "Hi", annotations: [])],
         )
 
         state.apply(.threadCreated(.init(thread: thread)))
         state.apply(.threadItemAdded(.init(item: .assistantMessage(message))))
         state.apply(.threadItemUpdated(.init(
             itemID: "msg_1",
-            update: .assistantMessageContentPartTextDelta(.init(contentIndex: 0, delta: " there"))
+            update: .assistantMessageContentPartTextDelta(.init(contentIndex: 0, delta: " there")),
         )))
         state.apply(.threadItemDone(.init(item: .assistantMessage(message.appendingText(" there")))))
 

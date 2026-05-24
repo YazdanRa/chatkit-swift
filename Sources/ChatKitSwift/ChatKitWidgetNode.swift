@@ -84,7 +84,7 @@ public struct ChatKitWidgetNode: Codable, Equatable, Identifiable, Sendable {
                 type: object["type"]?.stringValue ?? "Unknown",
                 key: object["key"]?.stringValue,
                 id: object["id"]?.stringValue,
-                raw: object
+                raw: object,
             )
         }
     }
@@ -100,7 +100,8 @@ public struct ChatKitWidgetNode: Codable, Equatable, Identifiable, Sendable {
     /// Returns an action stored under a specific raw widget key.
     public func action(named key: String) -> ChatKitAction? {
         guard case let .object(object)? = raw[key],
-              let type = object["type"]?.stringValue else {
+              let type = object["type"]?.stringValue
+        else {
             return nil
         }
 

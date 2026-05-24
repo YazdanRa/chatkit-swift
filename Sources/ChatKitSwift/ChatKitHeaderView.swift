@@ -27,8 +27,6 @@ struct ChatKitHeaderView: View {
                         Capsule()
                             .stroke(.tertiary)
                     }
-            } else {
-                EmptyView()
             }
 
             Spacer()

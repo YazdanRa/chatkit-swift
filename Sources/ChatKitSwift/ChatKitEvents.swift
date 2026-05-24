@@ -27,29 +27,29 @@ public enum ChatKitEvent: Codable, Equatable, Sendable {
 
         switch type {
         case "thread.created":
-            self = .threadCreated(try ChatKitJSON.decoder.decode(ThreadCreated.self, from: data))
+            self = try .threadCreated(ChatKitJSON.decoder.decode(ThreadCreated.self, from: data))
         case "thread.updated":
-            self = .threadUpdated(try ChatKitJSON.decoder.decode(ThreadUpdated.self, from: data))
+            self = try .threadUpdated(ChatKitJSON.decoder.decode(ThreadUpdated.self, from: data))
         case "thread.item.added":
-            self = .threadItemAdded(try ChatKitJSON.decoder.decode(ThreadItemAdded.self, from: data))
+            self = try .threadItemAdded(ChatKitJSON.decoder.decode(ThreadItemAdded.self, from: data))
         case "thread.item.updated":
-            self = .threadItemUpdated(try ChatKitJSON.decoder.decode(ThreadItemUpdated.self, from: data))
+            self = try .threadItemUpdated(ChatKitJSON.decoder.decode(ThreadItemUpdated.self, from: data))
         case "thread.item.done":
-            self = .threadItemDone(try ChatKitJSON.decoder.decode(ThreadItemDone.self, from: data))
+            self = try .threadItemDone(ChatKitJSON.decoder.decode(ThreadItemDone.self, from: data))
         case "thread.item.removed":
-            self = .threadItemRemoved(try ChatKitJSON.decoder.decode(ThreadItemRemoved.self, from: data))
+            self = try .threadItemRemoved(ChatKitJSON.decoder.decode(ThreadItemRemoved.self, from: data))
         case "thread.item.replaced":
-            self = .threadItemReplaced(try ChatKitJSON.decoder.decode(ThreadItemReplaced.self, from: data))
+            self = try .threadItemReplaced(ChatKitJSON.decoder.decode(ThreadItemReplaced.self, from: data))
         case "stream_options":
-            self = .streamOptions(try ChatKitJSON.decoder.decode(StreamOptionsEvent.self, from: data))
+            self = try .streamOptions(ChatKitJSON.decoder.decode(StreamOptionsEvent.self, from: data))
         case "progress_update":
-            self = .progressUpdate(try ChatKitJSON.decoder.decode(ProgressUpdate.self, from: data))
+            self = try .progressUpdate(ChatKitJSON.decoder.decode(ProgressUpdate.self, from: data))
         case "client_effect":
-            self = .clientEffect(try ChatKitJSON.decoder.decode(ClientEffect.self, from: data))
+            self = try .clientEffect(ChatKitJSON.decoder.decode(ClientEffect.self, from: data))
         case "error":
-            self = .error(try ChatKitJSON.decoder.decode(ErrorEvent.self, from: data))
+            self = try .error(ChatKitJSON.decoder.decode(ErrorEvent.self, from: data))
         case "notice":
-            self = .notice(try ChatKitJSON.decoder.decode(Notice.self, from: data))
+            self = try .notice(ChatKitJSON.decoder.decode(Notice.self, from: data))
         default:
             self = .unknown(type: type, raw: raw)
         }
@@ -235,25 +235,25 @@ public enum ChatKitThreadItemUpdate: Codable, Equatable, Sendable {
 
         switch type {
         case "assistant_message.content_part.added":
-            self = .assistantMessageContentPartAdded(try ChatKitJSON.decoder.decode(AssistantMessageContentPartAdded.self, from: data))
+            self = try .assistantMessageContentPartAdded(ChatKitJSON.decoder.decode(AssistantMessageContentPartAdded.self, from: data))
         case "assistant_message.content_part.text_delta":
-            self = .assistantMessageContentPartTextDelta(try ChatKitJSON.decoder.decode(AssistantMessageContentPartTextDelta.self, from: data))
+            self = try .assistantMessageContentPartTextDelta(ChatKitJSON.decoder.decode(AssistantMessageContentPartTextDelta.self, from: data))
         case "assistant_message.content_part.annotation_added":
-            self = .assistantMessageContentPartAnnotationAdded(try ChatKitJSON.decoder.decode(AssistantMessageContentPartAnnotationAdded.self, from: data))
+            self = try .assistantMessageContentPartAnnotationAdded(ChatKitJSON.decoder.decode(AssistantMessageContentPartAnnotationAdded.self, from: data))
         case "assistant_message.content_part.done":
-            self = .assistantMessageContentPartDone(try ChatKitJSON.decoder.decode(AssistantMessageContentPartDone.self, from: data))
+            self = try .assistantMessageContentPartDone(ChatKitJSON.decoder.decode(AssistantMessageContentPartDone.self, from: data))
         case "widget.streaming_text.value_delta":
-            self = .widgetStreamingTextValueDelta(try ChatKitJSON.decoder.decode(WidgetStreamingTextValueDelta.self, from: data))
+            self = try .widgetStreamingTextValueDelta(ChatKitJSON.decoder.decode(WidgetStreamingTextValueDelta.self, from: data))
         case "widget.root.updated":
-            self = .widgetRootUpdated(try ChatKitJSON.decoder.decode(WidgetRootUpdated.self, from: data))
+            self = try .widgetRootUpdated(ChatKitJSON.decoder.decode(WidgetRootUpdated.self, from: data))
         case "widget.component.updated":
-            self = .widgetComponentUpdated(try ChatKitJSON.decoder.decode(WidgetComponentUpdated.self, from: data))
+            self = try .widgetComponentUpdated(ChatKitJSON.decoder.decode(WidgetComponentUpdated.self, from: data))
         case "workflow.task.added":
-            self = .workflowTaskAdded(try ChatKitJSON.decoder.decode(GenericIndexedUpdate.self, from: data))
+            self = try .workflowTaskAdded(ChatKitJSON.decoder.decode(GenericIndexedUpdate.self, from: data))
         case "workflow.task.updated":
-            self = .workflowTaskUpdated(try ChatKitJSON.decoder.decode(GenericIndexedUpdate.self, from: data))
+            self = try .workflowTaskUpdated(ChatKitJSON.decoder.decode(GenericIndexedUpdate.self, from: data))
         case "generated_image.updated":
-            self = .generatedImageUpdated(try ChatKitJSON.decoder.decode(GeneratedImageUpdated.self, from: data))
+            self = try .generatedImageUpdated(ChatKitJSON.decoder.decode(GeneratedImageUpdated.self, from: data))
         default:
             self = .unknown(type: type, raw: raw)
         }

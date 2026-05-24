@@ -20,7 +20,7 @@ struct DynamicCodingKey: CodingKey {
     }
 }
 
-extension Dictionary where Key == String, Value == JSONValue {
+extension [String: JSONValue] {
     var foundationObject: [String: Any] {
         mapValues(\.foundationObject)
     }
@@ -67,7 +67,7 @@ extension ChatKitWidgetNode {
                 type: object["type"]?.stringValue ?? "Unknown",
                 key: object["key"]?.stringValue,
                 id: object["id"]?.stringValue,
-                raw: object
+                raw: object,
             )
             return .object(node.appendingText(text, componentID: componentID).raw)
         })
@@ -93,7 +93,7 @@ extension ChatKitWidgetNode {
                 type: object["type"]?.stringValue ?? "Unknown",
                 key: object["key"]?.stringValue,
                 id: object["id"]?.stringValue,
-                raw: object
+                raw: object,
             )
             return .object(node.replacingComponent(component, componentID: componentID).raw)
         })

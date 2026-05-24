@@ -16,7 +16,7 @@ public struct ChatKitComposerState: Equatable, Sendable {
         attachments: [ChatKitAttachment] = [],
         files: [ChatKitLocalFile] = [],
         selectedToolID: String? = nil,
-        selectedModelID: String? = nil
+        selectedModelID: String? = nil,
     ) {
         self.text = text
         self.content = content

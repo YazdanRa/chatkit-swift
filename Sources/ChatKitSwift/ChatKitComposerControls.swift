@@ -33,7 +33,7 @@ struct ChatKitComposerOptionsMenu: View {
                             Task {
                                 await session.setComposerValue(
                                     text: tool.placeholderOverride ?? session.composer.text,
-                                    selectedToolID: tool.id
+                                    selectedToolID: tool.id,
                                 )
                             }
                         }
