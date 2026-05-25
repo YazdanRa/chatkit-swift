@@ -461,7 +461,10 @@ public enum ChatKitAPI: Sendable {
     /// The secret provider receives the currently cached secret, if any, and should
     /// return a valid replacement from your server. Do not embed provider API keys in
     /// the app.
-    public static func hosted(getClientSecret: @escaping @Sendable (_ currentClientSecret: String?) async throws -> String, endpoint: URL = URL(string: "https://api.openai.com/v1/chatkit")!) -> ChatKitAPI {
+    public static func hosted(
+        getClientSecret: @escaping @Sendable (_ currentClientSecret: String?) async throws -> String,
+        endpoint: URL = URL(string: "https://api.openai.com/v1/chatkit/conversation")!,
+    ) -> ChatKitAPI {
         .hosted(.init(endpoint: endpoint, getClientSecret: getClientSecret))
     }
 }
