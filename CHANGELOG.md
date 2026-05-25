@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.3.0](https://github.com/YazdanRa/chatkit-swift/compare/v1.2.0...v1.3.0) (2026-05-25)
+
+
+### Features
+
+* **widgets:** add native ChatKit component rendering ([beae8dc](https://github.com/YazdanRa/chatkit-swift/commit/beae8dccfb989e42c2f054a10de057623aa7d259))
+
 ## [1.2.0](https://github.com/YazdanRa/chatkit-swift/compare/v1.1.0...v1.2.0) (2026-05-25)
 
 
