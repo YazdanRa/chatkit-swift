@@ -172,6 +172,37 @@ final class ChatKitProtocolTests: XCTestCase {
         XCTAssertEqual(doneMessage.content.map(\.text).joined(), "Hi! How can I help?")
     }
 
+    func testDecodesWorkflowThreadItemAddedWithReasoningPayload() throws {
+        let data = """
+        {
+          "type": "thread.item.added",
+          "item": {
+            "id": "cti_6a13cd073-da88190a924d574944-fa4bf02d4b2aa45881f18",
+            "thread_id": "cthr_6a13cd041ca481908fefd-d66331d772e02d4b2aa45881f18",
+            "created_at": "2026-05-25T04:16:07.240947Z",
+            "type": "workflow",
+            "workflow": {
+              "type": "reasoning",
+              "tasks": [],
+              "expanded": false
+            },
+            "response_items": []
+          }
+        }
+        """.data(using: .utf8)!
+
+        let event = try ChatKitJSON.decoder.decode(ChatKitEvent.self, from: data)
+
+        guard case let .threadItemAdded(added) = event,
+              case let .workflow(workflow) = added.item
+        else {
+            return XCTFail("Expected workflow thread.item.added")
+        }
+        XCTAssertEqual(workflow.id, "cti_6a13cd073-da88190a924d574944-fa4bf02d4b2aa45881f18")
+        XCTAssertEqual(workflow.threadID, "cthr_6a13cd041ca481908fefd-d66331d772e02d4b2aa45881f18")
+        XCTAssertEqual(workflow.workflow["type"], .string("reasoning"))
+    }
+
     func testEncodesCreateThreadRequestWithSnakeCasePayload() throws {
         let request = ChatKitRequest.threadsCreate(
             .init(

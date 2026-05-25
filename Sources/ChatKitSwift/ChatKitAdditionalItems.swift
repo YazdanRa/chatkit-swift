@@ -90,6 +90,14 @@ public struct ChatKitGeneratedImageItem: Codable, Equatable, Sendable {
         public var id: String
         public var url: URL
     }
+
+    private enum CodingKeys: String, CodingKey {
+        case type
+        case id
+        case threadID = "threadId"
+        case createdAt
+        case image
+    }
 }
 
 public struct ChatKitStructuredInputItem: Codable, Equatable, Sendable {
@@ -112,6 +120,15 @@ public struct ChatKitStructuredInputItem: Codable, Equatable, Sendable {
         public struct Option: Codable, Equatable, Sendable {
             public var value: String
         }
+    }
+
+    private enum CodingKeys: String, CodingKey {
+        case type
+        case id
+        case threadID = "threadId"
+        case createdAt
+        case status
+        case inputs
     }
 }
 
@@ -147,6 +164,14 @@ public struct ChatKitTaskItem: Codable, Equatable, Sendable {
     public var threadID: String
     public var createdAt: Date
     public var task: [String: JSONValue]
+
+    private enum CodingKeys: String, CodingKey {
+        case type
+        case id
+        case threadID = "threadId"
+        case createdAt
+        case task
+    }
 }
 
 public struct ChatKitWorkflowItem: Codable, Equatable, Sendable {
@@ -155,6 +180,14 @@ public struct ChatKitWorkflowItem: Codable, Equatable, Sendable {
     public var threadID: String
     public var createdAt: Date
     public var workflow: [String: JSONValue]
+
+    private enum CodingKeys: String, CodingKey {
+        case type
+        case id
+        case threadID = "threadId"
+        case createdAt
+        case workflow
+    }
 }
 
 public struct ChatKitEndOfTurnItem: Codable, Equatable, Sendable {
@@ -162,6 +195,13 @@ public struct ChatKitEndOfTurnItem: Codable, Equatable, Sendable {
     public var id: String
     public var threadID: String
     public var createdAt: Date
+
+    private enum CodingKeys: String, CodingKey {
+        case type
+        case id
+        case threadID = "threadId"
+        case createdAt
+    }
 }
 
 public struct ChatKitHiddenContextItem: Codable, Equatable, Sendable {
@@ -170,6 +210,14 @@ public struct ChatKitHiddenContextItem: Codable, Equatable, Sendable {
     public var threadID: String
     public var createdAt: Date
     public var content: String
+
+    private enum CodingKeys: String, CodingKey {
+        case type
+        case id
+        case threadID = "threadId"
+        case createdAt
+        case content
+    }
 }
 
 public struct ChatKitUnknownThreadItem: Codable, Equatable, Sendable {
