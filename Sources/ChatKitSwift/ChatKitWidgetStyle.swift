@@ -1,6 +1,7 @@
 import Foundation
 import SwiftUI
 
+/// Semantic widget tone used to translate backend color tokens into SwiftUI colors.
 enum ChatKitWidgetTone: Equatable {
     case primary
     case secondary
@@ -31,6 +32,7 @@ enum ChatKitWidgetTone: Equatable {
         }
     }
 
+    /// Foreground color for solid controls and badges.
     var foreground: Color {
         switch self {
         case .primary, .discovery, .success, .warning, .danger:
@@ -40,6 +42,7 @@ enum ChatKitWidgetTone: Equatable {
         }
     }
 
+    /// Background color for solid controls and badges.
     var solidBackground: Color {
         switch self {
         case .primary:
@@ -59,10 +62,12 @@ enum ChatKitWidgetTone: Equatable {
         }
     }
 
+    /// Low-emphasis background color for outline and soft widget treatments.
     var softBackground: Color {
         solidBackground.opacity(0.16)
     }
 
+    /// Low-emphasis foreground color for outline and soft widget treatments.
     var softForeground: Color {
         switch self {
         case .primary:
@@ -83,7 +88,9 @@ enum ChatKitWidgetTone: Equatable {
     }
 }
 
+/// Converts backend widget size tokens into SwiftUI layout values.
 enum ChatKitWidgetMetrics {
+    /// Resolves a JSON spacing token or numeric value into points.
     static func spacing(_ value: JSONValue?) -> CGFloat? {
         switch value {
         case let .number(number):
@@ -95,6 +102,7 @@ enum ChatKitWidgetMetrics {
         }
     }
 
+    /// Resolves named spacing tokens, pixel strings, and numeric strings.
     static func spacing(_ token: String) -> CGFloat? {
         let trimmed = token.trimmingCharacters(in: .whitespacesAndNewlines)
         if trimmed.hasSuffix("px") {
@@ -118,6 +126,7 @@ enum ChatKitWidgetMetrics {
         }
     }
 
+    /// Resolves scalar or directional padding objects into edge insets.
     static func insets(_ value: JSONValue?, fallback: CGFloat = 0) -> EdgeInsets {
         guard case let .object(object)? = value else {
             let spacing = spacing(value) ?? fallback
@@ -134,6 +143,7 @@ enum ChatKitWidgetMetrics {
         )
     }
 
+    /// Resolves backend radius tokens into SwiftUI corner radii.
     static func radius(_ value: JSONValue?) -> CGFloat {
         switch value {
         case let .number(number):
@@ -161,6 +171,7 @@ enum ChatKitWidgetMetrics {
         }
     }
 
+    /// Maps compact and large widget size tokens to native control sizes.
     static func controlSize(_ token: String?) -> ControlSize {
         switch token {
         case "3xs", "2xs", "xs", "sm":
@@ -172,6 +183,7 @@ enum ChatKitWidgetMetrics {
         }
     }
 
+    /// Maps widget icon size tokens to native SwiftUI fonts.
     static func iconFont(_ token: String?) -> Font {
         switch token {
         case "xs":
@@ -190,6 +202,7 @@ enum ChatKitWidgetMetrics {
     }
 }
 
+/// Normalized chart datum used by the built-in bar chart renderer.
 struct ChatKitWidgetChartPoint: Equatable, Identifiable {
     var id: String {
         label
@@ -199,6 +212,7 @@ struct ChatKitWidgetChartPoint: Equatable, Identifiable {
     var value: Double
     var colorToken: String?
 
+    /// Extracts chart points from either a `data` or `points` array on the node.
     static func points(in node: ChatKitWidgetNode) -> [ChatKitWidgetChartPoint] {
         let values: [JSONValue] = if case let .array(data)? = node.raw["data"] {
             data
@@ -229,26 +243,32 @@ struct ChatKitWidgetChartPoint: Equatable, Identifiable {
 }
 
 extension ChatKitWidgetNode {
+    /// Returns a raw string field from the widget payload.
     func string(_ key: String) -> String? {
         raw[key]?.stringValue
     }
 
+    /// Returns whether a raw boolean field is explicitly true.
     func bool(_ key: String) -> Bool {
         raw[key]?.boolValue == true
     }
 
+    /// Returns a raw numeric field from the widget payload.
     func number(_ key: String) -> Double? {
         raw[key]?.numberValue
     }
 
+    /// Returns a raw array field, or an empty array when missing or mismatched.
     func array(_ key: String) -> [JSONValue] {
         raw[key]?.arrayValue ?? []
     }
 
+    /// Returns a raw object field from the widget payload.
     func object(_ key: String) -> [String: JSONValue]? {
         raw[key]?.objectValue
     }
 
+    /// Resolves a raw widget color field against the current SwiftUI color scheme.
     func color(_ key: String, colorScheme: SwiftUI.ColorScheme) -> Color? {
         ChatKitWidgetColor.color(raw[key], colorScheme: colorScheme)
     }
@@ -272,7 +292,9 @@ extension JSONValue {
     }
 }
 
+/// Resolves widget color tokens, hex strings, and light/dark color objects.
 enum ChatKitWidgetColor {
+    /// Resolves a JSON color value, including `{ light, dark }` objects.
     static func color(_ value: JSONValue?, colorScheme: SwiftUI.ColorScheme) -> Color? {
         switch value {
         case let .string(token):
@@ -285,6 +307,7 @@ enum ChatKitWidgetColor {
         }
     }
 
+    /// Resolves a semantic tone or CSS-style hex string into a SwiftUI color.
     static func color(_ token: String?) -> Color? {
         guard let token else {
             return nil
@@ -297,6 +320,7 @@ enum ChatKitWidgetColor {
 }
 
 extension Color {
+    /// Creates a color from a 6- or 8-digit widget hex string.
     init?(chatKitHex: String) {
         let value = chatKitHex.trimmingCharacters(in: CharacterSet.alphanumerics.inverted)
         guard value.count == 6 || value.count == 8,

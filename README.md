@@ -395,10 +395,41 @@ let options = ChatKitOptions(
 
 ### Widgets
 
-Widget payloads are decoded as `ChatKitWidgetNode`, preserving unknown fields in `raw` so the client can render known nodes and remain forward-compatible with newer protocol fields.
-ChatKitSwift renders the official ChatKit widget component set natively in SwiftUI, including cards, list views, text, markdown, badges, icons, images, buttons, layout rows/columns, dividers, spacers, inputs, text areas, selects, date pickers, checkboxes, radio groups, labels, tables, table rows, table cells, and transitions. OpenAI widget icon names are translated to SF Symbols, while semantic widget colors and light/dark theme color objects are translated to native SwiftUI colors.
+Widget payloads are assistant response items that describe UI as a tree of
+`ChatKitWidgetNode` values. ChatKitSwift decodes each node, keeps unknown fields
+in `raw`, and renders the supported components directly in SwiftUI.
 
-The official JavaScript package does not currently expose a dedicated `Chart` widget component. ChatKitSwift still includes a small native bar-chart renderer for chart-like payloads that use `Chart` or `BarChart` with `data`/`points` arrays, so custom backends can display simple native charts without falling back to raw JSON.
+The native renderer covers the official ChatKit components used for layout,
+content, and interaction: `Basic`, `Box`, `Row`, `Col`, `Card`, `ListView`,
+`ListViewItem`, `Title`, `Caption`, `Text`, `Markdown`, `Badge`, `Icon`,
+`Image`, `Button`, `Divider`, `Spacer`, `Form`, `Input`, `Textarea`, `Select`,
+`DatePicker`, `Checkbox`, `RadioGroup`, `Label`, `Table`, `Table.Row`,
+`Table.Cell`, and `Transition`.
+
+OpenAI icon names are mapped to SF Symbols when a native equivalent is known.
+`lucide:`-prefixed names use the same mapping after the prefix is removed.
+Unmapped values are passed through as SF Symbol names, so package users can also
+send symbols such as `doc.text` or `magnifyingglass` directly.
+
+Colors can be semantic tokens such as `primary`, `secondary`, `info`,
+`discovery`, `success`, `warning`, and `danger`, or hex values. Widget color
+fields can also be light/dark objects, for example `{ "light": "#111827",
+"dark": "#F9FAFB" }`, and ChatKitSwift resolves them against the current SwiftUI
+color scheme.
+
+Forms and controls use native SwiftUI controls. Buttons, list items, card
+confirm/cancel actions, form submit actions, and control change actions are sent
+to `widgets.onAction` when supplied; otherwise ChatKitSwift sends the custom
+action back to the configured backend. Control change actions include the
+control `name` and current `value` in the action payload.
+
+Tables render natively from `Table`, `Table.Row`, and `Table.Cell` nodes, with
+header rows emphasized and cells laid out as adaptive SwiftUI columns.
+
+The official ChatKit component set does not currently include a dedicated chart
+component, but some backends send chart-like custom payloads. ChatKitSwift
+includes a simple native bar-chart renderer for `Chart` or `BarChart` nodes with
+`data` or `points` arrays containing labels and numeric values.
 
 ```swift
 let options = ChatKitOptions(

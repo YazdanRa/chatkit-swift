@@ -298,7 +298,14 @@ public struct ChatKitOptions: Sendable {
     ///
     /// Widget payloads are streamed from the backend as ``ChatKitWidgetNode`` values.
     /// `onAction` is called when a rendered widget exposes and triggers an action.
+    /// If this callback is `nil`, ChatKitSwift sends the action back through the
+    /// current ``ChatKitSession``.
     public struct Widgets: Sendable {
+        /// Handles a widget action instead of using the default backend forwarding.
+        ///
+        /// Implement this to intercept button, form submit, or input change actions
+        /// in the host app. Input controls include the current field value in the
+        /// action payload before this callback is invoked.
         public var onAction: (@Sendable (ChatKitAction, ChatKitWidgetItem) async throws -> Void)?
 
         public init(onAction: (@Sendable (ChatKitAction, ChatKitWidgetItem) async throws -> Void)? = nil) {

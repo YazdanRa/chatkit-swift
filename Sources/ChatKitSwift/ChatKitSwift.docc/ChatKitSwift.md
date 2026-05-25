@@ -4,7 +4,7 @@ Embed a native SwiftUI chat surface that speaks the OpenAI ChatKit protocol.
 
 ## Overview
 
-ChatKitSwift packages the SwiftUI views, session controller, transport, and Codable protocol models needed to add a ChatKit conversation to an iOS, macOS, or visionOS app. The package keeps OpenAI API keys out of client apps: your app talks to a backend endpoint, and that backend owns user authorization, OpenAI calls, storage, and streamed ChatKit events.
+ChatKitSwift packages the SwiftUI views, session controller, transport, and Codable protocol models needed to add a ChatKit conversation to an iOS, macOS, or visionOS app. It also renders ChatKit widget payloads as native SwiftUI views, including controls, tables, colors, icons, and simple chart-like payloads. The package keeps OpenAI API keys out of client apps: your app talks to a backend endpoint, and that backend owns user authorization, OpenAI calls, storage, and streamed ChatKit events.
 
 Use ``ChatKitView`` when the chat surface can own its own ``ChatKitSession``. Create and inject a ``ChatKitSession`` when the host app needs to load threads, send messages, or update composer state from surrounding UI.
 
@@ -47,6 +47,12 @@ ChatKitSwift is a client package. Production apps should pass user-scoped auth h
 - <doc:Getting-Started>
 - <doc:Backend-Integration>
 - <doc:Composer-Attachments-and-Tools>
+- <doc:Native-Widget-Rendering>
+
+### Widgets
+
+- <doc:Native-Widget-Rendering>
+- ``ChatKitWidgetNode``
 
 ### Core Types
 

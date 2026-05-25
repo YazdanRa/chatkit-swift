@@ -1,6 +1,7 @@
 import SwiftUI
 
 enum ChatKitStyle {
+    /// Resolves the chat surface background from theme surface colors.
     static func background(for theme: ChatKitTheme) -> Color {
         if let background = theme.color.surface?.background {
             return Color(hex: background) ?? .clear
@@ -15,6 +16,7 @@ enum ChatKitStyle {
         }
     }
 
+    /// Resolves the chat surface foreground from theme surface colors.
     static func foreground(for theme: ChatKitTheme) -> Color {
         if let foreground = theme.color.surface?.foreground {
             return Color(hex: foreground) ?? .primary
@@ -22,6 +24,7 @@ enum ChatKitStyle {
         return .primary
     }
 
+    /// Returns the explicit SwiftUI color scheme requested by the theme.
     static func preferredColorScheme(for theme: ChatKitTheme) -> SwiftUI.ColorScheme? {
         switch theme.colorScheme {
         case .light:
@@ -33,6 +36,11 @@ enum ChatKitStyle {
         }
     }
 
+    /// Maps backend or configuration icon names to SF Symbols.
+    ///
+    /// The renderer accepts plain SF Symbol names, common ChatKit icon aliases, and
+    /// `lucide:`-prefixed names. Unknown values pass through unchanged so hosts can
+    /// use native symbols without waiting for a mapping update.
     static func systemImage(for icon: String) -> String {
         let normalized = icon.replacing("lucide:", with: "")
         return iconMap[normalized] ?? normalized
