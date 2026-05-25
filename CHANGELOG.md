@@ -1,5 +1,19 @@
 # Changelog
 
+## [1.2.0](https://github.com/YazdanRa/chatkit-swift/compare/v1.1.0...v1.2.0) (2026-05-25)
+
+
+### Features
+
+* **composer:** add liquid glass styling ([ad16ddf](https://github.com/YazdanRa/chatkit-swift/commit/ad16ddf7da03f72631b3b50b8849bf1e468e406d))
+* **demo:** add ChatKit options sheet ([b150118](https://github.com/YazdanRa/chatkit-swift/commit/b1501184b76bab88647e78bb4f7c457bab795bcd))
+* **example:** add ChatKitSwift demo app ([d038d2d](https://github.com/YazdanRa/chatkit-swift/commit/d038d2dced88bc255bc6898a4c8ae17aee1ba535))
+
+
+### Bug Fixes
+
+* **protocol:** decode additional thread item IDs ([bd44af7](https://github.com/YazdanRa/chatkit-swift/commit/bd44af72bb97ce073f9f269d6483bf4fffb7c6dc))
+
 ## [1.1.0](https://github.com/YazdanRa/chatkit-swift/compare/v1.0.1...v1.1.0) (2026-05-23)
 
 
