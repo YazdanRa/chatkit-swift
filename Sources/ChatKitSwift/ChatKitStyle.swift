@@ -96,7 +96,7 @@ enum ChatKitStyle {
         case "share": "square.and.arrow.up"
         case "dark-mode": "moon"
         case "light-mode": "sun.max"
-        default: "sparkles"
+        default: normalized
         }
     }
 }
