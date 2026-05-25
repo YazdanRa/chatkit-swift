@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.4.0](https://github.com/YazdanRa/chatkit-swift/compare/v1.3.0...v1.4.0) (2026-05-25)
+
+
+### Features
+
+* **license:** Add MIT License to the project ([5ea0317](https://github.com/YazdanRa/chatkit-swift/commit/5ea0317ddabdc01b4f514e3c7269e7a735faa0f6))
+
 ## [1.3.0](https://github.com/YazdanRa/chatkit-swift/compare/v1.2.0...v1.3.0) (2026-05-25)
 
 
