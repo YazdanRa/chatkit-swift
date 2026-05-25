@@ -113,6 +113,25 @@ final class ChatKitSessionTests: XCTestCase {
             #"Invalid ChatKit event payload: Invalid ISO-8601 date. Payload: {"type":"thread.item.done","item":{"type":"assistant_message","created_at":"not-a-date"}}"#,
         )
     }
+
+    func testSelectingThreadHidesVisibleHistory() async throws {
+        let transport = ThreadLookupTransport(thread: .init(
+            title: "Saved chat",
+            id: "thread_1",
+            createdAt: Date(timeIntervalSince1970: 1),
+            items: .init(),
+        ))
+        let session = try ChatKitSession(
+            options: .init(api: .custom(url: XCTUnwrap(URL(string: "https://example.com/chatkit")))),
+            transport: transport,
+        )
+        await session.showHistory()
+
+        try await session.setThreadId("thread_1")
+
+        XCTAssertEqual(session.state.currentThread?.id, "thread_1")
+        XCTAssertFalse(session.isHistoryVisible)
+    }
 }
 
 private actor RecordingTransport: ChatKitTransport {
@@ -145,6 +164,24 @@ private actor RecordingTransport: ChatKitTransport {
 
     func streamedRequestTypes() -> [String] {
         streamedRequests.map(\.type)
+    }
+}
+
+private struct ThreadLookupTransport: ChatKitTransport {
+    let thread: ChatKitThread
+
+    func send(_ request: ChatKitRequest) async throws -> Data {
+        guard case .threadsGetByID = request else {
+            throw ChatKitTransportError.invalidResponse
+        }
+
+        return try ChatKitJSON.encoder.encode(thread)
+    }
+
+    func stream(_: ChatKitRequest) async throws -> AsyncThrowingStream<ChatKitEvent, Error> {
+        AsyncThrowingStream { continuation in
+            continuation.finish()
+        }
     }
 }
 

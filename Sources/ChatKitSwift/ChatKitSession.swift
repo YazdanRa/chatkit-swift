@@ -68,6 +68,7 @@ public final class ChatKitSession {
         let data = try await transport.send(.threadsGetByID(.init(threadID: threadID)))
         let thread = try ChatKitJSON.decoder.decode(ChatKitThread.self, from: data)
         state.replaceCurrentThread(thread)
+        isHistoryVisible = false
         options.events.onThreadChange?(threadID)
     }
 
