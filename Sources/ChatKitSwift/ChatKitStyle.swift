@@ -35,70 +35,103 @@ enum ChatKitStyle {
 
     static func systemImage(for icon: String) -> String {
         let normalized = icon.replacing("lucide:", with: "")
-        return switch normalized {
-        case "agent": "sparkles"
-        case "analytics", "chart", "chart.bar": "chart.bar"
-        case "arrow.right": "arrow.right"
-        case "arrow.up": "arrow.up"
-        case "atom": "atom"
-        case "batch": "square.stack.3d.up"
-        case "bolt": "bolt"
-        case "book-open": "book"
-        case "book-closed": "book.closed"
-        case "book-clock": "clock"
-        case "bug": "ladybug"
-        case "calendar": "calendar"
-        case "check", "check-circle", "check-circle-filled", "checkmark.circle": "checkmark.circle"
-        case "chevron-left": "chevron.left"
-        case "chevron-right": "chevron.right"
-        case "circle-question": "questionmark.circle"
-        case "clock": "clock"
-        case "compass": "safari"
-        case "confetti": "party.popper"
-        case "cube": "cube"
-        case "desktop": "desktopcomputer"
-        case "document", "page-blank", "square-text": "doc.text"
-        case "dot", "empty-circle": "circle"
-        case "dots-horizontal": "ellipsis"
-        case "dots-vertical": "ellipsis"
-        case "external-link": "arrow.up.right.square"
-        case "globe": "globe"
-        case "keys": "key"
-        case "lab": "flask"
-        case "images", "square-image": "photo"
-        case "exclamationmark.triangle": "exclamationmark.triangle"
-        case "info", "info.circle": "info.circle"
-        case "lifesaver": "questionmark.life"
-        case "lightbulb": "lightbulb"
-        case "line.3.horizontal": "line.3.horizontal"
-        case "mail": "envelope"
-        case "map-pin", "maps": "mappin"
-        case "mobile", "phone": "iphone"
-        case "name": "character.cursor.ibeam"
-        case "notebook", "notebook-pencil": "note.text"
-        case "play": "play"
-        case "plus": "plus"
-        case "profile", "profile-card", "user": "person.crop.circle"
-        case "reload": "arrow.clockwise"
-        case "star", "star-filled": "star"
-        case "search": "magnifyingglass"
-        case "sparkle", "sparkle-double": "sparkles"
-        case "square-code": "chevron.left.forwardslash.chevron.right"
-        case "suitcase": "briefcase"
-        case "settings-slider", "settings-cog": "slider.horizontal.3"
-        case "write", "write-alt", "write-alt2", "compose", "square.and.pencil": "square.and.pencil"
-        case "pencil": "pencil"
-        case "sidebar-left", "sidebar-open-left", "history", "sidebar.left": "sidebar.left"
-        case "sidebar-right", "sidebar-open-right": "sidebar.right"
-        case "close": "xmark"
-        case "circle.dashed": "circle.dashed"
-        case "home", "home-alt": "house"
-        case "share": "square.and.arrow.up"
-        case "dark-mode": "moon"
-        case "light-mode": "sun.max"
-        default: normalized
-        }
+        return iconMap[normalized] ?? normalized
     }
+
+    private static let iconMap = [
+        "agent": "sparkles",
+        "analytics": "chart.bar",
+        "arrow-up-right": "arrow.up.right",
+        "arrow.right": "arrow.right",
+        "arrow.up": "arrow.up",
+        "atom": "atom",
+        "badge-check": "checkmark.seal",
+        "batch": "square.stack.3d.up",
+        "bolt": "bolt",
+        "book-open": "book",
+        "book-closed": "book.closed",
+        "book-clock": "clock",
+        "bug": "ladybug",
+        "calendar": "calendar",
+        "chart": "chart.bar",
+        "chart.bar": "chart.bar",
+        "check": "checkmark",
+        "check-circle": "checkmark.circle",
+        "checkmark.circle": "checkmark.circle",
+        "check-circle-filled": "checkmark.circle.fill",
+        "chevron-left": "chevron.left",
+        "chevron-right": "chevron.right",
+        "circle-alert": "exclamationmark.circle",
+        "circle-question": "questionmark.circle",
+        "clock": "clock",
+        "compass": "safari",
+        "confetti": "party.popper",
+        "cube": "cube",
+        "desktop": "desktopcomputer",
+        "document": "doc.text",
+        "square-text": "doc.text",
+        "page-blank": "doc",
+        "dot": "circle.fill",
+        "empty-circle": "circle",
+        "dots-horizontal": "ellipsis",
+        "dots-vertical": "ellipsis.vertical",
+        "external-link": "arrow.up.right.square",
+        "globe": "globe",
+        "keys": "key",
+        "lab": "flask",
+        "images": "photo",
+        "square-image": "photo.on.rectangle",
+        "exclamationmark.triangle": "exclamationmark.triangle",
+        "info": "info.circle",
+        "info.circle": "info.circle",
+        "lifesaver": "questionmark.life",
+        "lightbulb": "lightbulb",
+        "line.3.horizontal": "line.3.horizontal",
+        "mail": "envelope",
+        "map-pin": "mappin",
+        "maps": "map",
+        "mobile": "iphone",
+        "phone": "phone",
+        "name": "character.cursor.ibeam",
+        "notebook": "note.text",
+        "notebook-pencil": "note.text",
+        "play": "play.fill",
+        "plus": "plus",
+        "profile": "person.crop.circle",
+        "profile-card": "person.text.rectangle",
+        "user": "person",
+        "reload": "arrow.clockwise",
+        "star": "star",
+        "star-filled": "star.fill",
+        "search": "magnifyingglass",
+        "sparkle": "sparkles",
+        "sparkle-double": "sparkles",
+        "square-code": "chevron.left.forwardslash.chevron.right",
+        "suitcase": "briefcase",
+        "settings-slider": "slider.horizontal.3",
+        "settings-cog": "slider.horizontal.3",
+        "wreath": "rosette",
+        "write": "square.and.pencil",
+        "compose": "square.and.pencil",
+        "square.and.pencil": "square.and.pencil",
+        "write-alt": "pencil",
+        "write-alt2": "pencil.and.outline",
+        "pencil": "pencil",
+        "sidebar-left": "sidebar.left",
+        "sidebar-open-left": "sidebar.left",
+        "history": "sidebar.left",
+        "sidebar.left": "sidebar.left",
+        "sidebar-right": "sidebar.right",
+        "sidebar-open-right": "sidebar.right",
+        "sidebar.right": "sidebar.right",
+        "close": "xmark",
+        "circle.dashed": "circle.dashed",
+        "home": "house",
+        "home-alt": "house",
+        "share": "square.and.arrow.up",
+        "dark-mode": "moon",
+        "light-mode": "sun.max",
+    ]
 }
 
 private extension Color {

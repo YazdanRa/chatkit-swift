@@ -396,6 +396,9 @@ let options = ChatKitOptions(
 ### Widgets
 
 Widget payloads are decoded as `ChatKitWidgetNode`, preserving unknown fields in `raw` so the client can render known nodes and remain forward-compatible with newer protocol fields.
+ChatKitSwift renders the official ChatKit widget component set natively in SwiftUI, including cards, list views, text, markdown, badges, icons, images, buttons, layout rows/columns, dividers, spacers, inputs, text areas, selects, date pickers, checkboxes, radio groups, labels, tables, table rows, table cells, and transitions. OpenAI widget icon names are translated to SF Symbols, while semantic widget colors and light/dark theme color objects are translated to native SwiftUI colors.
+
+The official JavaScript package does not currently expose a dedicated `Chart` widget component. ChatKitSwift still includes a small native bar-chart renderer for chart-like payloads that use `Chart` or `BarChart` with `data`/`points` arrays, so custom backends can display simple native charts without falling back to raw JSON.
 
 ```swift
 let options = ChatKitOptions(
