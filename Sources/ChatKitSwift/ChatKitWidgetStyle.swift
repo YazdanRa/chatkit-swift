@@ -351,6 +351,40 @@ enum ChatKitWidgetMetrics {
         max(0, lineHeight - pointSize - 4)
     }
 
+    static func defaultCardBackgroundHex(colorScheme: SwiftUI.ColorScheme) -> String {
+        colorScheme == .dark ? "#111827" : "#FFFFFF"
+    }
+
+    static func defaultCardBorderHex(colorScheme: SwiftUI.ColorScheme) -> String {
+        colorScheme == .dark ? "#374151" : "#E3E3E3"
+    }
+
+    static func defaultCardBackground(colorScheme: SwiftUI.ColorScheme) -> Color {
+        Color(chatKitHex: defaultCardBackgroundHex(colorScheme: colorScheme)) ?? .clear
+    }
+
+    static func defaultCardBorder(colorScheme: SwiftUI.ColorScheme) -> Color {
+        Color(chatKitHex: defaultCardBorderHex(colorScheme: colorScheme)) ?? .secondary.opacity(0.22)
+    }
+
+    static func controlFieldHeight(_ token: String?) -> CGFloat {
+        switch token {
+        case "3xs", "2xs", "xs", "sm":
+            28
+        case "lg", "xl", "2xl", "3xl":
+            36
+        default:
+            32
+        }
+    }
+
+    static func textareaMinHeight(rows: Int) -> CGFloat {
+        CGFloat(max(rows, 1)) * 16 + 24
+    }
+
+    static let selectionIndicatorSize: CGFloat = 16
+    static let checkboxIndicatorSize: CGFloat = 16
+
     static func stackGap(_ value: JSONValue?, containerType: String, childTypes: [String]) -> CGFloat? {
         let gap = spacing(value)
         guard let gap else {
@@ -361,6 +395,9 @@ enum ChatKitWidgetMetrics {
                 return 0
             }
             if containerType == "Row", childTypes.allSatisfy({ $0 == "Box" }) {
+                return 0
+            }
+            if containerType == "Row", childTypes.allSatisfy({ $0 == "Badge" }) {
                 return 0
             }
         }

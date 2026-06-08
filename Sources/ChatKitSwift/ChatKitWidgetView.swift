@@ -13,8 +13,16 @@ private struct ChatKitWidgetNodeView: View {
     let node: ChatKitWidgetNode
     let item: ChatKitWidgetItem
     let session: ChatKitSession
+    let parentType: String?
 
     @Environment(\.colorScheme) private var colorScheme
+
+    init(node: ChatKitWidgetNode, item: ChatKitWidgetItem, session: ChatKitSession, parentType: String? = nil) {
+        self.node = node
+        self.item = item
+        self.session = session
+        self.parentType = parentType
+    }
 
     var body: some View {
         switch node.type {
@@ -24,45 +32,35 @@ private struct ChatKitWidgetNodeView: View {
                     ChatKitWidgetStatusView(status: status)
                 }
                 children
-                if node.type == "Form", node.action(named: "onSubmitAction") != nil {
-                    widgetButton(label: "Submit", actionKey: "onSubmitAction")
-                }
             }
-            .chatKitWidgetBoxStyle(node: node, colorScheme: colorScheme)
+            .chatKitWidgetBoxStyle(node: node, colorScheme: colorScheme, parentType: parentType)
         case "Row":
             HStack(alignment: node.verticalAlignment, spacing: node.gap) {
                 children
             }
-            .chatKitWidgetBoxStyle(node: node, colorScheme: colorScheme)
+            .chatKitWidgetBoxStyle(node: node, colorScheme: colorScheme, parentType: parentType)
         case "Col":
             VStack(alignment: node.horizontalAlignment, spacing: node.gap) {
                 children
             }
-            .chatKitWidgetBoxStyle(node: node, colorScheme: colorScheme)
+            .chatKitWidgetBoxStyle(node: node, colorScheme: colorScheme, parentType: parentType)
         case "Card":
             VStack(alignment: .leading, spacing: node.gapOrDefault(12)) {
                 if let status = node.object("status") {
                     ChatKitWidgetStatusView(status: status)
                 }
-                if !node.bool("collapsed") {
-                    children
-                }
+
+                cardBody
                 cardActions
             }
-            .padding(ChatKitWidgetMetrics.insets(node.raw["padding"], fallback: node.cardPadding))
             .frame(maxWidth: .infinity, alignment: .leading)
-            .background(node.color("background", colorScheme: colorScheme) ?? Color.secondary.opacity(0.10), in: RoundedRectangle(cornerRadius: node.cornerRadius))
-            .overlay {
-                RoundedRectangle(cornerRadius: node.cornerRadius)
-                    .stroke(node.borderColor(colorScheme: colorScheme) ?? Color.secondary.opacity(0.22), lineWidth: node.borderWidth ?? 1)
-            }
         case "ListView":
             VStack(alignment: .leading, spacing: node.gapOrDefault(8)) {
                 if let status = node.object("status") {
                     ChatKitWidgetStatusView(status: status)
                 }
                 ForEach(limitedChildren, id: \.stableID) { child in
-                    ChatKitWidgetNodeView(node: child, item: item, session: session)
+                    ChatKitWidgetNodeView(node: child, item: item, session: session, parentType: node.type)
                 }
             }
         case "ListViewItem":
@@ -136,14 +134,14 @@ private struct ChatKitWidgetNodeView: View {
         case "Table":
             ChatKitWidgetTableView(node: node, item: item, session: session)
         case "Table.Row":
-            HStack(alignment: .top, spacing: 0) {
+            HStack(alignment: .top, spacing: 16) {
                 children
             }
         case "Table.Cell":
             VStack(alignment: node.horizontalAlignment, spacing: 4) {
                 children
             }
-            .padding(ChatKitWidgetMetrics.insets(node.raw["padding"], fallback: 8))
+            .padding(node.tableCellInsets)
             .frame(minWidth: node.number("width").map { CGFloat($0) }, alignment: node.frameAlignment)
         case "Transition":
             children
@@ -162,7 +160,7 @@ private struct ChatKitWidgetNodeView: View {
 
     private var children: some View {
         ForEach(node.children, id: \.stableID) { child in
-            ChatKitWidgetNodeView(node: child, item: item, session: session)
+            ChatKitWidgetNodeView(node: child, item: item, session: session, parentType: node.type)
         }
     }
 
@@ -212,6 +210,7 @@ private struct ChatKitWidgetNodeView: View {
         let tone = ChatKitWidgetTone(rawValue: node.string("color") ?? (node.string("style") == "primary" ? "primary" : "secondary"))
         let variant = node.string("variant") ?? (node.string("style") == "primary" ? "solid" : "outline")
         let buttonRadius = ChatKitWidgetMetrics.buttonCornerRadius(node.raw["radius"], pill: node.bool("pill"))
+        let fillWidth = node.bool("block") || parentType == "Col"
 
         Button {
             Task { await performActionIfPossible(node.action(named: actionKey) ?? node.action) }
@@ -231,7 +230,7 @@ private struct ChatKitWidgetNodeView: View {
                         .font(ChatKitWidgetMetrics.iconFont(node.string("iconSize")))
                 }
             }
-            .frame(maxWidth: node.bool("block") ? .infinity : nil)
+            .frame(maxWidth: fillWidth ? .infinity : nil)
         }
         .controlSize(ChatKitWidgetMetrics.controlSize(node.string("size")))
         .buttonStyle(ChatKitWidgetButtonStyle(
@@ -246,21 +245,57 @@ private struct ChatKitWidgetNodeView: View {
         .disabled(node.isDisabled)
     }
 
-    private var cardActions: some View {
-        HStack {
-            if let cancel = node.cardAction("cancel") {
-                Button(cancel.label) {
-                    Task { await performActionIfPossible(cancel.action) }
-                }
-                .buttonStyle(.bordered)
-            }
-            if let confirm = node.cardAction("confirm") {
-                Button(confirm.label) {
-                    Task { await performActionIfPossible(confirm.action) }
-                }
-                .buttonStyle(.borderedProminent)
+    private var cardBody: some View {
+        VStack(alignment: .leading, spacing: node.gapOrDefault(12)) {
+            if !node.bool("collapsed") {
+                children
             }
         }
+        .padding(ChatKitWidgetMetrics.insets(node.raw["padding"], fallback: node.cardPadding))
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .background(
+            node.color("background", colorScheme: colorScheme) ?? ChatKitWidgetMetrics.defaultCardBackground(colorScheme: colorScheme),
+            in: RoundedRectangle(cornerRadius: node.cornerRadius),
+        )
+        .overlay {
+            RoundedRectangle(cornerRadius: node.cornerRadius)
+                .stroke(
+                    node.borderColor(colorScheme: colorScheme) ?? ChatKitWidgetMetrics.defaultCardBorder(colorScheme: colorScheme),
+                    lineWidth: node.borderWidth ?? 1,
+                )
+        }
+    }
+
+    @ViewBuilder
+    private var cardActions: some View {
+        if node.cardAction("confirm") != nil || node.cardAction("cancel") != nil {
+            HStack(spacing: 8) {
+                if let confirm = node.cardAction("confirm") {
+                    cardActionButton(label: confirm.label, action: confirm.action, variant: "solid", tone: .primary)
+                }
+                if let cancel = node.cardAction("cancel") {
+                    cardActionButton(label: cancel.label, action: cancel.action, variant: "outline", tone: .secondary)
+                }
+            }
+        }
+    }
+
+    private func cardActionButton(label: String, action: ChatKitAction, variant: String, tone: ChatKitWidgetTone) -> some View {
+        Button {
+            Task { await performActionIfPossible(action) }
+        } label: {
+            Text(label)
+                .lineLimit(1)
+                .truncationMode(.tail)
+        }
+        .buttonStyle(ChatKitWidgetButtonStyle(
+            variant: variant,
+            tone: tone,
+            height: ChatKitWidgetMetrics.buttonHeight(nil),
+            fontPointSize: ChatKitWidgetMetrics.buttonFontPointSize(nil),
+            horizontalPadding: ChatKitWidgetMetrics.buttonHorizontalPadding(nil, pill: true),
+            cornerRadius: ChatKitWidgetMetrics.buttonCornerRadius(nil, pill: true),
+        ))
     }
 
     @ViewBuilder
@@ -324,6 +359,8 @@ private struct ChatKitWidgetNodeView: View {
 private struct ChatKitWidgetBadgeView: View {
     let node: ChatKitWidgetNode
 
+    @Environment(\.colorScheme) private var colorScheme
+
     var body: some View {
         let tone = ChatKitWidgetTone(rawValue: node.string("color") ?? "secondary") ?? .secondary
         Text(node.label ?? node.value ?? "")
@@ -336,7 +373,7 @@ private struct ChatKitWidgetBadgeView: View {
             .overlay {
                 if node.string("variant") == "outline" {
                     CapsuleOrRoundedRectangle(pill: node.bool("pill"), radius: 8)
-                        .stroke(tone.softForeground.opacity(0.45))
+                        .stroke(outlineColor(for: tone))
                 }
             }
     }
@@ -358,18 +395,68 @@ private struct ChatKitWidgetBadgeView: View {
     }
 
     private func foreground(for tone: ChatKitWidgetTone) -> Color {
-        node.string("variant") == "solid" ? tone.foreground : tone.softForeground
+        node.string("variant") == "solid" ? tone.foreground : lowEmphasisForeground(for: tone)
     }
 
     private func background(for tone: ChatKitWidgetTone) -> Color {
         switch node.string("variant") {
         case "solid":
-            tone.solidBackground
+            return tone.solidBackground
         case "outline":
-            .clear
+            return .clear
         default:
-            tone.softBackground
+            return lowEmphasisBackground(for: tone)
         }
+    }
+
+    private func outlineColor(for tone: ChatKitWidgetTone) -> Color {
+        lowEmphasisForeground(for: tone)
+    }
+
+    private func lowEmphasisForeground(for tone: ChatKitWidgetTone) -> Color {
+        guard colorScheme == .dark else {
+            return tone.softForeground
+        }
+        let hex = switch tone {
+        case .primary:
+            "#F3F3F3"
+        case .secondary:
+            "#D4D4D4"
+        case .info:
+            "#3DA1FF"
+        case .discovery:
+            "#B08CFF"
+        case .success:
+            "#41D67A"
+        case .warning:
+            "#FF7A2F"
+        case .danger:
+            "#FF6B66"
+        }
+        return Color(chatKitHex: hex) ?? tone.softForeground
+    }
+
+    private func lowEmphasisBackground(for tone: ChatKitWidgetTone) -> Color {
+        guard colorScheme == .dark else {
+            return tone.softBackground
+        }
+        let hex = switch tone {
+        case .primary:
+            "#2F2F2F"
+        case .secondary:
+            "#2F2F2F"
+        case .info:
+            "#0D2A42"
+        case .discovery:
+            "#2B2142"
+        case .success:
+            "#0F3321"
+        case .warning:
+            "#3A2418"
+        case .danger:
+            "#421C1C"
+        }
+        return Color(chatKitHex: hex) ?? tone.softBackground
     }
 }
 
@@ -378,7 +465,7 @@ private struct ChatKitWidgetStatusView: View {
 
     var body: some View {
         Label(status["text"]?.stringValue ?? "", systemImage: ChatKitStyle.systemImage(for: status["icon"]?.stringValue ?? "info"))
-            .font(.caption)
+            .font(.system(size: 16, weight: .regular))
             .foregroundStyle(.secondary)
     }
 }
@@ -404,7 +491,7 @@ private struct ChatKitWidgetButtonStyle: ButtonStyle {
             .overlay {
                 if variant == "outline" {
                     RoundedRectangle(cornerRadius: cornerRadius)
-                        .stroke(isEnabled ? resolvedTone.softForeground : disabledForeground)
+                        .stroke(isEnabled ? outlineBorder(tone: resolvedTone) : disabledForeground)
                 }
             }
             .opacity(configuration.isPressed ? 0.82 : 1)
@@ -444,6 +531,63 @@ private struct ChatKitWidgetButtonStyle: ButtonStyle {
     private var disabledBackground: Color {
         Color(chatKitHex: "#EDEDED") ?? .secondary.opacity(0.12)
     }
+
+    private func outlineBorder(tone: ChatKitWidgetTone) -> Color {
+        tone == .secondary
+            ? (Color(chatKitHex: "#D7D7D7") ?? .secondary.opacity(0.25))
+            : tone.softForeground
+    }
+}
+
+private struct ChatKitWidgetControlField<Content: View>: View {
+    let minHeight: CGFloat
+    let isDisabled: Bool
+    let horizontalPadding: CGFloat
+    let verticalPadding: CGFloat
+    let content: Content
+
+    @Environment(\.colorScheme) private var colorScheme
+
+    init(
+        minHeight: CGFloat,
+        isDisabled: Bool = false,
+        horizontalPadding: CGFloat = 12,
+        verticalPadding: CGFloat = 0,
+        @ViewBuilder content: () -> Content
+    ) {
+        self.minHeight = minHeight
+        self.isDisabled = isDisabled
+        self.horizontalPadding = horizontalPadding
+        self.verticalPadding = verticalPadding
+        self.content = content()
+    }
+
+    var body: some View {
+        content
+            .font(.system(size: ChatKitWidgetMetrics.textPointSize(nil), weight: .regular))
+            .padding(.horizontal, horizontalPadding)
+            .padding(.vertical, verticalPadding)
+            .frame(minHeight: minHeight, alignment: .center)
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .background(fieldBackground, in: RoundedRectangle(cornerRadius: 12))
+            .overlay {
+                RoundedRectangle(cornerRadius: 12)
+                    .stroke(fieldBorder, lineWidth: 1)
+            }
+            .opacity(isDisabled ? 0.55 : 1)
+    }
+
+    private var fieldBackground: Color {
+        colorScheme == .dark
+            ? (Color(chatKitHex: "#111827") ?? .clear)
+            : (Color(chatKitHex: "#FFFFFF") ?? .clear)
+    }
+
+    private var fieldBorder: Color {
+        colorScheme == .dark
+            ? (Color(chatKitHex: "#374151") ?? .secondary.opacity(0.25))
+            : (Color(chatKitHex: "#D7D7D7") ?? .secondary.opacity(0.25))
+    }
 }
 
 private struct ChatKitWidgetTextInputView: View {
@@ -463,30 +607,34 @@ private struct ChatKitWidgetTextInputView: View {
     }
 
     var body: some View {
-        Group {
+        ChatKitWidgetControlField(
+            minHeight: minHeight,
+            isDisabled: node.isDisabled,
+            verticalPadding: axis == .vertical ? 10 : 0,
+        ) {
             if axis == .vertical {
                 TextField(node.string("placeholder") ?? "", text: $value, axis: .vertical)
                     .lineLimit(node.number("rows").map(Int.init) ?? 3, reservesSpace: true)
+                    .textFieldStyle(.plain)
             } else {
                 TextField(node.string("placeholder") ?? "", text: $value)
+                    .textFieldStyle(.plain)
                 #if os(iOS) || os(visionOS)
                     .textInputAutocapitalization(.sentences)
                 #endif
-            }
-        }
-        .textFieldStyle(.roundedBorder)
-        .controlSize(ChatKitWidgetMetrics.controlSize(node.string("size")))
-        .padding(ChatKitWidgetMetrics.insets(node.raw["gutterSize"], fallback: node.string("variant") == "outline" ? 0 : 8))
-        .background {
-            if node.string("variant") != "outline" {
-                RoundedRectangle(cornerRadius: node.cornerRadius)
-                    .fill(Color.secondary.opacity(0.10))
             }
         }
         .disabled(node.isDisabled)
         .onSubmit {
             Task { await performChangeAction() }
         }
+    }
+
+    private var minHeight: CGFloat {
+        if axis == .vertical {
+            return ChatKitWidgetMetrics.textareaMinHeight(rows: node.number("rows").map(Int.init) ?? 3)
+        }
+        return ChatKitWidgetMetrics.controlFieldHeight(node.string("size"))
     }
 
     private func performChangeAction() async {
@@ -521,20 +669,40 @@ private struct ChatKitWidgetSelectView: View {
     }
 
     var body: some View {
-        Picker(node.string("placeholder") ?? node.name ?? "Select", selection: $value) {
+        Menu {
             if node.bool("clearable") {
-                Text(node.string("placeholder") ?? "None").tag("")
+                Button(node.string("placeholder") ?? "None") {
+                    value = ""
+                    Task { await performChangeAction() }
+                }
             }
             ForEach(options, id: \.value) { option in
-                Text(option.label).tag(option.value)
+                Button(option.label) {
+                    value = option.value
+                    Task { await performChangeAction() }
+                }
+            }
+        } label: {
+            ChatKitWidgetControlField(
+                minHeight: ChatKitWidgetMetrics.controlFieldHeight(node.string("size")),
+                isDisabled: node.isDisabled,
+            ) {
+                HStack(spacing: 8) {
+                    Text(selectedLabel)
+                        .foregroundStyle(value.isEmpty ? .secondary : .primary)
+                    Spacer(minLength: 8)
+                    Image(systemName: "chevron.up.chevron.down")
+                        .font(.system(size: 13, weight: .semibold))
+                        .foregroundStyle(.secondary)
+                }
             }
         }
-        .pickerStyle(.menu)
-        .controlSize(ChatKitWidgetMetrics.controlSize(node.string("size")))
+        .buttonStyle(.plain)
         .disabled(node.isDisabled)
-        .onChange(of: value) { _, _ in
-            Task { await performChangeAction() }
-        }
+    }
+
+    private var selectedLabel: String {
+        options.first(where: { $0.value == value })?.label ?? node.string("placeholder") ?? node.name ?? "Select"
     }
 
     private var options: [(value: String, label: String)] {
@@ -580,13 +748,35 @@ private struct ChatKitWidgetDatePickerView: View {
     }
 
     var body: some View {
-        DatePicker(node.string("placeholder") ?? node.name ?? "Date", selection: $date, displayedComponents: [.date])
-            .datePickerStyle(.compact)
-            .controlSize(ChatKitWidgetMetrics.controlSize(node.string("size")))
-            .disabled(node.isDisabled)
-            .onChange(of: date) { _, _ in
-                Task { await performChangeAction() }
+        ZStack {
+            DatePicker(node.string("placeholder") ?? node.name ?? "Date", selection: $date, displayedComponents: [.date])
+                .datePickerStyle(.compact)
+                .labelsHidden()
+                .opacity(0.01)
+                .frame(maxWidth: .infinity, minHeight: ChatKitWidgetMetrics.controlFieldHeight(node.string("size")), alignment: .leading)
+
+            ChatKitWidgetControlField(
+                minHeight: ChatKitWidgetMetrics.controlFieldHeight(node.string("size")),
+                isDisabled: node.isDisabled,
+            ) {
+                HStack(spacing: 12) {
+                    Image(systemName: "calendar")
+                        .font(.system(size: 18, weight: .regular))
+                        .foregroundStyle(.primary)
+                    Text(Self.displayFormatter.string(from: date))
+                        .foregroundStyle(.primary)
+                    Spacer(minLength: 8)
+                    Image(systemName: "chevron.up.chevron.down")
+                        .font(.system(size: 13, weight: .semibold))
+                        .foregroundStyle(.secondary)
+                }
             }
+            .allowsHitTesting(false)
+        }
+        .disabled(node.isDisabled)
+        .onChange(of: date) { _, _ in
+            Task { await performChangeAction() }
+        }
     }
 
     private func performChangeAction() async {
@@ -612,6 +802,13 @@ private struct ChatKitWidgetDatePickerView: View {
     private static func formatDate(_ date: Date) -> String {
         ISO8601DateFormatter().string(from: date)
     }
+
+    private static let displayFormatter: DateFormatter = {
+        let formatter = DateFormatter()
+        formatter.locale = Locale(identifier: "en_US_POSIX")
+        formatter.dateFormat = "MM/dd/yy"
+        return formatter
+    }()
 }
 
 private struct ChatKitWidgetCheckboxView: View {
@@ -629,11 +826,37 @@ private struct ChatKitWidgetCheckboxView: View {
     }
 
     var body: some View {
-        Toggle(node.label ?? node.name ?? "", isOn: $checked)
-            .disabled(node.isDisabled)
-            .onChange(of: checked) { _, _ in
-                Task { await performChangeAction() }
+        Button {
+            checked.toggle()
+            Task { await performChangeAction() }
+        } label: {
+            HStack(spacing: 8) {
+                checkboxIndicator
+                Text(node.label ?? node.name ?? "")
+                    .font(.system(size: ChatKitWidgetMetrics.textPointSize(nil), weight: .regular))
+                    .foregroundStyle(.primary)
             }
+        }
+        .buttonStyle(.plain)
+        .disabled(node.isDisabled)
+        .opacity(node.isDisabled ? 0.55 : 1)
+    }
+
+    private var checkboxIndicator: some View {
+        ZStack {
+            RoundedRectangle(cornerRadius: 6)
+                .fill(checked ? (Color(chatKitHex: "#282828") ?? .primary) : (Color(chatKitHex: "#FFFFFF") ?? .clear))
+                .overlay {
+                    RoundedRectangle(cornerRadius: 6)
+                        .stroke(checked ? Color.clear : (Color(chatKitHex: "#D7D7D7") ?? .secondary.opacity(0.25)), lineWidth: 1)
+            }
+            if checked {
+                Image(systemName: "checkmark")
+                    .font(.system(size: 11, weight: .bold))
+                    .foregroundStyle(.white)
+            }
+        }
+        .frame(width: ChatKitWidgetMetrics.checkboxIndicatorSize, height: ChatKitWidgetMetrics.checkboxIndicatorSize)
     }
 
     private func performChangeAction() async {
@@ -670,19 +893,23 @@ private struct ChatKitWidgetRadioGroupView: View {
     var body: some View {
         directionalStack {
             ForEach(options, id: \.value) { option in
-                Toggle(isOn: Binding(
-                    get: { value == option.value },
-                    set: { isOn in
-                        if isOn {
-                            value = option.value
-                            Task { await performChangeAction() }
-                        }
-                    },
-                )) {
-                    Text(option.label)
+                Button {
+                    guard !option.disabled else {
+                        return
+                    }
+                    value = option.value
+                    Task { await performChangeAction() }
+                } label: {
+                    HStack(spacing: 8) {
+                        radioIndicator(isSelected: value == option.value)
+                        Text(option.label)
+                            .font(.system(size: ChatKitWidgetMetrics.textPointSize(nil), weight: .regular))
+                            .foregroundStyle(.primary)
+                    }
                 }
-                .toggleStyle(.button)
+                .buttonStyle(.plain)
                 .disabled(node.isDisabled || option.disabled)
+                .opacity((node.isDisabled || option.disabled) ? 0.55 : 1)
             }
         }
         .accessibilityLabel(node.string("ariaLabel") ?? node.name ?? "Options")
@@ -691,10 +918,27 @@ private struct ChatKitWidgetRadioGroupView: View {
     @ViewBuilder
     private func directionalStack(@ViewBuilder content: () -> some View) -> some View {
         if node.string("direction") == "row" {
-            HStack(spacing: 8, content: content)
+            HStack(spacing: 18, content: content)
         } else {
             VStack(alignment: .leading, spacing: 8, content: content)
         }
+    }
+
+    private func radioIndicator(isSelected: Bool) -> some View {
+        ZStack {
+            Circle()
+                .fill(isSelected ? (Color(chatKitHex: "#282828") ?? .primary) : (Color(chatKitHex: "#FFFFFF") ?? .clear))
+                .overlay {
+                    Circle()
+                        .stroke(isSelected ? Color.clear : (Color(chatKitHex: "#D7D7D7") ?? .secondary.opacity(0.25)), lineWidth: 1)
+                }
+            if isSelected {
+                Circle()
+                    .fill(.white)
+                    .frame(width: 6, height: 6)
+            }
+        }
+        .frame(width: ChatKitWidgetMetrics.selectionIndicatorSize, height: ChatKitWidgetMetrics.selectionIndicatorSize)
     }
 
     private var options: [(value: String, label: String, disabled: Bool)] {
@@ -732,22 +976,18 @@ private struct ChatKitWidgetTableView: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
-            ForEach(node.children, id: \.stableID) { row in
-                HStack(alignment: .top, spacing: 0) {
+            ForEach(Array(node.children.enumerated()), id: \.element.stableID) { index, row in
+                HStack(alignment: .top, spacing: 16) {
                     ForEach(row.children, id: \.stableID) { cell in
-                        ChatKitWidgetNodeView(node: cell, item: item, session: session)
+                        ChatKitWidgetNodeView(node: cell, item: item, session: session, parentType: row.type)
                             .fontWeight(row.bool("header") ? .semibold : nil)
                             .frame(maxWidth: .infinity, alignment: cell.frameAlignment)
                     }
                 }
-                .background(row.bool("header") ? Color.secondary.opacity(0.10) : Color.clear)
-                Divider()
+                if index < node.children.count - 1 {
+                    Divider()
+                }
             }
-        }
-        .clipShape(RoundedRectangle(cornerRadius: 10))
-        .overlay {
-            RoundedRectangle(cornerRadius: 10)
-                .stroke(.secondary.opacity(0.2))
         }
     }
 }
@@ -806,12 +1046,12 @@ private struct CapsuleOrRoundedRectangle: Shape {
 }
 
 private extension View {
-    func chatKitWidgetBoxStyle(node: ChatKitWidgetNode, colorScheme: SwiftUI.ColorScheme) -> some View {
-        chatKitWidgetSizedBoxStyle(node: node, colorScheme: colorScheme)
+    func chatKitWidgetBoxStyle(node: ChatKitWidgetNode, colorScheme: SwiftUI.ColorScheme, parentType: String?) -> some View {
+        chatKitWidgetSizedBoxStyle(node: node, colorScheme: colorScheme, parentType: parentType)
     }
 
     @ViewBuilder
-    private func chatKitWidgetSizedBoxStyle(node: ChatKitWidgetNode, colorScheme: SwiftUI.ColorScheme) -> some View {
+    private func chatKitWidgetSizedBoxStyle(node: ChatKitWidgetNode, colorScheme: SwiftUI.ColorScheme, parentType: String?) -> some View {
         if let widthPercentage = node.widthPercentage, let fixedHeight = node.fixedHeight {
             GeometryReader { proxy in
                 padding(ChatKitWidgetMetrics.insets(node.raw["padding"], fallback: 0))
@@ -827,7 +1067,7 @@ private extension View {
                     height: node.fixedHeight,
                     alignment: node.frameAlignment,
                 )
-                .frame(maxWidth: node.fillsAvailableWidth ? .infinity : nil, alignment: node.frameAlignment)
+                .frame(maxWidth: node.fillsAvailableWidth(parentType: parentType) ? .infinity : nil, alignment: node.frameAlignment)
                 .chatKitWidgetDecoratedBoxStyle(node: node, colorScheme: colorScheme)
         }
     }
@@ -848,7 +1088,7 @@ private extension View {
     }
 }
 
-private extension ChatKitWidgetNode {
+extension ChatKitWidgetNode {
     var gap: CGFloat? {
         ChatKitWidgetMetrics.stackGap(raw["gap"], containerType: type, childTypes: children.map(\.type))
     }
@@ -897,6 +1137,13 @@ private extension ChatKitWidgetNode {
         }
     }
 
+    var tableCellInsets: EdgeInsets {
+        guard raw["padding"] == nil else {
+            return ChatKitWidgetMetrics.insets(raw["padding"])
+        }
+        return EdgeInsets(top: 12, leading: 0, bottom: 12, trailing: 0)
+    }
+
     var fixedWidth: CGFloat? {
         ChatKitWidgetMetrics.fixedDimension(raw["width"])
     }
@@ -909,8 +1156,14 @@ private extension ChatKitWidgetNode {
         ChatKitWidgetMetrics.percentage(raw["width"])
     }
 
-    var fillsAvailableWidth: Bool {
-        bool("block") || (type == "Box" && raw["background"] != nil && fixedHeight != nil && fixedWidth == nil)
+    func fillsAvailableWidth(parentType: String?) -> Bool {
+        if bool("block") || type == "Basic" || type == "Form" {
+            return true
+        }
+        if type == "Box", parentType != "Row", fixedWidth == nil {
+            return raw["background"] != nil || raw["border"] != nil || fixedHeight != nil
+        }
+        return false
     }
 
     var imageContentMode: ContentMode {

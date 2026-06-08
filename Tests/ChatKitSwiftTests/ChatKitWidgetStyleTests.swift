@@ -77,6 +77,21 @@ final class ChatKitWidgetStyleTests: XCTestCase {
         XCTAssertEqual(ChatKitWidgetTone.danger.accentHex, "#E02E2A")
     }
 
+    func testWidgetCardDefaultsMatchReferencePalette() {
+        XCTAssertEqual(ChatKitWidgetMetrics.defaultCardBackgroundHex(colorScheme: .light), "#FFFFFF")
+        XCTAssertEqual(ChatKitWidgetMetrics.defaultCardBackgroundHex(colorScheme: .dark), "#111827")
+        XCTAssertEqual(ChatKitWidgetMetrics.defaultCardBorderHex(colorScheme: .light), "#E3E3E3")
+        XCTAssertEqual(ChatKitWidgetMetrics.defaultCardBorderHex(colorScheme: .dark), "#374151")
+    }
+
+    func testWidgetControlsUseReferenceFieldMetrics() {
+        XCTAssertEqual(ChatKitWidgetMetrics.controlFieldHeight(nil), 32)
+        XCTAssertEqual(ChatKitWidgetMetrics.controlFieldHeight("sm"), 28)
+        XCTAssertEqual(ChatKitWidgetMetrics.textareaMinHeight(rows: 3), 72)
+        XCTAssertEqual(ChatKitWidgetMetrics.selectionIndicatorSize, 16)
+        XCTAssertEqual(ChatKitWidgetMetrics.checkboxIndicatorSize, 16)
+    }
+
     func testWidgetStackGapCollapsesForFlushReferenceRows() {
         XCTAssertEqual(
             ChatKitWidgetMetrics.stackGap(.string("sm"), containerType: "Col", childTypes: ["Button", "Button"]),
@@ -87,6 +102,10 @@ final class ChatKitWidgetStyleTests: XCTestCase {
             0,
         )
         XCTAssertEqual(
+            ChatKitWidgetMetrics.stackGap(.string("sm"), containerType: "Row", childTypes: ["Badge", "Badge"]),
+            0,
+        )
+        XCTAssertEqual(
             ChatKitWidgetMetrics.stackGap(.string("sm"), containerType: "Col", childTypes: ["Text", "Button"]),
             8,
         )
@@ -94,6 +113,18 @@ final class ChatKitWidgetStyleTests: XCTestCase {
             ChatKitWidgetMetrics.stackGap(.number(8), containerType: "Col", childTypes: ["Button", "Button"]),
             8,
         )
+    }
+
+    func testDecoratedBoxesFillAvailableWidthOutsideRows() {
+        let box = ChatKitWidgetNode(type: "Box", raw: [
+            "type": .string("Box"),
+            "background": .string("#F3F4F6"),
+        ])
+        let plainBox = ChatKitWidgetNode(type: "Box", raw: ["type": .string("Box")])
+
+        XCTAssertTrue(box.fillsAvailableWidth(parentType: "Card"))
+        XCTAssertFalse(box.fillsAvailableWidth(parentType: "Row"))
+        XCTAssertFalse(plainBox.fillsAvailableWidth(parentType: "Card"))
     }
 
     func testStudioColorTokensResolveToNativeColors() {
