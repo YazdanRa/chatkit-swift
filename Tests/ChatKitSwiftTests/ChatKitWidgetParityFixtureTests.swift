@@ -6,7 +6,7 @@ final class ChatKitWidgetParityFixtureTests: XCTestCase {
         let manifest = try Self.loadManifest()
 
         XCTAssertEqual(manifest.version, 1)
-        XCTAssertGreaterThanOrEqual(manifest.fixtures.count, 5)
+        XCTAssertGreaterThanOrEqual(manifest.fixtures.count, 10)
 
         let ids = manifest.fixtures.map(\.id)
         XCTAssertEqual(Set(ids).count, ids.count, "Fixture identifiers must be unique.")
@@ -23,16 +23,67 @@ final class ChatKitWidgetParityFixtureTests: XCTestCase {
             XCTAssertGreaterThanOrEqual(fixture.threshold, 0)
             XCTAssertLessThan(fixture.threshold, 1)
         }
+
+        let componentTypes = Set(manifest.fixtures.flatMap { Self.componentTypes(in: $0.widget) })
+        let requiredComponentTypes: Set<String> = [
+            "Badge",
+            "Basic",
+            "Box",
+            "Button",
+            "Caption",
+            "Card",
+            "Checkbox",
+            "Col",
+            "DatePicker",
+            "Divider",
+            "Form",
+            "Icon",
+            "Input",
+            "Label",
+            "ListView",
+            "ListViewItem",
+            "Markdown",
+            "RadioGroup",
+            "Row",
+            "Select",
+            "Spacer",
+            "Table",
+            "Table.Cell",
+            "Table.Row",
+            "Text",
+            "Textarea",
+            "Title",
+        ]
+        XCTAssertTrue(
+            requiredComponentTypes.isSubset(of: componentTypes),
+            "Missing fixture coverage for: \(requiredComponentTypes.subtracting(componentTypes).sorted().joined(separator: ", "))",
+        )
+    }
+
+    func testWidgetParityScriptSupportsVisualReview() throws {
+        let script = try String(contentsOf: Self.repoRoot().appending(path: "scripts/widget-parity.js"), encoding: .utf8)
+
+        XCTAssertTrue(script.contains("--visual-review"))
+        XCTAssertTrue(script.contains("OPENAI_API_KEY"))
+        XCTAssertTrue(script.contains("/v1/responses"))
     }
 
     private static func loadManifest() throws -> WidgetParityManifest {
-        let url = URL(fileURLWithPath: #filePath)
-            .deletingLastPathComponent()
-            .deletingLastPathComponent()
-            .deletingLastPathComponent()
+        let url = repoRoot()
             .appending(path: "WidgetParity/fixtures/widgets.json")
         let data = try Data(contentsOf: url)
         return try JSONDecoder().decode(WidgetParityManifest.self, from: data)
+    }
+
+    private static func repoRoot() -> URL {
+        URL(fileURLWithPath: #filePath)
+            .deletingLastPathComponent()
+            .deletingLastPathComponent()
+            .deletingLastPathComponent()
+    }
+
+    private static func componentTypes(in node: ChatKitWidgetNode) -> [String] {
+        [node.type] + node.children.flatMap(componentTypes(in:))
     }
 }
 

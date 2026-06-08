@@ -239,6 +239,183 @@
           }
         ]
       }
+    },
+    {
+      "id": "text-stress",
+      "name": "Text Stress",
+      "theme": "light",
+      "viewport": { "width": 390, "height": 560 },
+      "threshold": 0.22,
+      "widget": {
+        "type": "Card",
+        "size": "md",
+        "children": [
+          { "type": "Title", "value": "Release Notes", "size": "lg", "maxLines": 1 },
+          { "type": "Caption", "value": "Text wrapping, emphasis, truncation", "color": "tertiary" },
+          {
+            "type": "Text",
+            "value": "This paragraph is intentionally long so the renderer has to wrap dense copy across multiple lines without clipping or pushing controls outside the card.",
+            "size": "md",
+            "maxLines": 3
+          },
+          { "type": "Text", "value": "Deprecated API removed", "lineThrough": true, "color": "danger", "size": "sm" },
+          { "type": "Text", "value": "Migration helper available", "italic": true, "color": "success", "size": "sm" },
+          { "type": "Markdown", "value": "**Next:** validate the widget payload before enabling it for customers." },
+          { "type": "Divider", "spacing": "sm" },
+          {
+            "type": "Row",
+            "align": "center",
+            "children": [
+              { "type": "Caption", "value": "Owner: Platform", "color": "tertiary" },
+              { "type": "Spacer", "minSize": 16 },
+              { "type": "Badge", "label": "Ready", "color": "success", "variant": "soft", "size": "sm" }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "id": "button-badge-matrix",
+      "name": "Button Badge Matrix",
+      "theme": "light",
+      "viewport": { "width": 390, "height": 560 },
+      "threshold": 0.24,
+      "widget": {
+        "type": "Card",
+        "size": "md",
+        "children": [
+          { "type": "Title", "value": "Control States", "size": "sm" },
+          {
+            "type": "Row",
+            "gap": "xs",
+            "children": [
+              { "type": "Badge", "label": "Info", "color": "info", "variant": "soft" },
+              { "type": "Badge", "label": "Warn", "color": "warning", "variant": "outline" },
+              { "type": "Badge", "label": "Danger", "color": "danger", "variant": "solid" }
+            ]
+          },
+          {
+            "type": "Col",
+            "gap": "sm",
+            "children": [
+              { "type": "Button", "label": "Primary", "variant": "solid", "color": "primary", "block": true, "onClickAction": { "type": "primary" } },
+              { "type": "Button", "label": "Secondary", "variant": "soft", "color": "secondary", "block": true, "onClickAction": { "type": "secondary" } },
+              { "type": "Button", "label": "Outline", "variant": "outline", "color": "info", "block": true, "onClickAction": { "type": "outline" } },
+              { "type": "Button", "label": "Disabled", "variant": "ghost", "color": "danger", "disabled": true }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "id": "card-actions",
+      "name": "Card Actions",
+      "theme": "light",
+      "viewport": { "width": 390, "height": 480 },
+      "threshold": 0.22,
+      "widget": {
+        "type": "Card",
+        "size": "sm",
+        "status": { "text": "Needs approval", "icon": "info" },
+        "confirm": { "label": "Approve", "action": { "type": "approve_invoice", "payload": { "invoiceId": "inv_2042" } } },
+        "cancel": { "label": "Reject", "action": { "type": "reject_invoice", "payload": { "invoiceId": "inv_2042" } } },
+        "children": [
+          { "type": "Title", "value": "Invoice Review", "size": "sm" },
+          { "type": "Text", "value": "Approve the updated vendor invoice after checking the purchase order match.", "size": "sm" },
+          {
+            "type": "Row",
+            "gap": "sm",
+            "children": [
+              { "type": "Badge", "label": "$12,480", "color": "secondary", "variant": "soft" },
+              { "type": "Badge", "label": "Matched", "color": "success", "variant": "soft" }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "id": "icon-stat-row",
+      "name": "Icon Stat Row",
+      "theme": "light",
+      "viewport": { "width": 390, "height": 520 },
+      "threshold": 0.24,
+      "widget": {
+        "type": "Card",
+        "size": "md",
+        "children": [
+          { "type": "Title", "value": "Uptime", "size": "sm" },
+          { "type": "Caption", "value": "Last 24 hours", "color": "tertiary" },
+          { "type": "Icon", "name": "check", "color": "success", "size": "lg" },
+          {
+            "type": "Row",
+            "gap": "sm",
+            "children": [
+              {
+                "type": "Box",
+                "padding": "sm",
+                "radius": "lg",
+                "background": "#F3F4F6",
+                "children": [
+                  { "type": "Caption", "value": "API", "color": "tertiary" },
+                  { "type": "Text", "value": "99.98%", "weight": "bold" }
+                ]
+              },
+              {
+                "type": "Box",
+                "padding": "sm",
+                "radius": "lg",
+                "background": "#F3F4F6",
+                "children": [
+                  { "type": "Caption", "value": "Jobs", "color": "tertiary" },
+                  { "type": "Text", "value": "99.91%", "weight": "bold" }
+                ]
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "id": "dark-nested-layout",
+      "name": "Dark Nested Layout",
+      "theme": "dark",
+      "viewport": { "width": 390, "height": 560 },
+      "threshold": 0.26,
+      "widget": {
+        "type": "Basic",
+        "direction": "col",
+        "gap": "sm",
+        "padding": "md",
+        "children": [
+          {
+            "type": "Box",
+            "padding": "md",
+            "radius": "xl",
+            "background": { "light": "#F9FAFB", "dark": "#111827" },
+            "border": { "size": 1, "color": { "light": "#D1D5DB", "dark": "#374151" } },
+            "children": [
+              { "type": "Title", "value": "Nightly Run", "size": "md", "color": { "light": "#111827", "dark": "#F9FAFB" } },
+              { "type": "Caption", "value": "Batch window closes at 04:00 UTC", "color": "tertiary" },
+              {
+                "type": "Row",
+                "gap": "sm",
+                "children": [
+                  { "type": "Badge", "label": "Queued", "color": "info", "variant": "soft" },
+                  { "type": "Badge", "label": "Compact", "color": "secondary", "variant": "outline" }
+                ]
+              }
+            ]
+          },
+          {
+            "type": "Row",
+            "gap": "sm",
+            "children": [
+              { "type": "Button", "label": "Open logs", "variant": "outline", "color": "info", "onClickAction": { "type": "open_logs" } },
+              { "type": "Button", "label": "Pause", "variant": "ghost", "color": "warning", "onClickAction": { "type": "pause_run" } }
+            ]
+          }
+        ]
+      }
     }
   ]
 }

@@ -528,7 +528,13 @@ Useful variants:
 node scripts/widget-parity.js --allow-failures
 node scripts/widget-parity.js --skip-swift
 node scripts/widget-parity.js --chatkit-js /Users/ericlewis/Developer/chatkit-js
+OPENAI_API_KEY=... node scripts/widget-parity.js --visual-review --visual-detail low
 ```
+
+`--visual-review` sends each Swift crop, JS crop, and diff heatmap to the
+OpenAI Responses API and appends a fixture-by-fixture model review to
+`.widget-parity/report.md` and `.widget-parity/report.json`. Use
+`OPENAI_VISION_MODEL` or `--visual-model` to choose a different model.
 
 The default asset fallback is `https://cdn.platform.openai.com` for dynamic
 `/assets/ck1/*` chunks that are referenced by the saved JS bundle but not present

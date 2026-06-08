@@ -9,7 +9,9 @@ const zlib = require("zlib");
 const DEFAULT_CHATKIT_JS = "/Users/ericlewis/Developer/chatkit-js";
 const DEFAULT_FIXTURES = "WidgetParity/fixtures/widgets.json";
 const DEFAULT_OUTPUT = ".widget-parity";
+const DEFAULT_VISUAL_MODEL = process.env.OPENAI_VISION_MODEL || "gpt-4.1-mini";
 const PLAYWRIGHT_VERSION = "1.60.0";
+const RESPONSES_API_URL = "https://api.openai.com/v1/responses";
 
 main().catch((error) => {
   console.error(error instanceof Error ? error.stack || error.message : String(error));
@@ -21,6 +23,9 @@ async function main() {
   if (options.help) {
     printHelp();
     return;
+  }
+  if (options.visualReview && !process.env.OPENAI_API_KEY) {
+    throw new Error("--visual-review requires OPENAI_API_KEY in the environment.");
   }
 
   const repoRoot = process.cwd();
@@ -73,12 +78,28 @@ async function main() {
     jsOutput,
     diffOutput,
   });
+  if (options.visualReview) {
+    report.visualReview = {
+      model: options.visualModel,
+      detail: options.visualDetail,
+      reviewedAt: new Date().toISOString(),
+    };
+    report.visualReviews = await runVisualReviews(report, {
+      swiftCropOutput,
+      jsOutput,
+      diffOutput,
+    }, options);
+  }
   writeReport(report, outputRoot);
 
   const failed = report.results.filter((result) => !result.passed);
+  const visualFailures = (report.visualReviews || []).filter((review) => review.verdict === "fail");
   console.log(`Widget parity: ${report.results.length - failed.length}/${report.results.length} fixtures within threshold.`);
+  if (report.visualReviews) {
+    console.log(`Visual review: ${report.visualReviews.length - visualFailures.length}/${report.visualReviews.length} fixtures accepted by ${options.visualModel}.`);
+  }
   console.log(`Report: ${path.join(outputRoot, "report.md")}`);
-  if (failed.length > 0 && !options.allowFailures) {
+  if ((failed.length > 0 || visualFailures.length > 0) && !options.allowFailures) {
     process.exitCode = 1;
   }
 }
@@ -92,6 +113,9 @@ function parseArguments(args) {
     skipSwift: false,
     noInstall: false,
     allowFailures: false,
+    visualReview: false,
+    visualModel: DEFAULT_VISUAL_MODEL,
+    visualDetail: "low",
     help: false,
   };
 
@@ -119,6 +143,15 @@ function parseArguments(args) {
       case "--allow-failures":
         options.allowFailures = true;
         break;
+      case "--visual-review":
+        options.visualReview = true;
+        break;
+      case "--visual-model":
+        options.visualModel = readValue(args, ++index, arg);
+        break;
+      case "--visual-detail":
+        options.visualDetail = readValue(args, ++index, arg);
+        break;
       case "--help":
       case "-h":
         options.help = true;
@@ -126,6 +159,10 @@ function parseArguments(args) {
       default:
         throw new Error(`Unknown argument: ${arg}`);
     }
+  }
+
+  if (!["low", "auto", "high"].includes(options.visualDetail)) {
+    throw new Error("--visual-detail must be one of: low, auto, high.");
   }
 
   return options;
@@ -143,6 +180,9 @@ Options:
   --skip-swift           Reuse existing Swift screenshots.
   --no-install           Do not bootstrap Playwright into the output directory.
   --allow-failures       Generate the report without returning a failing exit code.
+  --visual-review        Ask a visual model to review Swift, JS, and diff images.
+  --visual-model <name>  OpenAI model for visual review. Default: ${DEFAULT_VISUAL_MODEL}
+  --visual-detail <mode> Image detail for visual review: low, auto, high. Default: low
 `);
 }
 
@@ -618,6 +658,150 @@ function compareScreenshots(manifest, paths) {
   };
 }
 
+async function runVisualReviews(report, paths, options) {
+  const reviews = [];
+  for (const result of report.results) {
+    console.log(`Visual reviewing ${result.id} with ${options.visualModel}...`);
+    reviews.push(await requestVisualReview(result, paths, options));
+  }
+  return reviews;
+}
+
+async function requestVisualReview(result, paths, options) {
+  const prompt = [
+    "Compare one ChatKit widget parity fixture.",
+    "Image 1 is the ChatKitSwift native crop. Image 2 is the real chatkit-js reference crop. Image 3 is the generated diff heatmap, where brighter pixels mean larger differences.",
+    "Decide whether the Swift rendering is visually on par with the JS reference for product-quality widget rendering.",
+    "Ignore minor font rasterization, subpixel antialiasing, and 1-2px crop padding. Flag missing content, wrong layout, clipping, theme/color problems, icon/control mismatches, or clearly incorrect spacing.",
+    `Fixture: ${result.name} (${result.id}). Numeric mean absolute error: ${result.score.toFixed(4)}. Threshold: ${result.threshold.toFixed(4)}. Pixel check result: ${result.passed ? "pass" : "fail"}.`,
+    'Return only compact JSON with this shape: {"verdict":"pass|fail|review","severity":"none|low|medium|high","summary":"short sentence","issues":["short issue"],"recommendedFixes":["short fix"]}.',
+  ].join("\n\n");
+
+  const body = {
+    model: options.visualModel,
+    input: [{
+      role: "user",
+      content: [
+        { type: "input_text", text: prompt },
+        { type: "input_image", image_url: imageDataURL(path.join(paths.swiftCropOutput, `${result.id}.png`)), detail: options.visualDetail },
+        { type: "input_image", image_url: imageDataURL(path.join(paths.jsOutput, `${result.id}.png`)), detail: options.visualDetail },
+        { type: "input_image", image_url: imageDataURL(path.join(paths.diffOutput, `${result.id}.png`)), detail: options.visualDetail },
+      ],
+    }],
+    max_output_tokens: 700,
+  };
+
+  const response = await fetch(RESPONSES_API_URL, {
+    method: "POST",
+    headers: {
+      "Authorization": `Bearer ${process.env.OPENAI_API_KEY}`,
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify(body),
+  });
+  const responseText = await response.text();
+  if (!response.ok) {
+    throw new Error(`Visual review failed for ${result.id}: HTTP ${response.status} ${responseText.slice(0, 500)}`);
+  }
+
+  let payload;
+  try {
+    payload = JSON.parse(responseText);
+  } catch {
+    payload = {};
+  }
+  const outputText = extractResponseText(payload) || responseText;
+  const parsed = parseJSONish(outputText);
+  return normalizeVisualReview(result, parsed, outputText, options);
+}
+
+function imageDataURL(filePath) {
+  return `data:image/png;base64,${fs.readFileSync(filePath).toString("base64")}`;
+}
+
+function extractResponseText(payload) {
+  if (typeof payload.output_text === "string") {
+    return payload.output_text.trim();
+  }
+
+  const chunks = [];
+  for (const item of payload.output || []) {
+    if (typeof item.content === "string") {
+      chunks.push(item.content);
+    }
+    for (const content of item.content || []) {
+      if (typeof content.text === "string") {
+        chunks.push(content.text);
+      } else if (typeof content.value === "string") {
+        chunks.push(content.value);
+      }
+    }
+  }
+  return chunks.join("\n").trim();
+}
+
+function parseJSONish(text) {
+  const candidates = [text];
+  const fenced = text.match(/```(?:json)?\s*([\s\S]*?)```/i);
+  if (fenced) {
+    candidates.push(fenced[1]);
+  }
+  const object = text.match(/\{[\s\S]*\}/);
+  if (object) {
+    candidates.push(object[0]);
+  }
+
+  for (const candidate of candidates) {
+    try {
+      const parsed = JSON.parse(candidate);
+      if (parsed && typeof parsed === "object" && !Array.isArray(parsed)) {
+        return parsed;
+      }
+    } catch {
+      // Try the next extraction strategy.
+    }
+  }
+  return null;
+}
+
+function normalizeVisualReview(result, parsed, rawText, options) {
+  const object = parsed || {};
+  const verdict = normalizeChoice(object.verdict, ["pass", "fail", "review"], result.passed ? "pass" : "review");
+  const severity = normalizeChoice(object.severity, ["none", "low", "medium", "high"], verdict === "pass" ? "none" : "medium");
+  return {
+    id: result.id,
+    name: result.name,
+    model: options.visualModel,
+    detail: options.visualDetail,
+    verdict,
+    severity,
+    summary: typeof object.summary === "string" && object.summary.trim()
+      ? object.summary.trim()
+      : "The visual model response could not be parsed into the expected summary.",
+    issues: normalizeStringArray(object.issues),
+    recommendedFixes: normalizeStringArray(object.recommendedFixes),
+    rawText: rawText.slice(0, 4000),
+  };
+}
+
+function normalizeChoice(value, allowed, fallback) {
+  if (typeof value !== "string") {
+    return fallback;
+  }
+  const normalized = value.trim().toLowerCase();
+  return allowed.includes(normalized) ? normalized : fallback;
+}
+
+function normalizeStringArray(value) {
+  if (!Array.isArray(value)) {
+    return [];
+  }
+  return value
+    .map((entry) => String(entry).trim())
+    .filter(Boolean)
+    .slice(0, 8);
+}
+
 function writeReport(report, outputRoot) {
   fs.writeFileSync(path.join(outputRoot, "report.json"), JSON.stringify(report, null, 2));
   const lines = [
@@ -636,7 +820,36 @@ function writeReport(report, outputRoot) {
   lines.push("- `swift-crop/`: native screenshots cropped to visible widget content");
   lines.push("- `js/`: cropped real ChatKit JS widget screenshots");
   lines.push("- `diff/`: visual diff heatmaps");
+  if (report.visualReviews && report.visualReviews.length > 0) {
+    lines.push("");
+    lines.push("## Visual Model Review");
+    lines.push("");
+    lines.push(`Model: \`${report.visualReview.model}\`; detail: \`${report.visualReview.detail}\`; reviewed at: \`${report.visualReview.reviewedAt}\`.`);
+    lines.push("");
+    lines.push("| Fixture | Verdict | Severity | Summary |");
+    lines.push("| --- | --- | --- | --- |");
+    for (const review of report.visualReviews) {
+      lines.push(`| ${markdownCell(review.name)} | ${review.verdict} | ${review.severity} | ${markdownCell(review.summary)} |`);
+    }
+    for (const review of report.visualReviews) {
+      if (review.issues.length === 0 && review.recommendedFixes.length === 0) {
+        continue;
+      }
+      lines.push("");
+      lines.push(`### ${review.name}`);
+      for (const issue of review.issues) {
+        lines.push(`- Issue: ${issue}`);
+      }
+      for (const fix of review.recommendedFixes) {
+        lines.push(`- Fix: ${fix}`);
+      }
+    }
+  }
   fs.writeFileSync(path.join(outputRoot, "report.md"), `${lines.join("\n")}\n`);
+}
+
+function markdownCell(value) {
+  return String(value).replace(/\|/g, "\\|").replace(/\s+/g, " ").trim();
 }
 
 function decodePng(buffer) {
