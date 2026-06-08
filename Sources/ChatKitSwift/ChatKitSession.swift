@@ -140,7 +140,7 @@ public final class ChatKitSession {
         composer.text = ""
         composer.content = []
         if options.composer.tools.first(where: { $0.id == composer.selectedToolID })?.persistent != true {
-            composer.selectedToolID = nil
+            updateSelectedToolID(nil)
         }
         try await runStream(request)
     }
@@ -155,7 +155,7 @@ public final class ChatKitSession {
         reply: String? = nil,
         attachments: [ChatKitAttachment]? = nil,
         files: [ChatKitLocalFile]? = nil,
-        selectedToolID: String? = nil,
+        selectedToolID: ChatKitSelectedToolID? = .unchanged,
         selectedModelID: String? = nil,
     ) async {
         if let text {
@@ -173,11 +173,38 @@ public final class ChatKitSession {
         if let files {
             composer.files = files
         }
-        composer.selectedToolID = selectedToolID
+        switch selectedToolID {
+        case nil:
+            updateSelectedToolID(nil)
+        case .unchanged:
+            break
+        case let .value(toolID):
+            updateSelectedToolID(toolID)
+        }
         if let selectedModelID {
             composer.selectedModelID = selectedModelID
         }
-        options.events.onToolChange?(composer.selectedToolID)
+    }
+
+    /// Updates composer state and selects a concrete tool ID.
+    public func setComposerValue(
+        text: String? = nil,
+        content: [ChatKitUserMessageContent]? = nil,
+        reply: String? = nil,
+        attachments: [ChatKitAttachment]? = nil,
+        files: [ChatKitLocalFile]? = nil,
+        selectedToolID: String,
+        selectedModelID: String? = nil,
+    ) async {
+        await setComposerValue(
+            text: text,
+            content: content,
+            reply: reply,
+            attachments: attachments,
+            files: files,
+            selectedToolID: .value(selectedToolID),
+            selectedModelID: selectedModelID,
+        )
     }
 
     /// Sends a widget or custom action for the current thread.
@@ -226,9 +253,14 @@ public final class ChatKitSession {
             throw ChatKitTransportError.missingCurrentThread
         }
 
+        try await updateThreadTitle(title, threadID: threadID)
+    }
+
+    /// Updates a thread title and replaces that thread in session state.
+    public func updateThreadTitle(_ title: String, threadID: String) async throws {
         let data = try await transport.send(.threadsUpdate(.init(threadID: threadID, title: title)))
         let thread = try ChatKitJSON.decoder.decode(ChatKitThread.self, from: data)
-        state.replaceCurrentThread(thread)
+        state.replaceThread(thread)
     }
 
     /// Deletes a thread and clears current state if it was active.
@@ -252,6 +284,17 @@ public final class ChatKitSession {
 
     private var selectedToolChoice: ChatKitToolChoice? {
         composer.selectedToolID.map(ChatKitToolChoice.init(id:))
+    }
+
+    @discardableResult
+    private func updateSelectedToolID(_ selectedToolID: String?) -> Bool {
+        guard composer.selectedToolID != selectedToolID else {
+            return false
+        }
+
+        composer.selectedToolID = selectedToolID
+        options.events.onToolChange?(selectedToolID)
+        return true
     }
 
     private func runStream(_ request: ChatKitRequest) async throws {
@@ -291,8 +334,13 @@ public final class ChatKitSession {
         }
 
         do {
-            let result = try await handler(.init(name: toolCall.name, params: toolCall.arguments))
-            try await runStream(.threadsAddClientToolOutput(.init(threadID: toolCall.threadID, result: .object(result))))
+            let result = try await handler(.init(id: toolCall.id, callID: toolCall.callID, name: toolCall.name, params: toolCall.arguments))
+            try await runStream(.threadsAddClientToolOutput(.init(
+                threadID: toolCall.threadID,
+                itemID: toolCall.id,
+                callID: toolCall.callID,
+                result: .object(result),
+            )))
         } catch {
             state.apply(.error(.init(code: "client_tool_error", message: error.localizedDescription, allowRetry: true)))
         }

@@ -1,5 +1,20 @@
 import Foundation
 
+/// Selection update for ``ChatKitSession/setComposerValue``.
+///
+/// JavaScript ChatKit distinguishes an omitted `selectedToolId` from an explicit
+/// `null`. Swift optionals collapse those states, so this enum preserves the same
+/// semantics: omit the argument to leave the tool unchanged, pass `nil` to clear it,
+/// or pass a string value to select a tool.
+public enum ChatKitSelectedToolID: Equatable, Sendable, ExpressibleByStringLiteral {
+    case unchanged
+    case value(String)
+
+    public init(stringLiteral value: String) {
+        self = .value(value)
+    }
+}
+
 public struct ChatKitComposerState: Equatable, Sendable {
     public var text: String
     public var content: [ChatKitUserMessageContent]

@@ -453,8 +453,8 @@ public enum ChatKitAPI: Sendable {
     ///
     /// - Parameters:
     ///   - url: Backend endpoint that receives ChatKit request envelopes.
-    ///   - domainKey: Optional domain key sent with requests when your backend
-    ///     requires one.
+    ///   - domainKey: Optional domain key sent as `OpenAI-Domain-Key` when your
+    ///     backend requires one.
     ///   - uploadStrategy: Optional attachment upload strategy advertised to the
     ///     host app.
     ///   - additionalHeaders: Async provider for user-scoped headers such as
@@ -501,8 +501,17 @@ public enum ChatKitUploadStrategy: Equatable, Sendable {
 /// Return a JSON object from ``ChatKitOptions/onClientTool`` and ChatKitSwift sends
 /// it back to the current thread as `threads.add_client_tool_output`.
 public struct ChatKitClientToolCall: Equatable, Sendable {
+    public var id: String
+    public var callID: String
     public var name: String
     public var params: [String: JSONValue]
+
+    public init(id: String = "", callID: String = "", name: String, params: [String: JSONValue]) {
+        self.id = id
+        self.callID = callID
+        self.name = name
+        self.params = params
+    }
 }
 
 /// Lifecycle and telemetry callbacks emitted by ``ChatKitSession``.

@@ -40,21 +40,24 @@ struct ChatKitMessageRowView: View {
             plainMessage {
                 ChatKitStructuredInputView(item: item, session: session)
             }
+        case let .imageGeneration(item):
+            plainMessage {
+                VStack(alignment: .leading, spacing: 8) {
+                    if let image = item.image {
+                        generatedImage(url: image.url)
+                    }
+                    if let progress = item.progress {
+                        ProgressView(value: progress)
+                            .frame(maxWidth: 320)
+                    } else {
+                        ProgressView()
+                    }
+                }
+            }
         case let .generatedImage(item):
             plainMessage {
                 if let image = item.image {
-                    AsyncImage(url: image.url) { phase in
-                        if let image = phase.image {
-                            image.resizable().scaledToFit()
-                        } else if phase.error != nil {
-                            Label("Image failed to load", systemImage: "exclamationmark.triangle")
-                        } else {
-                            ProgressView()
-                        }
-                    }
-                    .frame(maxHeight: 320)
-                    .clipShape(.rect(cornerRadius: 8))
-                    .accessibilityLabel("Generated image")
+                    generatedImage(url: image.url)
                 }
             }
         case .task, .workflow, .endOfTurn, .hiddenContext, .sdkHiddenContext, .unknown:
@@ -92,6 +95,21 @@ struct ChatKitMessageRowView: View {
         content()
             .frame(maxWidth: 620, alignment: .leading)
             .accessibilityElement(children: .combine)
+    }
+
+    private func generatedImage(url: URL) -> some View {
+        AsyncImage(url: url) { phase in
+            if let image = phase.image {
+                image.resizable().scaledToFit()
+            } else if phase.error != nil {
+                Label("Image failed to load", systemImage: "exclamationmark.triangle")
+            } else {
+                ProgressView()
+            }
+        }
+        .frame(maxHeight: 320)
+        .clipShape(.rect(cornerRadius: 8))
+        .accessibilityLabel("Generated image")
     }
 
     private func bubbleStyle(for alignment: HorizontalAlignment) -> AnyShapeStyle {

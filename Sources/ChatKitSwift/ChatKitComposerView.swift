@@ -17,6 +17,10 @@ struct ChatKitComposerView: View {
             }
 
             controls
+
+            if let disclaimer = session.options.disclaimer {
+                ChatKitDisclaimerView(disclaimer: disclaimer)
+            }
         }
         .padding(.horizontal, 24)
         .padding(.vertical, 12)
@@ -95,7 +99,9 @@ struct ChatKitComposerView: View {
     }
 
     private var canSend: Bool {
-        !session.composer.text.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty || !session.composer.content.isEmpty
+        !session.composer.text.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty ||
+            !session.composer.content.isEmpty ||
+            !session.composer.attachments.isEmpty
     }
 
     private var sendButtonForegroundStyle: Color {

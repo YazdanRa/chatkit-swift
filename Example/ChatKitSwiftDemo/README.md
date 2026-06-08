@@ -1,6 +1,6 @@
 # ChatKitSwiftDemo
 
-`ChatKitSwiftDemo` is a minimal iOS app for testing `ChatKitSwift` against OpenAI-hosted ChatKit.
+`ChatKitSwiftDemo` is a minimal iOS app for testing `ChatKitSwift` against a backend that mints short-lived OpenAI-hosted ChatKit client secrets.
 
 ## Setup
 
@@ -11,20 +11,21 @@
    xcodegen generate
    ```
 
-2. Create a local `.env` file next to `project.yml`:
-
-   ```bash
-   cp .env.example .env
-   ```
-
-3. Fill in:
+2. Configure a backend endpoint in the Xcode scheme environment:
 
    ```text
-   OPENAI_API_KEY=...
-   OPENAI_CHATKIT_WORKFLOW_ID=...
-   OPENAI_CHATKIT_USER_ID=chatkitswift-demo-user
+   OPENAI_CHATKIT_SESSION_ENDPOINT=https://yourapp.example.com/api/chatkit/session
    ```
 
-4. Open `ChatKitSwiftDemo.xcodeproj` and run the app on an iOS simulator.
+   The endpoint should be owned by your backend. It can call OpenAI with your API key server-side and return:
 
-The `.env` file is intentionally ignored by git. The app also checks process environment variables first, so CI or custom schemes can provide the same values without a local file.
+   ```json
+   {
+     "client_secret": "ck_...",
+     "expires_at": 1780950000
+   }
+   ```
+
+3. Open `ChatKitSwiftDemo.xcodeproj` and run the app on an iOS simulator.
+
+Do not put an OpenAI API key in the demo app, `.env`, scheme, or app bundle. Keep API keys on your server and expose only the session endpoint to the client app.

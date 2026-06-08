@@ -28,22 +28,3 @@ targets:
         MARKETING_VERSION: 1.0
         PRODUCT_BUNDLE_IDENTIFIER: com.chatkitswift.demo
         SWIFT_VERSION: 6.0
-    preBuildScripts:
-      - name: Copy Local Env
-        inputFiles:
-          - $(PROJECT_DIR)/.env
-        outputFiles:
-          - $(BUILT_PRODUCTS_DIR)/$(UNLOCALIZED_RESOURCES_FOLDER_PATH)/.env
-        script: |
-          set -euo pipefail
-
-          env_file="${PROJECT_DIR}/.env"
-          resources_dir="${BUILT_PRODUCTS_DIR}/${UNLOCALIZED_RESOURCES_FOLDER_PATH}"
-          bundled_env="${resources_dir}/.env"
-
-          mkdir -p "${resources_dir}"
-          rm -f "${bundled_env}"
-
-          if [ -f "${env_file}" ]; then
-            cp "${env_file}" "${bundled_env}"
-          fi

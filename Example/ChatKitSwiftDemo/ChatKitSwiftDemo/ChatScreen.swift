@@ -4,7 +4,7 @@ import SwiftUI
 struct ChatScreen: View {
     private let optionsResult: Result<ChatKitOptions, Error>
 
-    init(configuration: OpenAIHostedChatKitConfiguration = .init()) {
+    init(configuration: BackendHostedChatKitConfiguration = .init()) {
         optionsResult = configuration.options()
     }
 

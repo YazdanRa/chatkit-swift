@@ -40,6 +40,8 @@ public enum ChatKitRequest: Encodable, Sendable {
     case itemsList(ItemsList)
     case itemsFeedback(ItemsFeedback)
     case attachmentsCreate(AttachmentsCreate)
+    case attachmentsProcess(AttachmentsProcess)
+    case attachmentsGetPreview(AttachmentsGetPreview)
     case attachmentsDelete(AttachmentsDelete)
     case inputTranscribe(InputTranscribe)
 
@@ -59,6 +61,8 @@ public enum ChatKitRequest: Encodable, Sendable {
         case .itemsList: "items.list"
         case .itemsFeedback: "items.feedback"
         case .attachmentsCreate: "attachments.create"
+        case .attachmentsProcess: "attachments.process"
+        case .attachmentsGetPreview: "attachments.get_preview"
         case .attachmentsDelete: "attachments.delete"
         case .inputTranscribe: "input.transcribe"
         }
@@ -68,7 +72,7 @@ public enum ChatKitRequest: Encodable, Sendable {
         switch self {
         case .threadsCreate, .threadsAddUserMessage, .threadsAddClientToolOutput, .threadsAddStructuredInput, .threadsCustomAction, .threadsRetryAfterItem:
             true
-        case .threadsGetByID, .threadsList, .threadsSyncCustomAction, .threadsUpdate, .threadsDelete, .itemsList, .itemsFeedback, .attachmentsCreate, .attachmentsDelete, .inputTranscribe:
+        case .threadsGetByID, .threadsList, .threadsSyncCustomAction, .threadsUpdate, .threadsDelete, .itemsList, .itemsFeedback, .attachmentsCreate, .attachmentsProcess, .attachmentsGetPreview, .attachmentsDelete, .inputTranscribe:
             false
         }
     }
@@ -103,6 +107,10 @@ public enum ChatKitRequest: Encodable, Sendable {
         case let .itemsFeedback(params):
             try container.encode(params, forKey: .params)
         case let .attachmentsCreate(params):
+            try container.encode(params, forKey: .params)
+        case let .attachmentsProcess(params):
+            try container.encode(params, forKey: .params)
+        case let .attachmentsGetPreview(params):
             try container.encode(params, forKey: .params)
         case let .attachmentsDelete(params):
             try container.encode(params, forKey: .params)
@@ -165,15 +173,21 @@ public enum ChatKitRequest: Encodable, Sendable {
 
     public struct ThreadsAddClientToolOutput: Codable, Equatable, Sendable {
         public var threadID: String
+        public var itemID: String?
+        public var callID: String?
         public var result: JSONValue
 
-        public init(threadID: String, result: JSONValue) {
+        public init(threadID: String, itemID: String? = nil, callID: String? = nil, result: JSONValue) {
             self.threadID = threadID
+            self.itemID = itemID
+            self.callID = callID
             self.result = result
         }
 
         private enum CodingKeys: String, CodingKey {
             case threadID = "threadId"
+            case itemID = "itemId"
+            case callID = "callId"
             case result
         }
     }
@@ -304,6 +318,45 @@ public enum ChatKitRequest: Encodable, Sendable {
             self.name = name
             self.size = size
             self.mimeType = mimeType
+        }
+    }
+
+    public struct AttachmentsProcess: Codable, Equatable, Sendable {
+        public var attachmentID: String
+        public var name: String
+        public var width: Int?
+        public var height: Int?
+
+        public init(attachmentID: String, name: String, width: Int? = nil, height: Int? = nil) {
+            self.attachmentID = attachmentID
+            self.name = name
+            self.width = width
+            self.height = height
+        }
+
+        private enum CodingKeys: String, CodingKey {
+            case attachmentID = "attachmentId"
+            case name
+            case width
+            case height
+        }
+    }
+
+    public struct AttachmentsGetPreview: Codable, Equatable, Sendable {
+        public var attachmentID: String
+        public var conversationID: String?
+        public var sharedConversationID: String?
+
+        public init(attachmentID: String, conversationID: String? = nil, sharedConversationID: String? = nil) {
+            self.attachmentID = attachmentID
+            self.conversationID = conversationID
+            self.sharedConversationID = sharedConversationID
+        }
+
+        private enum CodingKeys: String, CodingKey {
+            case attachmentID = "attachmentId"
+            case conversationID = "conversationId"
+            case sharedConversationID = "sharedConversationId"
         }
     }
 

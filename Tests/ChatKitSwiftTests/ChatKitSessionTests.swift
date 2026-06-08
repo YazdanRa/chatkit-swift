@@ -132,6 +132,163 @@ final class ChatKitSessionTests: XCTestCase {
         XCTAssertEqual(session.state.currentThread?.id, "thread_1")
         XCTAssertFalse(session.isHistoryVisible)
     }
+
+    func testSetComposerValuePreservesSelectedToolWhenToolIsOmitted() async throws {
+        let session = try ChatKitSession(
+            options: .init(api: .custom(url: XCTUnwrap(URL(string: "https://example.com/chatkit")))),
+            transport: RecordingTransport(),
+        )
+
+        await session.setComposerValue(selectedToolID: "search")
+        await session.setComposerValue(text: "Prefilled message")
+
+        XCTAssertEqual(session.composer.text, "Prefilled message")
+        XCTAssertEqual(session.composer.selectedToolID, "search")
+    }
+
+    func testSetComposerValueClearsSelectedToolWhenNilIsExplicit() async throws {
+        let session = try ChatKitSession(
+            options: .init(api: .custom(url: XCTUnwrap(URL(string: "https://example.com/chatkit")))),
+            transport: RecordingTransport(),
+        )
+
+        await session.setComposerValue(selectedToolID: "search")
+        await session.setComposerValue(selectedToolID: nil)
+
+        XCTAssertNil(session.composer.selectedToolID)
+    }
+
+    func testSetComposerValueOnlyEmitsToolChangeWhenSelectionChanges() async throws {
+        let recorder = ToolChangeRecorder()
+        let session = try ChatKitSession(
+            options: .init(
+                api: .custom(url: XCTUnwrap(URL(string: "https://example.com/chatkit"))),
+                events: .init(onToolChange: { toolID in
+                    recorder.record(toolID)
+                }),
+            ),
+            transport: RecordingTransport(),
+        )
+
+        await session.setComposerValue(selectedToolID: "search")
+        await session.setComposerValue(text: "Prefilled message")
+        await session.setComposerValue(selectedToolID: nil)
+
+        XCTAssertEqual(recorder.recordedValues(), ["search", nil])
+    }
+
+    func testSendUserMessageEmitsToolChangeWhenNonPersistentToolIsCleared() async throws {
+        let recorder = ToolChangeRecorder()
+        let session = try ChatKitSession(
+            options: .init(
+                api: .custom(url: XCTUnwrap(URL(string: "https://example.com/chatkit"))),
+                composer: .init(
+                    tools: [.init(id: "search", label: "Search", icon: "magnifyingglass")],
+                ),
+                events: .init(onToolChange: { toolID in
+                    recorder.record(toolID)
+                }),
+            ),
+            transport: RecordingTransport(),
+        )
+
+        await session.setComposerValue(selectedToolID: "search")
+        try await session.sendUserMessage(text: "Search this")
+
+        XCTAssertEqual(recorder.recordedValues(), ["search", nil])
+    }
+
+    func testClientToolOutputRequestIncludesToolCallIdentifiers() async throws {
+        let toolCall = ChatKitThreadItem.clientToolCall(.init(
+            id: "tool_item_1",
+            threadID: "thread_1",
+            createdAt: Date(timeIntervalSince1970: 2),
+            callID: "call_1",
+            name: "lookup_order",
+            arguments: ["order_id": .string("ord_123")],
+        ))
+        let transport = ClientToolOutputTransport(initialEvents: [
+            .threadCreated(.init(thread: .init(
+                title: "New",
+                id: "thread_1",
+                createdAt: Date(timeIntervalSince1970: 1),
+                items: .init(),
+            ))),
+            .threadItemDone(.init(item: toolCall)),
+        ])
+        let session = try ChatKitSession(
+            options: .init(
+                api: .custom(url: XCTUnwrap(URL(string: "https://example.com/chatkit"))),
+                onClientTool: { call in
+                    XCTAssertEqual(call.name, "lookup_order")
+                    XCTAssertEqual(call.params["order_id"], .string("ord_123"))
+                    return ["ok": .bool(true)]
+                },
+            ),
+            transport: transport,
+        )
+
+        try await session.sendUserMessage(text: "Check my order")
+
+        let encodedRequests = try await transport.encodedStreamedRequestData().map { data in
+            try XCTUnwrap(JSONSerialization.jsonObject(with: data) as? [String: Any])
+        }
+        let outputRequest = try XCTUnwrap(encodedRequests.first { request in
+            request["type"] as? String == "threads.add_client_tool_output"
+        })
+        let params = try XCTUnwrap(outputRequest["params"] as? [String: Any])
+
+        XCTAssertEqual(params["thread_id"] as? String, "thread_1")
+        XCTAssertEqual(params["item_id"] as? String, "tool_item_1")
+        XCTAssertEqual(params["call_id"] as? String, "call_1")
+    }
+}
+
+private final class ToolChangeRecorder: @unchecked Sendable {
+    private let lock = NSLock()
+    private var values: [String?] = []
+
+    func record(_ value: String?) {
+        lock.withLock {
+            values.append(value)
+        }
+    }
+
+    func recordedValues() -> [String?] {
+        lock.withLock {
+            values
+        }
+    }
+}
+
+private actor ClientToolOutputTransport: ChatKitTransport {
+    var streamedRequests: [ChatKitRequest] = []
+    let initialEvents: [ChatKitEvent]
+
+    init(initialEvents: [ChatKitEvent]) {
+        self.initialEvents = initialEvents
+    }
+
+    func send(_: ChatKitRequest) async throws -> Data {
+        Data("{}".utf8)
+    }
+
+    func stream(_ request: ChatKitRequest) async throws -> AsyncThrowingStream<ChatKitEvent, Error> {
+        streamedRequests.append(request)
+        let events = request.type == "threads.add_client_tool_output" ? [] : initialEvents
+        return AsyncThrowingStream { continuation in
+            for event in events {
+                continuation.yield(event)
+            }
+            continuation.finish()
+        }
+    }
+
+    func encodedStreamedRequestData() throws -> [Data] {
+        try streamedRequests.map { request in
+            try ChatKitJSON.encoder.encode(request)
+        }
+    }
 }
 
 private actor RecordingTransport: ChatKitTransport {
@@ -164,6 +321,12 @@ private actor RecordingTransport: ChatKitTransport {
 
     func streamedRequestTypes() -> [String] {
         streamedRequests.map(\.type)
+    }
+
+    func encodedStreamedRequestData() throws -> [Data] {
+        try streamedRequests.map { request in
+            try ChatKitJSON.encoder.encode(request)
+        }
     }
 }
 

@@ -68,6 +68,10 @@ data: {"type":"thread.created","thread":{"id":"thread_123","title":"New chat","c
 data: {"type":"thread.item.done","item":{"type":"assistant_message","id":"msg_123","thread_id":"thread_123","created_at":"2026-05-23T00:00:01Z","content":[{"type":"output_text","text":"Hello","annotations":[]}]}}
 ```
 
+Attachment request envelopes use the same operation names as the JS runtime. `attachments.create` sends `name`, `size`, and `mime_type`; `attachments.process` sends `attachment_id`, `name`, and optional image dimensions; `attachments.get_preview` sends `attachment_id` plus `conversation_id` or `shared_conversation_id`; and `attachments.delete` sends `attachment_id`.
+
+Image-generation events are modeled as first-class thread items. Backends may stream `thread.item.image_generation` items with `image_generation.preview.updated` deltas, then update final `thread.item.generated_image` items with `generated_image.updated`.
+
 ## Custom Transport
 
 Inject a custom ``ChatKitTransport`` for previews, tests, local fixtures, or a backend that does not use the default single-endpoint shape.
