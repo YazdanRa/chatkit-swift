@@ -16,6 +16,10 @@ let package = Package(
             name: "ChatKitSwift",
             targets: ["ChatKitSwift"],
         ),
+        .executable(
+            name: "ChatKitWidgetSnapshot",
+            targets: ["ChatKitWidgetSnapshot"],
+        ),
     ],
     dependencies: [
         .package(url: "https://github.com/gonzalezreal/textual", from: "0.3.1"),
@@ -29,6 +33,11 @@ let package = Package(
             dependencies: [
                 .product(name: "Textual", package: "textual"),
             ],
+        ),
+        .executableTarget(
+            name: "ChatKitWidgetSnapshot",
+            dependencies: ["ChatKitSwift"],
+            path: "Tools/ChatKitWidgetSnapshot",
         ),
         .testTarget(
             name: "ChatKitSwiftTests",

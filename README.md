@@ -503,6 +503,37 @@ renders the returned `{{ (name) | tojson }}` placeholders with state values and
 decodes the result into a native widget node. The iOS demo app includes a Widget
 Studio sheet that exercises this flow.
 
+### Widget Screenshot Parity
+
+`WidgetParity/fixtures/widgets.json` contains representative official ChatKit
+widget payloads used for native-vs-web screenshot comparison. The fixtures are
+fed to both `ChatKitWidgetPreview` and the real ChatKit JS iframe from a local
+`chatkit-js` checkout.
+
+Run the full parity workflow from the package root:
+
+```sh
+node scripts/widget-parity.js
+```
+
+The script renders Swift screenshots with `ChatKitWidgetSnapshot`, starts a
+local server for the JS runtime, captures the real iframe with Playwright, crops
+both sides to visible widget content, and writes PNG diffs plus
+`.widget-parity/report.md`. Generated artifacts, Playwright's local install, and
+cached JS chunks stay under `.widget-parity/` and are ignored by git.
+
+Useful variants:
+
+```sh
+node scripts/widget-parity.js --allow-failures
+node scripts/widget-parity.js --skip-swift
+node scripts/widget-parity.js --chatkit-js /Users/ericlewis/Developer/chatkit-js
+```
+
+The default asset fallback is `https://cdn.platform.openai.com` for dynamic
+`/assets/ck1/*` chunks that are referenced by the saved JS bundle but not present
+in `remote_references_to`.
+
 ```swift
 let options = ChatKitOptions(
     api: .custom(url: chatEndpoint),
