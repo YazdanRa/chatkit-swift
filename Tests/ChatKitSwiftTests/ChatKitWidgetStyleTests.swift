@@ -32,11 +32,28 @@ final class ChatKitWidgetStyleTests: XCTestCase {
         XCTAssertEqual(ChatKitWidgetMetrics.radius(.number(14)), 14)
     }
 
+    func testDimensionsParseNumbersPixelsAndPercentages() throws {
+        XCTAssertEqual(ChatKitWidgetMetrics.fixedDimension(.number(8)), 8)
+        XCTAssertEqual(ChatKitWidgetMetrics.fixedDimension(.string("12px")), 12)
+        XCTAssertNil(ChatKitWidgetMetrics.fixedDimension(.string("68%")))
+        let percentage = try XCTUnwrap(ChatKitWidgetMetrics.percentage(.string("68%")))
+        XCTAssertEqual(percentage, CGFloat(0.68), accuracy: 0.001)
+        XCTAssertNil(ChatKitWidgetMetrics.percentage(.string("auto")))
+    }
+
     func testSemanticWidgetColorsResolveNativePalettes() {
         XCTAssertEqual(ChatKitWidgetTone(rawValue: "primary"), .primary)
         XCTAssertEqual(ChatKitWidgetTone(rawValue: "caution"), .warning)
         XCTAssertEqual(ChatKitWidgetTone(rawValue: "danger"), .danger)
         XCTAssertEqual(ChatKitWidgetTone(rawValue: "discovery"), .discovery)
+    }
+
+    func testStudioColorTokensResolveToNativeColors() {
+        XCTAssertNotNil(ChatKitWidgetColor.color("tertiary"))
+        XCTAssertNotNil(ChatKitWidgetColor.color("surface-tertiary"))
+        XCTAssertNotNil(ChatKitWidgetColor.color("green-500"))
+        XCTAssertNotNil(ChatKitWidgetColor.color("red-500"))
+        XCTAssertNotNil(ChatKitWidgetColor.color("blue-500"))
     }
 
     func testChartDataExtractsLabelsValuesAndColors() {

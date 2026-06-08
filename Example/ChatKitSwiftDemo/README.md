@@ -28,4 +28,9 @@
 
 3. Open `ChatKitSwiftDemo.xcodeproj` and run the app on an iOS simulator.
 
+The toolbar includes a Widget Studio sheet for generating a widget from a prompt,
+converting the JSX into template JSON, rendering it as a native
+`ChatKitWidgetNode`, and inspecting the generated JSX, schema, state, template,
+and rendered JSON.
+
 Do not put an OpenAI API key in the demo app, `.env`, scheme, or app bundle. Keep API keys on your server and expose only the session endpoint to the client app.

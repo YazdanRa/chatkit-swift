@@ -11,11 +11,15 @@
 		2BF9E370A1FCF9677522F0A2 /* ChatKitSwift in Frameworks */ = {isa = PBXBuildFile; productRef = 34C6FFF4929AD1C1519C42E9 /* ChatKitSwift */; };
 		3A5A7D2C31FA8BA3314778F0 /* BackendHostedChatKitConfiguration.swift in Sources */ = {isa = PBXBuildFile; fileRef = A9549390084E06C44C5ED179 /* BackendHostedChatKitConfiguration.swift */; };
 		676C07EF6A547E07028B11C4 /* ChatScreen.swift in Sources */ = {isa = PBXBuildFile; fileRef = 910516B42A2BB1AFEDCE0D76 /* ChatScreen.swift */; };
+		C9A99521A525BE5F557B86E4 /* WidgetStudioClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3FC06ABC7C81399E5429BCB6 /* WidgetStudioClient.swift */; };
+		CC2B67DF6D5A26A758F6C0E2 /* WidgetStudioSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7C383116720359990CBEF15D /* WidgetStudioSheet.swift */; };
 		EB41BD6705994F7E1736D74A /* DemoEnvironment.swift in Sources */ = {isa = PBXBuildFile; fileRef = 61474C797307BC6913DD868C /* DemoEnvironment.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
+		3FC06ABC7C81399E5429BCB6 /* WidgetStudioClient.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WidgetStudioClient.swift; sourceTree = "<group>"; };
 		61474C797307BC6913DD868C /* DemoEnvironment.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DemoEnvironment.swift; sourceTree = "<group>"; };
+		7C383116720359990CBEF15D /* WidgetStudioSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WidgetStudioSheet.swift; sourceTree = "<group>"; };
 		910516B42A2BB1AFEDCE0D76 /* ChatScreen.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChatScreen.swift; sourceTree = "<group>"; };
 		A131C27EC0702FD9AD4182DE /* ChatKitSwiftDemoApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChatKitSwiftDemoApp.swift; sourceTree = "<group>"; };
 		A26BC2F38C2A81ACB31276D1 /* ChatKitSwiftDemo.app */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.application; path = ChatKitSwiftDemo.app; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -58,6 +62,8 @@
 				910516B42A2BB1AFEDCE0D76 /* ChatScreen.swift */,
 				61474C797307BC6913DD868C /* DemoEnvironment.swift */,
 				A9549390084E06C44C5ED179 /* BackendHostedChatKitConfiguration.swift */,
+				3FC06ABC7C81399E5429BCB6 /* WidgetStudioClient.swift */,
+				7C383116720359990CBEF15D /* WidgetStudioSheet.swift */,
 			);
 			path = ChatKitSwiftDemo;
 			sourceTree = "<group>";
@@ -138,6 +144,8 @@
 				676C07EF6A547E07028B11C4 /* ChatScreen.swift in Sources */,
 				EB41BD6705994F7E1736D74A /* DemoEnvironment.swift in Sources */,
 				3A5A7D2C31FA8BA3314778F0 /* BackendHostedChatKitConfiguration.swift in Sources */,
+				C9A99521A525BE5F557B86E4 /* WidgetStudioClient.swift in Sources */,
+				CC2B67DF6D5A26A758F6C0E2 /* WidgetStudioSheet.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

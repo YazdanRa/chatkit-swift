@@ -479,7 +479,8 @@ Colors can be semantic tokens such as `primary`, `secondary`, `info`,
 `discovery`, `success`, `warning`, and `danger`, or hex values. Widget color
 fields can also be light/dark objects, for example `{ "light": "#111827",
 "dark": "#F9FAFB" }`, and ChatKitSwift resolves them against the current SwiftUI
-color scheme.
+color scheme. The renderer also resolves common Widget Studio tokens such as
+`surface-tertiary`, `tertiary`, and `green-500` for generated-widget previews.
 
 Forms and controls use native SwiftUI controls. Buttons, list items, card
 confirm/cancel actions, form submit actions, and control change actions are sent
@@ -494,6 +495,13 @@ The official ChatKit component set does not currently include a dedicated chart
 component, but some backends send chart-like custom payloads. ChatKitSwift
 includes a simple native bar-chart renderer for `Chart` or `BarChart` nodes with
 `data` or `points` arrays containing labels and numeric values.
+
+For local tooling, `ChatKitWidgetPreview` renders a standalone
+`ChatKitWidgetNode` without inserting it into a live conversation. If you use
+Widget Studio's `convert-widget-to-file` endpoint, `ChatKitWidgetTemplate`
+renders the returned `{{ (name) | tojson }}` placeholders with state values and
+decodes the result into a native widget node. The iOS demo app includes a Widget
+Studio sheet that exercises this flow.
 
 ```swift
 let options = ChatKitOptions(

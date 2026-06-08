@@ -786,13 +786,38 @@ private struct CapsuleOrRoundedRectangle: Shape {
 
 private extension View {
     func chatKitWidgetBoxStyle(node: ChatKitWidgetNode, colorScheme: SwiftUI.ColorScheme) -> some View {
-        padding(ChatKitWidgetMetrics.insets(node.raw["padding"], fallback: 0))
-            .background {
-                if let background = node.color("background", colorScheme: colorScheme) {
-                    RoundedRectangle(cornerRadius: node.cornerRadius)
-                        .fill(background)
-                }
+        chatKitWidgetSizedBoxStyle(node: node, colorScheme: colorScheme)
+    }
+
+    @ViewBuilder
+    private func chatKitWidgetSizedBoxStyle(node: ChatKitWidgetNode, colorScheme: SwiftUI.ColorScheme) -> some View {
+        if let widthPercentage = node.widthPercentage, let fixedHeight = node.fixedHeight {
+            GeometryReader { proxy in
+                padding(ChatKitWidgetMetrics.insets(node.raw["padding"], fallback: 0))
+                    .frame(width: max(0, proxy.size.width * widthPercentage), height: fixedHeight, alignment: node.frameAlignment)
+                    .chatKitWidgetDecoratedBoxStyle(node: node, colorScheme: colorScheme)
+                    .frame(maxWidth: .infinity, alignment: node.frameAlignment)
             }
+            .frame(height: fixedHeight)
+        } else {
+            padding(ChatKitWidgetMetrics.insets(node.raw["padding"], fallback: 0))
+                .frame(
+                    width: node.fixedWidth,
+                    height: node.fixedHeight,
+                    alignment: node.frameAlignment,
+                )
+                .frame(maxWidth: node.fillsAvailableWidth ? .infinity : nil, alignment: node.frameAlignment)
+                .chatKitWidgetDecoratedBoxStyle(node: node, colorScheme: colorScheme)
+        }
+    }
+
+    private func chatKitWidgetDecoratedBoxStyle(node: ChatKitWidgetNode, colorScheme: SwiftUI.ColorScheme) -> some View {
+        background {
+            if let background = node.color("background", colorScheme: colorScheme) {
+                RoundedRectangle(cornerRadius: node.cornerRadius)
+                    .fill(background)
+            }
+        }
             .overlay {
                 if let borderWidth = node.borderWidth {
                     RoundedRectangle(cornerRadius: node.cornerRadius)
@@ -849,6 +874,22 @@ private extension ChatKitWidgetNode {
         case "end": .trailing
         default: .leading
         }
+    }
+
+    var fixedWidth: CGFloat? {
+        ChatKitWidgetMetrics.fixedDimension(raw["width"])
+    }
+
+    var fixedHeight: CGFloat? {
+        ChatKitWidgetMetrics.fixedDimension(raw["height"])
+    }
+
+    var widthPercentage: CGFloat? {
+        ChatKitWidgetMetrics.percentage(raw["width"])
+    }
+
+    var fillsAvailableWidth: Bool {
+        bool("block") || (type == "Box" && raw["background"] != nil && fixedHeight != nil && fixedWidth == nil)
     }
 
     var imageContentMode: ContentMode {

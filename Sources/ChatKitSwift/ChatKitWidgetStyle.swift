@@ -126,6 +126,43 @@ enum ChatKitWidgetMetrics {
         }
     }
 
+    /// Resolves fixed dimensions from numeric values, pixel strings, and numeric strings.
+    static func fixedDimension(_ value: JSONValue?) -> CGFloat? {
+        switch value {
+        case let .number(number):
+            CGFloat(number)
+        case let .string(string):
+            fixedDimension(string)
+        default:
+            nil
+        }
+    }
+
+    /// Resolves percentage strings such as `"68%"` into unit fractions.
+    static func percentage(_ value: JSONValue?) -> CGFloat? {
+        guard case let .string(string)? = value else {
+            return nil
+        }
+        let trimmed = string.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard trimmed.hasSuffix("%"),
+              let number = Double(trimmed.dropLast())
+        else {
+            return nil
+        }
+        return CGFloat(number / 100)
+    }
+
+    private static func fixedDimension(_ token: String) -> CGFloat? {
+        let trimmed = token.trimmingCharacters(in: .whitespacesAndNewlines)
+        if trimmed.hasSuffix("%") {
+            return nil
+        }
+        if trimmed.hasSuffix("px") {
+            return Double(trimmed.dropLast(2)).map { CGFloat($0) }
+        }
+        return Double(trimmed).map { CGFloat($0) }
+    }
+
     /// Resolves scalar or directional padding objects into edge insets.
     static func insets(_ value: JSONValue?, fallback: CGFloat = 0) -> EdgeInsets {
         guard case let .object(object)? = value else {
@@ -315,8 +352,28 @@ enum ChatKitWidgetColor {
         if let tone = ChatKitWidgetTone(rawValue: token) {
             return tone.softForeground
         }
+        if let color = studioTokenColors[token] {
+            return color
+        }
         return Color(chatKitHex: token)
     }
+
+    private static let studioTokenColors: [String: Color] = [
+        "tertiary": .secondary.opacity(0.72),
+        "text-secondary": .secondary,
+        "text-tertiary": .secondary.opacity(0.72),
+        "surface-secondary": .secondary.opacity(0.10),
+        "surface-tertiary": .secondary.opacity(0.16),
+        "gray-500": .gray,
+        "slate-500": .secondary,
+        "green-500": .green,
+        "red-500": .red,
+        "blue-500": .blue,
+        "yellow-500": .yellow,
+        "orange-500": .orange,
+        "purple-500": .purple,
+        "pink-500": .pink,
+    ]
 }
 
 extension Color {
