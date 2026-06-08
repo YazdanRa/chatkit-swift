@@ -34,57 +34,90 @@ enum ChatKitWidgetTone: Equatable {
 
     /// Foreground color for solid controls and badges.
     var foreground: Color {
-        switch self {
-        case .primary, .discovery, .success, .warning, .danger:
-            .white
-        case .secondary, .info:
-            .primary
-        }
+        color(hex: foregroundHex)
     }
 
     /// Background color for solid controls and badges.
     var solidBackground: Color {
-        switch self {
-        case .primary:
-            .accentColor
-        case .secondary:
-            .secondary.opacity(0.18)
-        case .info:
-            .blue
-        case .discovery:
-            .purple
-        case .success:
-            .green
-        case .warning:
-            .orange
-        case .danger:
-            .red
-        }
+        color(hex: solidHex)
     }
 
     /// Low-emphasis background color for outline and soft widget treatments.
     var softBackground: Color {
-        solidBackground.opacity(0.16)
+        color(hex: softHex)
     }
 
     /// Low-emphasis foreground color for outline and soft widget treatments.
     var softForeground: Color {
+        color(hex: accentHex)
+    }
+
+    var foregroundHex: String {
+        switch self {
+        case .primary, .secondary, .info, .discovery, .success, .warning, .danger:
+            "#FFFFFF"
+        }
+    }
+
+    var solidHex: String {
         switch self {
         case .primary:
-            .accentColor
+            "#181818"
         case .secondary:
-            .secondary
+            "#5D5D5D"
         case .info:
-            .blue
+            "#0285FF"
         case .discovery:
-            .purple
+            "#924FF7"
         case .success:
-            .green
+            "#00A240"
         case .warning:
-            .orange
+            "#E25507"
         case .danger:
-            .red
+            "#E02E2A"
         }
+    }
+
+    var softHex: String {
+        switch self {
+        case .primary:
+            "#F3F3F3"
+        case .secondary:
+            "#EDEDED"
+        case .info:
+            "#E5F3FF"
+        case .discovery:
+            "#EFE5FE"
+        case .success:
+            "#D9F4E4"
+        case .warning:
+            "#FFE7D9"
+        case .danger:
+            "#FFD9D9"
+        }
+    }
+
+    var accentHex: String {
+        switch self {
+        case .primary:
+            "#0D0D0D"
+        case .secondary:
+            "#282828"
+        case .info:
+            "#0169CC"
+        case .discovery:
+            "#8046D9"
+        case .success:
+            "#008635"
+        case .warning:
+            "#B9480D"
+        case .danger:
+            "#E02E2A"
+        }
+    }
+
+    private func color(hex: String) -> Color {
+        Color(chatKitHex: hex) ?? .primary
     }
 }
 
@@ -220,21 +253,196 @@ enum ChatKitWidgetMetrics {
         }
     }
 
+    static func titlePointSize(_ token: String?) -> CGFloat {
+        switch token {
+        case "sm":
+            18
+        case "lg":
+            24
+        case "xl":
+            32
+        case "2xl":
+            36
+        case "3xl":
+            48
+        case "4xl":
+            60
+        case "5xl":
+            72
+        default:
+            20
+        }
+    }
+
+    static func titleLineHeight(_ token: String?) -> CGFloat {
+        switch token {
+        case "sm":
+            26
+        case "lg":
+            28
+        case "xl":
+            38
+        case "2xl":
+            42
+        case "3xl":
+            48
+        case "4xl":
+            60
+        case "5xl":
+            72
+        default:
+            26
+        }
+    }
+
+    static func textPointSize(_ token: String?) -> CGFloat {
+        switch token {
+        case "xs":
+            12
+        case "sm":
+            14
+        case "lg":
+            18
+        case "xl":
+            20
+        default:
+            16
+        }
+    }
+
+    static func textLineHeight(_ token: String?) -> CGFloat {
+        switch token {
+        case "xs":
+            18
+        case "sm":
+            20
+        case "lg":
+            29
+        case "xl":
+            26
+        default:
+            24
+        }
+    }
+
+    static func captionPointSize(_ token: String?) -> CGFloat {
+        switch token {
+        case "md":
+            14
+        case "lg":
+            16
+        default:
+            12
+        }
+    }
+
+    static func captionLineHeight(_ token: String?) -> CGFloat {
+        switch token {
+        case "md":
+            20
+        case "lg":
+            24
+        default:
+            15.6
+        }
+    }
+
+    static func additionalLineSpacing(pointSize: CGFloat, lineHeight: CGFloat) -> CGFloat {
+        max(0, lineHeight - pointSize - 4)
+    }
+
+    static func stackGap(_ value: JSONValue?, containerType: String, childTypes: [String]) -> CGFloat? {
+        let gap = spacing(value)
+        guard let gap else {
+            return nil
+        }
+        if case .string? = value {
+            if containerType == "Col", childTypes.allSatisfy({ $0 == "Button" }) {
+                return 0
+            }
+            if containerType == "Row", childTypes.allSatisfy({ $0 == "Box" }) {
+                return 0
+            }
+        }
+        return gap
+    }
+
+    static func buttonHeight(_ token: String?) -> CGFloat {
+        switch token {
+        case "3xs":
+            22
+        case "2xs":
+            24
+        case "xs":
+            26
+        case "sm":
+            28
+        case "md":
+            32
+        case "xl":
+            40
+        case "2xl":
+            44
+        case "3xl":
+            48
+        default:
+            36
+        }
+    }
+
+    static func buttonFontPointSize(_ token: String?) -> CGFloat {
+        switch token {
+        case "2xl", "3xl":
+            16
+        case "3xs", "2xs":
+            12
+        default:
+            14
+        }
+    }
+
+    static func buttonHorizontalPadding(_ token: String?, pill: Bool) -> CGFloat {
+        let base = switch token {
+        case "3xs":
+            CGFloat(6)
+        case "2xs", "xs":
+            CGFloat(8)
+        case "sm":
+            CGFloat(10)
+        case "xl", "2xl":
+            CGFloat(14)
+        case "3xl":
+            CGFloat(16)
+        default:
+            CGFloat(12)
+        }
+        return pill ? base * 1.33 : base
+    }
+
+    static func buttonCornerRadius(_ value: JSONValue?, pill: Bool) -> CGFloat {
+        if value != nil {
+            return radius(value)
+        }
+        return 999
+    }
+
     /// Maps widget icon size tokens to native SwiftUI fonts.
     static func iconFont(_ token: String?) -> Font {
         switch token {
         case "xs":
-            .caption2
+            .system(size: 12)
         case "sm":
-            .caption
+            .system(size: 14)
         case "lg":
-            .title3
+            .system(size: 20)
         case "xl":
-            .title2
-        case "2xl", "3xl":
-            .title
+            .system(size: 22)
+        case "2xl":
+            .system(size: 24)
+        case "3xl":
+            .system(size: 26)
         default:
-            .body
+            .system(size: 18)
         }
     }
 }

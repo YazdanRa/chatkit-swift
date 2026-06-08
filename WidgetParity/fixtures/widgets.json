@@ -245,7 +245,7 @@
       "name": "Text Stress",
       "theme": "light",
       "viewport": { "width": 390, "height": 560 },
-      "threshold": 0.22,
+      "threshold": 0.12,
       "widget": {
         "type": "Card",
         "size": "md",
@@ -279,7 +279,7 @@
       "name": "Button Badge Matrix",
       "theme": "light",
       "viewport": { "width": 390, "height": 560 },
-      "threshold": 0.24,
+      "threshold": 0.10,
       "widget": {
         "type": "Card",
         "size": "md",
@@ -312,7 +312,7 @@
       "name": "Card Actions",
       "theme": "light",
       "viewport": { "width": 390, "height": 480 },
-      "threshold": 0.22,
+      "threshold": 0.14,
       "widget": {
         "type": "Card",
         "size": "sm",
@@ -338,7 +338,7 @@
       "name": "Icon Stat Row",
       "theme": "light",
       "viewport": { "width": 390, "height": 520 },
-      "threshold": 0.24,
+      "threshold": 0.10,
       "widget": {
         "type": "Card",
         "size": "md",
@@ -380,7 +380,7 @@
       "name": "Dark Nested Layout",
       "theme": "dark",
       "viewport": { "width": 390, "height": 560 },
-      "threshold": 0.26,
+      "threshold": 0.12,
       "widget": {
         "type": "Basic",
         "direction": "col",

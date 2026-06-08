@@ -48,6 +48,54 @@ final class ChatKitWidgetStyleTests: XCTestCase {
         XCTAssertEqual(ChatKitWidgetTone(rawValue: "discovery"), .discovery)
     }
 
+    func testWidgetTypographyMatchesReferenceTokenScale() {
+        XCTAssertEqual(ChatKitWidgetMetrics.titlePointSize("sm"), 18)
+        XCTAssertEqual(ChatKitWidgetMetrics.titleLineHeight("sm"), 26)
+        XCTAssertEqual(ChatKitWidgetMetrics.titlePointSize("lg"), 24)
+        XCTAssertEqual(ChatKitWidgetMetrics.titleLineHeight("lg"), 28)
+
+        XCTAssertEqual(ChatKitWidgetMetrics.textPointSize("md"), 16)
+        XCTAssertEqual(ChatKitWidgetMetrics.textLineHeight("md"), 24)
+        XCTAssertEqual(ChatKitWidgetMetrics.additionalLineSpacing(pointSize: 16, lineHeight: 24), 4)
+        XCTAssertEqual(ChatKitWidgetMetrics.captionPointSize(nil), 12)
+        XCTAssertEqual(ChatKitWidgetMetrics.captionLineHeight(nil), 15.6, accuracy: 0.01)
+        XCTAssertEqual(ChatKitWidgetMetrics.additionalLineSpacing(pointSize: 12, lineHeight: 15.6), 0)
+    }
+
+    func testWidgetButtonsDefaultToReferenceLargePillMetrics() {
+        XCTAssertEqual(ChatKitWidgetMetrics.buttonHeight(nil), 36)
+        XCTAssertEqual(ChatKitWidgetMetrics.buttonFontPointSize(nil), 14)
+        XCTAssertEqual(ChatKitWidgetMetrics.buttonHorizontalPadding(nil, pill: true), 15.96, accuracy: 0.01)
+        XCTAssertEqual(ChatKitWidgetMetrics.buttonCornerRadius(nil, pill: false), 999)
+    }
+
+    func testWidgetToneReferencePaletteMatchesChatKitJS() {
+        XCTAssertEqual(ChatKitWidgetTone.primary.solidHex, "#181818")
+        XCTAssertEqual(ChatKitWidgetTone.secondary.softHex, "#EDEDED")
+        XCTAssertEqual(ChatKitWidgetTone.info.accentHex, "#0169CC")
+        XCTAssertEqual(ChatKitWidgetTone.success.accentHex, "#008635")
+        XCTAssertEqual(ChatKitWidgetTone.danger.accentHex, "#E02E2A")
+    }
+
+    func testWidgetStackGapCollapsesForFlushReferenceRows() {
+        XCTAssertEqual(
+            ChatKitWidgetMetrics.stackGap(.string("sm"), containerType: "Col", childTypes: ["Button", "Button"]),
+            0,
+        )
+        XCTAssertEqual(
+            ChatKitWidgetMetrics.stackGap(.string("sm"), containerType: "Row", childTypes: ["Box", "Box"]),
+            0,
+        )
+        XCTAssertEqual(
+            ChatKitWidgetMetrics.stackGap(.string("sm"), containerType: "Col", childTypes: ["Text", "Button"]),
+            8,
+        )
+        XCTAssertEqual(
+            ChatKitWidgetMetrics.stackGap(.number(8), containerType: "Col", childTypes: ["Button", "Button"]),
+            8,
+        )
+    }
+
     func testStudioColorTokensResolveToNativeColors() {
         XCTAssertNotNil(ChatKitWidgetColor.color("tertiary"))
         XCTAssertNotNil(ChatKitWidgetColor.color("surface-tertiary"))

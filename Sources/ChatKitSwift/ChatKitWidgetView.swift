@@ -50,6 +50,7 @@ private struct ChatKitWidgetNodeView: View {
                 cardActions
             }
             .padding(ChatKitWidgetMetrics.insets(node.raw["padding"], fallback: node.cardPadding))
+            .frame(maxWidth: .infinity, alignment: .leading)
             .background(node.color("background", colorScheme: colorScheme) ?? Color.secondary.opacity(0.10), in: RoundedRectangle(cornerRadius: node.cornerRadius))
             .overlay {
                 RoundedRectangle(cornerRadius: node.cornerRadius)
@@ -74,11 +75,25 @@ private struct ChatKitWidgetNodeView: View {
             }
             .padding(.vertical, 6)
         case "Title":
-            text(node.value ?? "", font: titleFont, defaultWeight: .semibold)
+            text(
+                node.value ?? "",
+                pointSize: ChatKitWidgetMetrics.titlePointSize(node.string("size")),
+                lineHeight: ChatKitWidgetMetrics.titleLineHeight(node.string("size")),
+                defaultWeight: .medium,
+            )
         case "Caption":
-            text(node.value ?? "", font: captionFont, defaultColor: .secondary)
+            text(
+                node.value ?? "",
+                pointSize: ChatKitWidgetMetrics.captionPointSize(node.string("size")),
+                lineHeight: ChatKitWidgetMetrics.captionLineHeight(node.string("size")),
+                defaultColor: .secondary,
+            )
         case "Text":
-            text(node.value ?? "", font: textFont)
+            text(
+                node.value ?? "",
+                pointSize: ChatKitWidgetMetrics.textPointSize(node.string("size")),
+                lineHeight: ChatKitWidgetMetrics.textLineHeight(node.string("size")),
+            )
         case "Markdown":
             ChatKitAssistantResponseTextView(markdown: node.value ?? "")
         case "Badge":
@@ -112,7 +127,12 @@ private struct ChatKitWidgetNodeView: View {
         case "RadioGroup":
             ChatKitWidgetRadioGroupView(node: node, item: item, session: session)
         case "Label":
-            text(node.value ?? node.label ?? "", font: textFont, defaultWeight: node.fontWeight)
+            text(
+                node.value ?? node.label ?? "",
+                pointSize: ChatKitWidgetMetrics.textPointSize(node.string("size")),
+                lineHeight: ChatKitWidgetMetrics.textLineHeight(node.string("size")),
+                defaultWeight: node.fontWeight,
+            )
         case "Table":
             ChatKitWidgetTableView(node: node, item: item, session: session)
         case "Table.Row":
@@ -191,6 +211,7 @@ private struct ChatKitWidgetNodeView: View {
         let iconEnd = node.string("iconEnd")
         let tone = ChatKitWidgetTone(rawValue: node.string("color") ?? (node.string("style") == "primary" ? "primary" : "secondary"))
         let variant = node.string("variant") ?? (node.string("style") == "primary" ? "solid" : "outline")
+        let buttonRadius = ChatKitWidgetMetrics.buttonCornerRadius(node.raw["radius"], pill: node.bool("pill"))
 
         Button {
             Task { await performActionIfPossible(node.action(named: actionKey) ?? node.action) }
@@ -203,6 +224,7 @@ private struct ChatKitWidgetNodeView: View {
                 if !label.isEmpty {
                     Text(label)
                         .lineLimit(1)
+                        .truncationMode(.tail)
                 }
                 if let iconEnd {
                     Image(systemName: ChatKitStyle.systemImage(for: iconEnd))
@@ -212,8 +234,15 @@ private struct ChatKitWidgetNodeView: View {
             .frame(maxWidth: node.bool("block") ? .infinity : nil)
         }
         .controlSize(ChatKitWidgetMetrics.controlSize(node.string("size")))
-        .buttonStyle(ChatKitWidgetButtonStyle(variant: variant, tone: tone))
-        .clipShape(CapsuleOrRoundedRectangle(pill: node.bool("pill"), radius: node.cornerRadius))
+        .buttonStyle(ChatKitWidgetButtonStyle(
+            variant: variant,
+            tone: tone,
+            height: ChatKitWidgetMetrics.buttonHeight(node.string("size")),
+            fontPointSize: ChatKitWidgetMetrics.buttonFontPointSize(node.string("size")),
+            horizontalPadding: ChatKitWidgetMetrics.buttonHorizontalPadding(node.string("size"), pill: buttonRadius >= 999),
+            cornerRadius: buttonRadius,
+        ))
+        .clipShape(RoundedRectangle(cornerRadius: buttonRadius))
         .disabled(node.isDisabled)
     }
 
@@ -256,11 +285,11 @@ private struct ChatKitWidgetNodeView: View {
     }
 
     @ViewBuilder
-    private func text(_ value: String, font: Font, defaultColor: Color? = nil, defaultWeight: Font.Weight? = nil) -> some View {
+    private func text(_ value: String, pointSize: CGFloat, lineHeight: CGFloat, defaultColor: Color? = nil, defaultWeight: Font.Weight? = nil) -> some View {
         let color = node.color("color", colorScheme: colorScheme) ?? defaultColor
+        let fontWeight = node.fontWeight ?? defaultWeight ?? .regular
         let text = Text(value)
-            .font(font)
-            .fontWeight(node.fontWeight ?? defaultWeight)
+            .font(.system(size: pointSize, weight: fontWeight))
             .strikethrough(node.bool("lineThrough"))
             .italic(node.bool("italic"))
 
@@ -268,38 +297,14 @@ private struct ChatKitWidgetNodeView: View {
             text.foregroundStyle(color)
                 .multilineTextAlignment(node.textAlignment)
                 .lineLimit(node.lineLimit)
+                .lineSpacing(ChatKitWidgetMetrics.additionalLineSpacing(pointSize: pointSize, lineHeight: lineHeight))
+                .truncationMode(.tail)
         } else {
             text
                 .multilineTextAlignment(node.textAlignment)
                 .lineLimit(node.lineLimit)
-        }
-    }
-
-    private var titleFont: Font {
-        switch node.string("size") {
-        case "sm": .headline
-        case "lg": .title2
-        case "xl": .title
-        case "2xl", "3xl", "4xl", "5xl": .largeTitle
-        default: .title3
-        }
-    }
-
-    private var captionFont: Font {
-        switch node.string("size") {
-        case "lg": .callout
-        case "md": .footnote
-        default: .caption
-        }
-    }
-
-    private var textFont: Font {
-        switch node.string("size") {
-        case "xs": .caption2
-        case "sm": .footnote
-        case "lg": .title3
-        case "xl": .title2
-        default: .body
+                .lineSpacing(ChatKitWidgetMetrics.additionalLineSpacing(pointSize: pointSize, lineHeight: lineHeight))
+                .truncationMode(.tail)
         }
     }
 
@@ -381,19 +386,25 @@ private struct ChatKitWidgetStatusView: View {
 private struct ChatKitWidgetButtonStyle: ButtonStyle {
     let variant: String
     let tone: ChatKitWidgetTone?
+    let height: CGFloat
+    let fontPointSize: CGFloat
+    let horizontalPadding: CGFloat
+    let cornerRadius: CGFloat
+
+    @Environment(\.isEnabled) private var isEnabled
 
     func makeBody(configuration: Configuration) -> some View {
         let resolvedTone = tone ?? .secondary
         configuration.label
-            .font(.callout.weight(.medium))
-            .padding(.horizontal, 12)
-            .padding(.vertical, 8)
-            .foregroundStyle(foreground(tone: resolvedTone))
-            .background(background(tone: resolvedTone, pressed: configuration.isPressed), in: RoundedRectangle(cornerRadius: 10))
+            .font(.system(size: fontPointSize, weight: .medium))
+            .frame(minHeight: height)
+            .padding(.horizontal, horizontalPadding)
+            .foregroundStyle(isEnabled ? foreground(tone: resolvedTone) : disabledForeground)
+            .background(background(tone: resolvedTone, pressed: configuration.isPressed), in: RoundedRectangle(cornerRadius: cornerRadius))
             .overlay {
                 if variant == "outline" {
-                    RoundedRectangle(cornerRadius: 10)
-                        .stroke(resolvedTone.softForeground.opacity(0.45))
+                    RoundedRectangle(cornerRadius: cornerRadius)
+                        .stroke(isEnabled ? resolvedTone.softForeground : disabledForeground)
                 }
             }
             .opacity(configuration.isPressed ? 0.82 : 1)
@@ -411,7 +422,9 @@ private struct ChatKitWidgetButtonStyle: ButtonStyle {
     }
 
     private func background(tone: ChatKitWidgetTone, pressed: Bool) -> Color {
-        let opacity = pressed ? 0.24 : 0.16
+        if !isEnabled {
+            return variant == "ghost" ? .clear : disabledBackground
+        }
         switch variant {
         case "solid":
             return tone.solidBackground
@@ -420,8 +433,16 @@ private struct ChatKitWidgetButtonStyle: ButtonStyle {
         case "outline":
             return .clear
         default:
-            return tone.solidBackground.opacity(opacity)
+            return tone.softBackground
         }
+    }
+
+    private var disabledForeground: Color {
+        Color(chatKitHex: "#8F8F8F") ?? .secondary
+    }
+
+    private var disabledBackground: Color {
+        Color(chatKitHex: "#EDEDED") ?? .secondary.opacity(0.12)
     }
 }
 
@@ -829,7 +850,7 @@ private extension View {
 
 private extension ChatKitWidgetNode {
     var gap: CGFloat? {
-        ChatKitWidgetMetrics.spacing(raw["gap"])
+        ChatKitWidgetMetrics.stackGap(raw["gap"], containerType: type, childTypes: children.map(\.type))
     }
 
     func gapOrDefault(_ fallback: CGFloat) -> CGFloat {
