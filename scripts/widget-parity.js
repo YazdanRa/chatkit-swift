@@ -9,9 +9,34 @@ const zlib = require("zlib");
 const DEFAULT_CHATKIT_JS = "/Users/ericlewis/Developer/chatkit-js";
 const DEFAULT_FIXTURES = "WidgetParity/fixtures/widgets.json";
 const DEFAULT_OUTPUT = ".widget-parity";
-const DEFAULT_VISUAL_MODEL = process.env.OPENAI_VISION_MODEL || "gpt-4.1-mini";
+const DEFAULT_VISUAL_MODEL = process.env.OPENAI_VISION_MODEL || "gpt-5.4-nano-2026-03-17";
 const PLAYWRIGHT_VERSION = "1.60.0";
 const RESPONSES_API_URL = "https://api.openai.com/v1/responses";
+const VISUAL_REVIEW_RESPONSE_FORMAT = {
+  type: "json_schema",
+  name: "chatkit_widget_visual_review",
+  strict: true,
+  schema: {
+    type: "object",
+    additionalProperties: false,
+    properties: {
+      verdict: { type: "string", enum: ["pass", "fail", "review"] },
+      severity: { type: "string", enum: ["none", "low", "medium", "high"] },
+      summary: { type: "string" },
+      issues: {
+        type: "array",
+        maxItems: 8,
+        items: { type: "string" },
+      },
+      recommendedFixes: {
+        type: "array",
+        maxItems: 8,
+        items: { type: "string" },
+      },
+    },
+    required: ["verdict", "severity", "summary", "issues", "recommendedFixes"],
+  },
+};
 
 main().catch((error) => {
   console.error(error instanceof Error ? error.stack || error.message : String(error));
@@ -115,7 +140,7 @@ function parseArguments(args) {
     allowFailures: false,
     visualReview: false,
     visualModel: DEFAULT_VISUAL_MODEL,
-    visualDetail: "low",
+    visualDetail: "high",
     help: false,
   };
 
@@ -182,7 +207,7 @@ Options:
   --allow-failures       Generate the report without returning a failing exit code.
   --visual-review        Ask a visual model to review Swift, JS, and diff images.
   --visual-model <name>  OpenAI model for visual review. Default: ${DEFAULT_VISUAL_MODEL}
-  --visual-detail <mode> Image detail for visual review: low, auto, high. Default: low
+  --visual-detail <mode> Image detail for visual review: low, auto, high. Default: high
 `);
 }
 
@@ -643,6 +668,7 @@ function compareScreenshots(manifest, paths) {
       jsSize: { width: js.width, height: js.height },
       differingPixels: diff.differingPixels,
       totalPixels: diff.totalPixels,
+      widget: fixture.widget,
       files: {
         native: path.relative(paths.swiftOutput, nativePath),
         nativeCrop: path.relative(paths.swiftCropOutput, croppedNativePath),
@@ -668,17 +694,22 @@ async function runVisualReviews(report, paths, options) {
 }
 
 async function requestVisualReview(result, paths, options) {
+  const widgetPayload = JSON.stringify(result.widget);
   const prompt = [
-    "Compare one ChatKit widget parity fixture.",
-    "Image 1 is the ChatKitSwift native crop. Image 2 is the real chatkit-js reference crop. Image 3 is the generated diff heatmap, where brighter pixels mean larger differences.",
-    "Decide whether the Swift rendering is visually on par with the JS reference for product-quality widget rendering.",
-    "Ignore minor font rasterization, subpixel antialiasing, and 1-2px crop padding. Flag missing content, wrong layout, clipping, theme/color problems, icon/control mismatches, or clearly incorrect spacing.",
+    "Goal: judge whether one ChatKitSwift native widget rendering is visually on par with the real chatkit-js reference.",
+    "Image 1 is the ChatKitSwift native crop. Image 2 is the chatkit-js reference crop. Image 3 is the diff heatmap; brighter pixels mean larger differences.",
+    "Use the JS reference image and fixture widget payload as ground truth. Do not infer expected styles from component names when the payload or reference image shows otherwise.",
+    "Pass when the Swift image preserves the same visible content, hierarchy, layout intent, theme, controls, and action styling. Minor font rasterization, antialiasing, subpixel offsets, and 1-2px crop padding are acceptable.",
+    "Return fail only for high-confidence product-quality regressions present in Swift but not the JS reference: missing content, wrong layout, clipping, wrong theme, wrong control primitive, unreadable overlap, or materially incorrect spacing.",
+    "Use review rather than fail when the evidence is ambiguous, when the difference also appears in the JS reference, or when the diff is mostly expected text rasterization/padding drift.",
     `Fixture: ${result.name} (${result.id}). Numeric mean absolute error: ${result.score.toFixed(4)}. Threshold: ${result.threshold.toFixed(4)}. Pixel check result: ${result.passed ? "pass" : "fail"}.`,
-    'Return only compact JSON with this shape: {"verdict":"pass|fail|review","severity":"none|low|medium|high","summary":"short sentence","issues":["short issue"],"recommendedFixes":["short fix"]}.',
+    `Swift crop: ${result.nativeSize.width}x${result.nativeSize.height}. JS crop: ${result.jsSize.width}x${result.jsSize.height}.`,
+    `Fixture widget payload: ${widgetPayload}`,
   ].join("\n\n");
 
   const body = {
     model: options.visualModel,
+    reasoning: { effort: "low" },
     input: [{
       role: "user",
       content: [
@@ -688,6 +719,10 @@ async function requestVisualReview(result, paths, options) {
         { type: "input_image", image_url: imageDataURL(path.join(paths.diffOutput, `${result.id}.png`)), detail: options.visualDetail },
       ],
     }],
+    text: {
+      verbosity: "low",
+      format: VISUAL_REVIEW_RESPONSE_FORMAT,
+    },
     max_output_tokens: 700,
   };
 
