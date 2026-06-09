@@ -6,7 +6,7 @@ final class ChatKitWidgetParityFixtureTests: XCTestCase {
         let manifest = try Self.loadManifest()
 
         XCTAssertEqual(manifest.version, 1)
-        XCTAssertGreaterThanOrEqual(manifest.fixtures.count, 10)
+        XCTAssertGreaterThanOrEqual(manifest.fixtures.count, 30)
 
         let ids = manifest.fixtures.map(\.id)
         XCTAssertEqual(Set(ids).count, ids.count, "Fixture identifiers must be unique.")

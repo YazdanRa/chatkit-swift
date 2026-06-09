@@ -416,6 +416,655 @@
           }
         ]
       }
+    },
+    {
+      "id": "compact-status-row",
+      "name": "Compact Status Row",
+      "theme": "light",
+      "viewport": { "width": 390, "height": 360 },
+      "threshold": 0.2,
+      "widget": {
+        "type": "Card",
+        "size": "md",
+        "status": { "text": "Live", "icon": "check" },
+        "children": [
+          { "type": "Title", "value": "Edge Worker", "size": "sm" },
+          { "type": "Caption", "value": "99 ms p95", "color": "tertiary" },
+          {
+            "type": "Row",
+            "align": "center",
+            "gap": "sm",
+            "children": [
+              { "type": "Icon", "name": "check", "color": "warning", "size": "lg" },
+              { "type": "Text", "value": "Requests healthy", "size": "sm", "weight": "semibold" },
+              { "type": "Spacer", "minSize": 12 },
+              { "type": "Badge", "label": "OK", "color": "success", "variant": "solid", "size": "sm" }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "id": "dense-table",
+      "name": "Dense Table",
+      "theme": "light",
+      "viewport": { "width": 440, "height": 520 },
+      "threshold": 0.22,
+      "widget": {
+        "type": "Card",
+        "size": "md",
+        "children": [
+          { "type": "Title", "value": "Regional Queue", "size": "sm" },
+          {
+            "type": "Table",
+            "children": [
+              {
+                "type": "Table.Row",
+                "header": true,
+                "children": [
+                  { "type": "Table.Cell", "children": [{ "type": "Text", "value": "Region", "size": "sm" }] },
+                  { "type": "Table.Cell", "align": "end", "children": [{ "type": "Text", "value": "Jobs", "size": "sm" }] },
+                  { "type": "Table.Cell", "children": [{ "type": "Text", "value": "SLA", "size": "sm" }] }
+                ]
+              },
+              {
+                "type": "Table.Row",
+                "children": [
+                  { "type": "Table.Cell", "children": [{ "type": "Text", "value": "us-east" }] },
+                  { "type": "Table.Cell", "align": "end", "children": [{ "type": "Caption", "value": "142" }] },
+                  { "type": "Table.Cell", "children": [{ "type": "Badge", "label": "Good", "color": "success", "variant": "soft", "size": "sm" }] }
+                ]
+              },
+              {
+                "type": "Table.Row",
+                "children": [
+                  { "type": "Table.Cell", "children": [{ "type": "Text", "value": "eu-west" }] },
+                  { "type": "Table.Cell", "align": "end", "children": [{ "type": "Caption", "value": "87" }] },
+                  { "type": "Table.Cell", "children": [{ "type": "Badge", "label": "Watch", "color": "warning", "variant": "outline", "size": "sm" }] }
+                ]
+              },
+              {
+                "type": "Table.Row",
+                "children": [
+                  { "type": "Table.Cell", "children": [{ "type": "Text", "value": "ap-south" }] },
+                  { "type": "Table.Cell", "align": "end", "children": [{ "type": "Caption", "value": "19" }] },
+                  { "type": "Table.Cell", "children": [{ "type": "Badge", "label": "Hold", "color": "danger", "variant": "soft", "size": "sm" }] }
+                ]
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "id": "empty-state-actions",
+      "name": "Empty State Actions",
+      "theme": "light",
+      "viewport": { "width": 390, "height": 460 },
+      "threshold": 0.18,
+      "widget": {
+        "type": "Card",
+        "size": "md",
+        "children": [
+          { "type": "Title", "value": "No open escalations", "size": "md" },
+          { "type": "Caption", "value": "Everything assigned to your team is currently clear.", "color": "tertiary" },
+          {
+            "type": "Row",
+            "gap": "sm",
+            "children": [
+              { "type": "Button", "label": "Refresh", "variant": "outline", "color": "secondary", "onClickAction": { "type": "refresh" } },
+              { "type": "Button", "label": "Create", "variant": "solid", "color": "primary", "onClickAction": { "type": "create_case" } }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "id": "progress-stack",
+      "name": "Progress Stack",
+      "theme": "light",
+      "viewport": { "width": 390, "height": 520 },
+      "threshold": 0.2,
+      "widget": {
+        "type": "Card",
+        "size": "md",
+        "children": [
+          { "type": "Title", "value": "Rollout Progress", "size": "sm" },
+          {
+            "type": "Col",
+            "gap": "sm",
+            "children": [
+              {
+                "type": "Col",
+                "gap": "2xs",
+                "children": [
+                  { "type": "Caption", "value": "Backend", "color": "tertiary" },
+                  {
+                    "type": "Box",
+                    "height": 8,
+                    "radius": "full",
+                    "background": "#E5E7EB",
+                    "children": [{ "type": "Box", "width": "92%", "height": 8, "radius": "full", "background": "#22C55E" }]
+                  }
+                ]
+              },
+              {
+                "type": "Col",
+                "gap": "2xs",
+                "children": [
+                  { "type": "Caption", "value": "Clients", "color": "tertiary" },
+                  {
+                    "type": "Box",
+                    "height": 8,
+                    "radius": "full",
+                    "background": "#E5E7EB",
+                    "children": [{ "type": "Box", "width": "64%", "height": 8, "radius": "full", "background": "#3B82F6" }]
+                  }
+                ]
+              },
+              {
+                "type": "Col",
+                "gap": "2xs",
+                "children": [
+                  { "type": "Caption", "value": "Docs", "color": "tertiary" },
+                  {
+                    "type": "Box",
+                    "height": 8,
+                    "radius": "full",
+                    "background": "#E5E7EB",
+                    "children": [{ "type": "Box", "width": "38%", "height": 8, "radius": "full", "background": "#F59E0B" }]
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "id": "vertical-radio-form",
+      "name": "Vertical Radio Form",
+      "theme": "light",
+      "viewport": { "width": 390, "height": 620 },
+      "threshold": 0.24,
+      "widget": {
+        "type": "Card",
+        "size": "lg",
+        "children": [
+          { "type": "Title", "value": "Escalation Policy", "size": "sm" },
+          {
+            "type": "Form",
+            "gap": "md",
+            "children": [
+              { "type": "Label", "value": "Route", "fieldName": "route", "weight": "semibold" },
+              {
+                "type": "RadioGroup",
+                "name": "route",
+                "direction": "row",
+                "defaultValue": "support",
+                "options": [
+                  { "value": "support", "label": "Support queue" },
+                  { "value": "engineering", "label": "Engineering owner" },
+                  { "value": "incident", "label": "Incident commander" }
+                ]
+              },
+              { "type": "Checkbox", "name": "audit", "label": "Include audit trail", "defaultChecked": true },
+              { "type": "Checkbox", "name": "page", "label": "Page on-call immediately", "defaultChecked": false },
+              { "type": "Button", "label": "Apply policy", "variant": "solid", "color": "primary", "block": true, "onClickAction": { "type": "apply_policy" } }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "id": "limited-list",
+      "name": "Limited List",
+      "theme": "light",
+      "viewport": { "width": 390, "height": 540 },
+      "threshold": 0.2,
+      "widget": {
+        "type": "ListView",
+        "status": { "text": "Top 3", "icon": "info" },
+        "children": [
+          {
+            "type": "ListViewItem",
+            "children": [
+              { "type": "Col", "gap": "2xs", "children": [{ "type": "Text", "value": "Security review", "weight": "semibold" }, { "type": "Caption", "value": "Owner: Priya", "color": "tertiary" }] },
+              { "type": "Badge", "label": "P0", "color": "danger", "variant": "solid", "size": "sm" }
+            ]
+          },
+          {
+            "type": "ListViewItem",
+            "children": [
+              { "type": "Col", "gap": "2xs", "children": [{ "type": "Text", "value": "Billing export", "weight": "semibold" }, { "type": "Caption", "value": "Owner: Mateo", "color": "tertiary" }] },
+              { "type": "Badge", "label": "P1", "color": "warning", "variant": "soft", "size": "sm" }
+            ]
+          },
+          {
+            "type": "ListViewItem",
+            "children": [
+              { "type": "Col", "gap": "2xs", "children": [{ "type": "Text", "value": "Docs update", "weight": "semibold" }, { "type": "Caption", "value": "Owner: Sam", "color": "tertiary" }] },
+              { "type": "Badge", "label": "P2", "color": "info", "variant": "outline", "size": "sm" }
+            ]
+          },
+          {
+            "type": "ListViewItem",
+            "children": [
+              { "type": "Text", "value": "Hidden by limit" },
+              { "type": "Badge", "label": "P3", "color": "secondary", "variant": "soft", "size": "sm" }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "id": "markdown-callout",
+      "name": "Markdown Callout",
+      "theme": "light",
+      "viewport": { "width": 390, "height": 520 },
+      "threshold": 0.2,
+      "widget": {
+        "type": "Basic",
+        "direction": "col",
+        "gap": "md",
+        "padding": "md",
+        "children": [
+          {
+            "type": "Box",
+            "padding": "md",
+            "radius": "lg",
+            "background": "#F0F9FF",
+            "border": { "size": 1, "color": "#BAE6FD" },
+            "children": [
+              { "type": "Title", "value": "Migration Note", "size": "sm" },
+              { "type": "Markdown", "value": "**Breaking:** rename `session_id` to `thread_id` before deploying." },
+              { "type": "Divider", "spacing": "xs" },
+              { "type": "Caption", "value": "Applies to public beta tenants only.", "color": "tertiary" }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "id": "dark-card-actions",
+      "name": "Dark Card Actions",
+      "theme": "dark",
+      "viewport": { "width": 390, "height": 500 },
+      "threshold": 0.18,
+      "widget": {
+        "type": "Card",
+        "size": "md",
+        "status": { "text": "Destructive", "icon": "info" },
+        "children": [
+          { "type": "Title", "value": "Delete draft?", "size": "md" },
+          { "type": "Text", "value": "This removes the local draft from the queue but keeps the published campaign unchanged.", "size": "sm" },
+          { "type": "Badge", "label": "Cannot undo", "color": "danger", "variant": "soft", "size": "sm" },
+          {
+            "type": "Row",
+            "gap": "sm",
+            "children": [
+              { "type": "Button", "label": "Delete", "variant": "outline", "color": "danger", "onClickAction": { "type": "delete_draft", "payload": { "draftId": "dr_42" } } },
+              { "type": "Button", "label": "Keep", "variant": "ghost", "color": "secondary", "onClickAction": { "type": "keep_draft", "payload": { "draftId": "dr_42" } } }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "id": "metric-bars",
+      "name": "Metric Bars",
+      "theme": "light",
+      "viewport": { "width": 430, "height": 520 },
+      "threshold": 0.22,
+      "widget": {
+        "type": "Card",
+        "size": "md",
+        "children": [
+          { "type": "Title", "value": "Conversion Mix", "size": "sm" },
+          {
+            "type": "Col",
+            "gap": "sm",
+            "children": [
+              {
+                "type": "Row",
+                "gap": "sm",
+                "children": [
+                  { "type": "Caption", "value": "Direct", "color": "tertiary" },
+                  { "type": "Box", "width": "72%", "height": 8, "radius": "full", "background": "#2563EB" },
+                  { "type": "Caption", "value": "42" }
+                ]
+              },
+              {
+                "type": "Row",
+                "gap": "sm",
+                "children": [
+                  { "type": "Caption", "value": "Search", "color": "tertiary" },
+                  { "type": "Box", "width": "54%", "height": 8, "radius": "full", "background": "#22C55E" },
+                  { "type": "Caption", "value": "31" }
+                ]
+              },
+              {
+                "type": "Row",
+                "gap": "sm",
+                "children": [
+                  { "type": "Caption", "value": "Paid", "color": "tertiary" },
+                  { "type": "Box", "width": "34%", "height": 8, "radius": "full", "background": "#F59E0B" },
+                  { "type": "Caption", "value": "18" }
+                ]
+              }
+            ]
+          },
+          { "type": "Caption", "value": "Last 7 days", "color": "tertiary" }
+        ]
+      }
+    },
+    {
+      "id": "dark-throughput-bars",
+      "name": "Dark Throughput Bars",
+      "theme": "dark",
+      "viewport": { "width": 430, "height": 520 },
+      "threshold": 0.24,
+      "widget": {
+        "type": "Card",
+        "size": "md",
+        "children": [
+          { "type": "Title", "value": "Nightly Throughput", "size": "sm" },
+          {
+            "type": "Col",
+            "gap": "sm",
+            "children": [
+              { "type": "Row", "gap": "sm", "children": [{ "type": "Caption", "value": "00:00", "color": "tertiary" }, { "type": "Box", "width": "32%", "height": 8, "radius": "full", "background": "#38BDF8" }, { "type": "Caption", "value": "12" }] },
+              { "type": "Row", "gap": "sm", "children": [{ "type": "Caption", "value": "01:00", "color": "tertiary" }, { "type": "Box", "width": "68%", "height": 8, "radius": "full", "background": "#A78BFA" }, { "type": "Caption", "value": "26" }] },
+              { "type": "Row", "gap": "sm", "children": [{ "type": "Caption", "value": "02:00", "color": "tertiary" }, { "type": "Box", "width": "50%", "height": 8, "radius": "full", "background": "#22C55E" }, { "type": "Caption", "value": "19" }] },
+              { "type": "Row", "gap": "sm", "children": [{ "type": "Caption", "value": "03:00", "color": "tertiary" }, { "type": "Box", "width": "86%", "height": 8, "radius": "full", "background": "#F59E0B" }, { "type": "Caption", "value": "33" }] }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "id": "segmented-actions",
+      "name": "Segmented Actions",
+      "theme": "light",
+      "viewport": { "width": 390, "height": 480 },
+      "threshold": 0.18,
+      "widget": {
+        "type": "Card",
+        "size": "md",
+        "children": [
+          { "type": "Title", "value": "View Mode", "size": "sm" },
+          {
+            "type": "Row",
+            "gap": "xs",
+            "children": [
+              { "type": "Button", "label": "Today", "variant": "solid", "color": "primary", "onClickAction": { "type": "set_range", "payload": { "range": "today" } } },
+              { "type": "Button", "label": "Week", "variant": "outline", "color": "secondary", "onClickAction": { "type": "set_range", "payload": { "range": "week" } } },
+              { "type": "Button", "label": "Month", "variant": "ghost", "color": "secondary", "onClickAction": { "type": "set_range", "payload": { "range": "month" } } }
+            ]
+          },
+          {
+            "type": "Row",
+            "gap": "sm",
+            "children": [
+              { "type": "Badge", "label": "1.2k", "color": "info", "variant": "soft" },
+              { "type": "Caption", "value": "Active conversations", "color": "tertiary" }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "id": "compact-schedule-form",
+      "name": "Compact Schedule Form",
+      "theme": "light",
+      "viewport": { "width": 390, "height": 560 },
+      "threshold": 0.24,
+      "widget": {
+        "type": "Card",
+        "size": "sm",
+        "children": [
+          { "type": "Title", "value": "Ship Window", "size": "sm" },
+          {
+            "type": "Form",
+            "gap": "sm",
+            "children": [
+              { "type": "Label", "value": "Release", "fieldName": "release" },
+              { "type": "Input", "name": "release", "defaultValue": "iOS 2.4.1", "placeholder": "Version" },
+              { "type": "Label", "value": "Channel", "fieldName": "channel" },
+              {
+                "type": "Select",
+                "name": "channel",
+                "defaultValue": "beta",
+                "options": [
+                  { "value": "alpha", "label": "Alpha" },
+                  { "value": "beta", "label": "Beta" },
+                  { "value": "stable", "label": "Stable" }
+                ]
+              },
+              { "type": "DatePicker", "name": "shipDate", "defaultValue": "2026-07-01T12:00:00Z", "placeholder": "Ship date" }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "id": "stat-grid",
+      "name": "Stat Grid",
+      "theme": "light",
+      "viewport": { "width": 430, "height": 500 },
+      "threshold": 0.18,
+      "widget": {
+        "type": "Basic",
+        "direction": "col",
+        "gap": "sm",
+        "padding": "md",
+        "children": [
+          { "type": "Title", "value": "Workspace Health", "size": "md" },
+          {
+            "type": "Row",
+            "gap": "sm",
+            "children": [
+              { "type": "Box", "padding": "md", "radius": "lg", "background": "#F3F4F6", "children": [{ "type": "Caption", "value": "Threads" }, { "type": "Text", "value": "842", "weight": "bold" }] },
+              { "type": "Box", "padding": "md", "radius": "lg", "background": "#F3F4F6", "children": [{ "type": "Caption", "value": "Tools" }, { "type": "Text", "value": "128", "weight": "bold" }] }
+            ]
+          },
+          {
+            "type": "Row",
+            "gap": "sm",
+            "children": [
+              { "type": "Box", "padding": "md", "radius": "lg", "background": "#F3F4F6", "children": [{ "type": "Caption", "value": "Errors" }, { "type": "Text", "value": "3", "weight": "bold", "color": "danger" }] },
+              { "type": "Box", "padding": "md", "radius": "lg", "background": "#F3F4F6", "children": [{ "type": "Caption", "value": "Latency" }, { "type": "Text", "value": "212 ms", "weight": "bold" }] }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "id": "wide-invoice-table",
+      "name": "Wide Invoice Table",
+      "theme": "light",
+      "viewport": { "width": 520, "height": 540 },
+      "threshold": 0.22,
+      "widget": {
+        "type": "Card",
+        "size": "md",
+        "children": [
+          { "type": "Title", "value": "Invoice Aging", "size": "sm" },
+          {
+            "type": "Table",
+            "children": [
+              {
+                "type": "Table.Row",
+                "header": true,
+                "children": [
+                  { "type": "Table.Cell", "children": [{ "type": "Text", "value": "Account", "size": "sm" }] },
+                  { "type": "Table.Cell", "align": "end", "children": [{ "type": "Text", "value": "Amount", "size": "sm" }] },
+                  { "type": "Table.Cell", "children": [{ "type": "Text", "value": "Age", "size": "sm" }] },
+                  { "type": "Table.Cell", "children": [{ "type": "Text", "value": "State", "size": "sm" }] }
+                ]
+              },
+              {
+                "type": "Table.Row",
+                "children": [
+                  { "type": "Table.Cell", "children": [{ "type": "Text", "value": "Acme" }] },
+                  { "type": "Table.Cell", "align": "end", "children": [{ "type": "Caption", "value": "$8,400" }] },
+                  { "type": "Table.Cell", "children": [{ "type": "Caption", "value": "12d" }] },
+                  { "type": "Table.Cell", "children": [{ "type": "Badge", "label": "Open", "color": "info", "variant": "soft", "size": "sm" }] }
+                ]
+              },
+              {
+                "type": "Table.Row",
+                "children": [
+                  { "type": "Table.Cell", "children": [{ "type": "Text", "value": "Northwind" }] },
+                  { "type": "Table.Cell", "align": "end", "children": [{ "type": "Caption", "value": "$2,120" }] },
+                  { "type": "Table.Cell", "children": [{ "type": "Caption", "value": "34d" }] },
+                  { "type": "Table.Cell", "children": [{ "type": "Badge", "label": "Late", "color": "warning", "variant": "outline", "size": "sm" }] }
+                ]
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "id": "alert-banner",
+      "name": "Alert Banner",
+      "theme": "light",
+      "viewport": { "width": 430, "height": 360 },
+      "threshold": 0.18,
+      "widget": {
+        "type": "Basic",
+        "direction": "col",
+        "gap": "sm",
+        "padding": "md",
+        "background": "#FEF2F2",
+        "border": { "size": 1, "color": "#FECACA" },
+        "children": [
+          { "type": "Title", "value": "Webhook failures", "size": "sm" },
+          { "type": "Caption", "value": "18 deliveries failed in the last hour.", "color": "tertiary" },
+          { "type": "Button", "label": "View failures", "variant": "outline", "color": "danger", "block": true, "onClickAction": { "type": "open_failures" } }
+        ]
+      }
+    },
+    {
+      "id": "customer-list-compact",
+      "name": "Customer List Compact",
+      "theme": "light",
+      "viewport": { "width": 390, "height": 560 },
+      "threshold": 0.22,
+      "widget": {
+        "type": "ListView",
+        "children": [
+          { "type": "ListViewItem", "children": [{ "type": "Col", "gap": "2xs", "children": [{ "type": "Text", "value": "Globex", "weight": "semibold" }, { "type": "Caption", "value": "Renewal today", "color": "tertiary" }] }, { "type": "Badge", "label": "Hot", "color": "danger", "variant": "soft", "size": "sm" }] },
+          { "type": "ListViewItem", "children": [{ "type": "Col", "gap": "2xs", "children": [{ "type": "Text", "value": "Umbrella", "weight": "semibold" }, { "type": "Caption", "value": "Legal review", "color": "tertiary" }] }, { "type": "Badge", "label": "Risk", "color": "warning", "variant": "outline", "size": "sm" }] },
+          { "type": "ListViewItem", "children": [{ "type": "Col", "gap": "2xs", "children": [{ "type": "Text", "value": "Initech", "weight": "semibold" }, { "type": "Caption", "value": "Expansion", "color": "tertiary" }] }, { "type": "Badge", "label": "Upsell", "color": "success", "variant": "soft", "size": "sm" }] },
+          { "type": "ListViewItem", "children": [{ "type": "Col", "gap": "2xs", "children": [{ "type": "Text", "value": "Soylent", "weight": "semibold" }, { "type": "Caption", "value": "Quiet", "color": "tertiary" }] }, { "type": "Badge", "label": "OK", "color": "secondary", "variant": "soft", "size": "sm" }] }
+        ]
+      }
+    },
+    {
+      "id": "stepper-plan",
+      "name": "Stepper Plan",
+      "theme": "light",
+      "viewport": { "width": 390, "height": 560 },
+      "threshold": 0.2,
+      "widget": {
+        "type": "Card",
+        "size": "md",
+        "children": [
+          { "type": "Title", "value": "Launch Plan", "size": "sm" },
+          {
+            "type": "Col",
+            "gap": "sm",
+            "children": [
+              { "type": "Row", "gap": "sm", "children": [{ "type": "Badge", "label": "1", "color": "success", "variant": "solid", "size": "sm" }, { "type": "Text", "value": "Verify production keys", "weight": "semibold" }] },
+              { "type": "Row", "gap": "sm", "children": [{ "type": "Badge", "label": "2", "color": "info", "variant": "solid", "size": "sm" }, { "type": "Text", "value": "Ramp to 25 percent", "weight": "semibold" }] },
+              { "type": "Row", "gap": "sm", "children": [{ "type": "Badge", "label": "3", "color": "secondary", "variant": "outline", "size": "sm" }, { "type": "Text", "value": "Publish post-launch report", "weight": "semibold" }] }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "id": "nested-panel",
+      "name": "Nested Panel",
+      "theme": "light",
+      "viewport": { "width": 390, "height": 500 },
+      "threshold": 0.18,
+      "widget": {
+        "type": "Card",
+        "size": "md",
+        "children": [
+          { "type": "Title", "value": "Draft State", "size": "sm" },
+          {
+            "type": "Box",
+            "padding": "md",
+            "radius": "lg",
+            "background": "#F8FAFC",
+            "border": { "size": 1, "color": "#E2E8F0" },
+            "children": [
+              { "type": "Caption", "value": "Current version", "color": "tertiary" },
+              { "type": "Text", "value": "v3 waiting for review", "weight": "semibold" }
+            ]
+          },
+          { "type": "Button", "label": "Submit review", "variant": "solid", "color": "primary", "block": true, "onClickAction": { "type": "submit_review" } }
+        ]
+      }
+    },
+    {
+      "id": "tone-grid",
+      "name": "Tone Grid",
+      "theme": "light",
+      "viewport": { "width": 430, "height": 500 },
+      "threshold": 0.18,
+      "widget": {
+        "type": "Card",
+        "size": "md",
+        "children": [
+          { "type": "Title", "value": "Tone Coverage", "size": "sm" },
+          {
+            "type": "Row",
+            "gap": "xs",
+            "children": [
+              { "type": "Badge", "label": "Secondary", "color": "secondary", "variant": "soft" },
+              { "type": "Badge", "label": "Info", "color": "info", "variant": "soft" },
+              { "type": "Badge", "label": "Discover", "color": "discovery", "variant": "outline" }
+            ]
+          },
+          {
+            "type": "Row",
+            "gap": "xs",
+            "children": [
+              { "type": "Badge", "label": "Success", "color": "success", "variant": "soft" },
+              { "type": "Badge", "label": "Warn", "color": "warning", "variant": "outline" },
+              { "type": "Badge", "label": "Danger", "color": "danger", "variant": "solid" }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "id": "long-action-labels",
+      "name": "Long Action Labels",
+      "theme": "light",
+      "viewport": { "width": 390, "height": 500 },
+      "threshold": 0.22,
+      "widget": {
+        "type": "Card",
+        "size": "sm",
+        "children": [
+          { "type": "Title", "value": "Approval Routing", "size": "sm" },
+          { "type": "Text", "value": "Long labels should truncate without pushing the secondary action out of view.", "size": "sm" },
+          {
+            "type": "Col",
+            "gap": "sm",
+            "children": [
+              { "type": "Button", "label": "Approve and notify finance operations", "variant": "solid", "color": "primary", "block": true, "onClickAction": { "type": "approve_notify" } },
+              { "type": "Button", "label": "Request changes", "variant": "outline", "color": "secondary", "block": true, "onClickAction": { "type": "request_changes" } }
+            ]
+          }
+        ]
+      }
     }
   ]
 }
