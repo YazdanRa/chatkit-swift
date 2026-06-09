@@ -528,13 +528,45 @@ Useful variants:
 node scripts/widget-parity.js --allow-failures
 node scripts/widget-parity.js --skip-swift
 node scripts/widget-parity.js --chatkit-js /Users/ericlewis/Developer/chatkit-js
-OPENAI_API_KEY=... node scripts/widget-parity.js --visual-review --visual-detail low
+OPENAI_API_KEY=... node scripts/widget-parity.js --visual-review --visual-detail auto
 ```
 
 `--visual-review` sends each Swift crop, JS crop, and diff heatmap to the
 OpenAI Responses API and appends a fixture-by-fixture model review to
 `.widget-parity/report.md` and `.widget-parity/report.json`. Use
 `OPENAI_VISION_MODEL` or `--visual-model` to choose a different model.
+
+### Generated Widget Fuzzing
+
+`WidgetParity/prompts/generated-widget-prompts.json` contains the checked-in
+prompt corpus for live Widget Studio fuzzing. `scripts/widget-fuzz.js` calls the
+real `https://widgets.chatkit.studio/create-widget` and
+`https://widgets.chatkit.studio/convert-widget-to-file` endpoints, renders the
+returned Studio template with its generated state, normalizes React-only `key`
+props out of the payload, and writes a standard widget parity manifest.
+
+Generate the default 100-widget corpus:
+
+```sh
+node scripts/widget-fuzz.js --allow-failures
+```
+
+The default output is `WidgetParity/fixtures/generated-widgets.json`; the
+checked-in copy was produced from a successful 100-widget run. Use
+`--output .widget-parity/generated-100.json` for ignored local experiments,
+`--count <n>` for 1-300 widgets, and `--resume` to retry missing or previously
+failed prompts without regenerating completed fixtures.
+
+Run generated fixtures through screenshot parity:
+
+```sh
+node scripts/widget-fuzz.js --run-parity --allow-failures
+OPENAI_API_KEY=... node scripts/widget-fuzz.js --run-parity --visual-review --allow-failures
+```
+
+`--allow-failures` is useful for fuzzing because some generated widgets can be
+valid Swift payloads while the JS reference rejects a generated prop shape. Those
+cases are kept in the parity report instead of aborting the batch.
 
 The default asset fallback is `https://cdn.platform.openai.com` for dynamic
 `/assets/ck1/*` chunks that are referenced by the saved JS bundle but not present

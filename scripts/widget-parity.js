@@ -105,7 +105,7 @@ async function main() {
   });
 
   try {
-    await captureReferenceScreenshots(playwright, server, manifest, jsOutput);
+    await captureReferenceScreenshots(playwright, server, manifest, jsOutput, options);
   } finally {
     await new Promise((resolve) => server.close(resolve));
   }
@@ -496,7 +496,7 @@ function renderFixturePage(fixture) {
 </html>`;
 }
 
-async function captureReferenceScreenshots(playwright, server, manifest, outputDirectory) {
+async function captureReferenceScreenshots(playwright, server, manifest, outputDirectory, options) {
   const browser = await launchChromium(playwright);
   try {
     const context = await browser.newContext({ deviceScaleFactor: 2 });
@@ -514,97 +514,109 @@ async function captureReferenceScreenshots(playwright, server, manifest, outputD
     });
 
     for (const fixture of manifest.fixtures) {
-      await page.setViewportSize({
-        width: fixture.viewport.width,
-        height: fixture.viewport.height,
-      });
-      await page.goto(`${server.baseURL}/fixture/${encodeURIComponent(fixture.id)}`, {
-        waitUntil: "domcontentloaded",
-      });
+      try {
+        await page.setViewportSize({
+          width: fixture.viewport.width,
+          height: fixture.viewport.height,
+        });
+        await page.goto(`${server.baseURL}/fixture/${encodeURIComponent(fixture.id)}`, {
+          waitUntil: "domcontentloaded",
+        });
 
-      const frame = await waitForChatKitFrame(page);
-      await frame.waitForLoadState("domcontentloaded", { timeout: 30000 }).catch(() => {});
-      const needle = firstWidgetNeedle(fixture.widget);
-      await frame.waitForFunction((value) => document.body.innerText.includes(value), needle, { timeout: 30000 }).catch(async (error) => {
-        const state = await page.evaluate(() => ({
-          ready: window.__chatkitReady,
-          errors: window.__chatkitErrors,
-          requests: window.__chatkitRequests,
-          hostDefined: Boolean(customElements.get("openai-chatkit")),
-        }));
-        throw new Error(`${error.message}\nHost state: ${JSON.stringify(state, null, 2)}`);
-      });
-      await frame.waitForTimeout(400);
+        const frame = await waitForChatKitFrame(page);
+        await frame.waitForLoadState("domcontentloaded", { timeout: 30000 }).catch(() => {});
+        const needle = firstWidgetNeedle(fixture.widget);
+        await frame.waitForFunction((value) => document.body.innerText.includes(value), needle, { timeout: 30000 }).catch(async (error) => {
+          const state = await page.evaluate(() => ({
+            ready: window.__chatkitReady,
+            errors: window.__chatkitErrors,
+            requests: window.__chatkitRequests,
+            hostDefined: Boolean(customElements.get("openai-chatkit")),
+          }));
+          throw new Error(`${error.message}\nHost state: ${JSON.stringify(state, null, 2)}`);
+        });
+        await frame.waitForTimeout(400);
 
-      const box = await frame.evaluate((value) => {
-        function findTextElement(root, text) {
-          const walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT);
-          let node = walker.nextNode();
-          while (node) {
-            if ((node.textContent || "").includes(text)) {
-              return node.parentElement;
+        const box = await frame.evaluate((value) => {
+          function findTextElement(root, text) {
+            const walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT);
+            let node = walker.nextNode();
+            while (node) {
+              if ((node.textContent || "").includes(text)) {
+                return node.parentElement;
+              }
+              node = walker.nextNode();
             }
-            node = walker.nextNode();
+            return null;
           }
-          return null;
-        }
 
-        const start = findTextElement(document.body, value);
-        if (!start) return null;
+          const start = findTextElement(document.body, value);
+          if (!start) return null;
 
-        const candidates = [];
-        for (let element = start; element && element !== document.body; element = element.parentElement) {
-          const rect = element.getBoundingClientRect();
-          const text = element.innerText || element.textContent || "";
-          const fullFrame = rect.width >= window.innerWidth - 4 && rect.height >= window.innerHeight - 4;
-          if (
-            text.includes(value) &&
-            rect.width >= 80 &&
-            rect.height >= 20 &&
-            rect.height <= window.innerHeight * 0.85 &&
-            !fullFrame
-          ) {
-            candidates.push({
-              x: rect.left,
-              y: rect.top,
-              width: rect.width,
-              height: rect.height,
-              area: rect.width * rect.height,
-            });
+          const candidates = [];
+          for (let element = start; element && element !== document.body; element = element.parentElement) {
+            const rect = element.getBoundingClientRect();
+            const text = element.innerText || element.textContent || "";
+            const fullFrame = rect.width >= window.innerWidth - 4 && rect.height >= window.innerHeight - 4;
+            if (
+              text.includes(value) &&
+              rect.width >= 80 &&
+              rect.height >= 20 &&
+              rect.height <= window.innerHeight * 0.85 &&
+              !fullFrame
+            ) {
+              candidates.push({
+                x: rect.left,
+                y: rect.top,
+                width: rect.width,
+                height: rect.height,
+                area: rect.width * rect.height,
+              });
+            }
           }
+
+          const best = candidates.sort((left, right) => right.area - left.area)[0];
+          if (!best) {
+            const rect = start.getBoundingClientRect();
+            return { x: rect.left, y: rect.top, width: rect.width, height: rect.height };
+          }
+          const pad = 4;
+          return {
+            x: Math.max(0, Math.floor(best.x - pad)),
+            y: Math.max(0, Math.floor(best.y - pad)),
+            width: Math.ceil(best.width + pad * 2),
+            height: Math.ceil(best.height + pad * 2),
+          };
+        }, needle);
+        const iframe = await page.locator("openai-chatkit").evaluateHandle((host) => host.shadowRoot.querySelector("iframe"));
+        const iframeBox = await iframe.asElement().boundingBox();
+        if (!iframeBox || !box) {
+          throw new Error(`Unable to locate JS widget box for fixture ${fixture.id}`);
         }
 
-        const best = candidates.sort((left, right) => right.area - left.area)[0];
-        if (!best) {
-          const rect = start.getBoundingClientRect();
-          return { x: rect.left, y: rect.top, width: rect.width, height: rect.height };
+        const screenshotPath = path.join(outputDirectory, `${fixture.id}.png`);
+        await page.screenshot({
+          path: screenshotPath,
+          clip: {
+            x: Math.max(0, iframeBox.x + box.x),
+            y: Math.max(0, iframeBox.y + box.y),
+            width: Math.max(1, Math.min(box.width, fixture.viewport.width - box.x)),
+            height: Math.max(1, Math.min(box.height, fixture.viewport.height - box.y)),
+          },
+        });
+        cropPngFileToContent(screenshotPath);
+        console.log(`Captured ${path.join(outputDirectory, `${fixture.id}.png`)}`);
+      } catch (error) {
+        if (!options.allowFailures) {
+          throw error;
         }
-        const pad = 4;
-        return {
-          x: Math.max(0, Math.floor(best.x - pad)),
-          y: Math.max(0, Math.floor(best.y - pad)),
-          width: Math.ceil(best.width + pad * 2),
-          height: Math.ceil(best.height + pad * 2),
-        };
-      }, needle);
-      const iframe = await page.locator("openai-chatkit").evaluateHandle((host) => host.shadowRoot.querySelector("iframe"));
-      const iframeBox = await iframe.asElement().boundingBox();
-      if (!iframeBox || !box) {
-        throw new Error(`Unable to locate JS widget box for fixture ${fixture.id}`);
+        const errorPath = path.join(outputDirectory, `${fixture.id}.error.json`);
+        fs.writeFileSync(errorPath, `${JSON.stringify({
+          id: fixture.id,
+          message: error instanceof Error ? error.message : String(error),
+        }, null, 2)}\n`);
+        console.log(`Failed JS capture for ${fixture.id}: ${error instanceof Error ? error.message : String(error)}`);
       }
-
-      const screenshotPath = path.join(outputDirectory, `${fixture.id}.png`);
-      await page.screenshot({
-        path: screenshotPath,
-        clip: {
-          x: Math.max(0, iframeBox.x + box.x),
-          y: Math.max(0, iframeBox.y + box.y),
-          width: Math.max(1, Math.min(box.width, fixture.viewport.width - box.x)),
-          height: Math.max(1, Math.min(box.height, fixture.viewport.height - box.y)),
-        },
-      });
-      cropPngFileToContent(screenshotPath);
-      console.log(`Captured ${path.join(outputDirectory, `${fixture.id}.png`)}`);
     }
 
     await context.close();
@@ -675,12 +687,41 @@ function compareScreenshots(manifest, paths) {
     const nativePath = path.join(paths.swiftOutput, `${fixture.id}.png`);
     const jsPath = path.join(paths.jsOutput, `${fixture.id}.png`);
     const native = decodePng(fs.readFileSync(nativePath));
-    const js = decodePng(fs.readFileSync(jsPath));
 
     const nativeBounds = contentBounds(native, native.data.slice(0, 4), 10);
     const croppedNative = cropImage(native, nativeBounds);
     const croppedNativePath = path.join(paths.swiftCropOutput, `${fixture.id}.png`);
     fs.writeFileSync(croppedNativePath, encodePng(croppedNative));
+
+    if (!fs.existsSync(jsPath)) {
+      const errorPath = path.join(paths.jsOutput, `${fixture.id}.error.json`);
+      const captureError = fs.existsSync(errorPath)
+        ? JSON.parse(fs.readFileSync(errorPath, "utf8")).message
+        : "Missing JS reference screenshot.";
+      results.push({
+        id: fixture.id,
+        name: fixture.name,
+        threshold: fixture.threshold,
+        score: 1,
+        passed: false,
+        error: captureError,
+        nativeSize: { width: croppedNative.width, height: croppedNative.height },
+        jsSize: { width: 0, height: 0 },
+        differingPixels: 0,
+        totalPixels: 0,
+        widget: fixture.widget,
+        files: {
+          native: path.relative(paths.swiftOutput, nativePath),
+          nativeCrop: path.relative(paths.swiftCropOutput, croppedNativePath),
+          js: null,
+          jsError: fs.existsSync(errorPath) ? path.relative(paths.jsOutput, errorPath) : null,
+          diff: null,
+        },
+      });
+      continue;
+    }
+
+    const js = decodePng(fs.readFileSync(jsPath));
 
     const width = Math.max(croppedNative.width, js.width);
     const height = Math.max(croppedNative.height, js.height);
@@ -721,6 +762,23 @@ function compareScreenshots(manifest, paths) {
 async function runVisualReviews(report, paths, options) {
   const reviews = [];
   for (const result of report.results) {
+    if (result.error || !result.files.js) {
+      reviews.push({
+        id: result.id,
+        name: result.name,
+        verdict: "fail",
+        confidence: "high",
+        summary: result.error || "JS reference screenshot was not captured.",
+        issues: [{
+          severity: "major",
+          category: "other",
+          description: result.error || "JS reference screenshot was not captured.",
+          swiftOnly: false,
+        }],
+        ignoredDifferences: [],
+      });
+      continue;
+    }
     console.log(`Visual reviewing ${result.id} with ${options.visualModel}...`);
     reviews.push(await requestVisualReview(result, paths, options));
   }
@@ -984,11 +1042,11 @@ function writeReport(report, outputRoot) {
   const lines = [
     "# Widget Screenshot Parity",
     "",
-    "| Fixture | Score | Threshold | Result | Native crop | JS crop |",
-    "| --- | ---: | ---: | --- | --- | --- |",
+    "| Fixture | Score | Threshold | Result | Native crop | JS crop | Note |",
+    "| --- | ---: | ---: | --- | --- | --- | --- |",
   ];
   for (const result of report.results) {
-    lines.push(`| ${result.name} | ${result.score.toFixed(4)} | ${result.threshold.toFixed(4)} | ${result.passed ? "pass" : "fail"} | ${result.nativeSize.width}x${result.nativeSize.height} | ${result.jsSize.width}x${result.jsSize.height} |`);
+    lines.push(`| ${result.name} | ${result.score.toFixed(4)} | ${result.threshold.toFixed(4)} | ${result.passed ? "pass" : "fail"} | ${result.nativeSize.width}x${result.nativeSize.height} | ${result.jsSize.width}x${result.jsSize.height} | ${markdownCell(result.error || "")} |`);
   }
   lines.push("");
   lines.push("Artifacts:");

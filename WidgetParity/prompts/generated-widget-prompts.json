@@ -1,0 +1,409 @@
+{
+  "version": 1,
+  "prompts": [
+    {
+      "id": "support-ticket-priority",
+      "prompt": "A compact support ticket status card with ticket id, priority badge, owner, last updated time, and two action buttons."
+    },
+    {
+      "id": "invoice-payment-summary",
+      "prompt": "An invoice payment summary with amount due, due date, customer name, payment status badge, and pay or remind actions."
+    },
+    {
+      "id": "deployment-rollout-status",
+      "prompt": "A deployment rollout status widget with environment, version, progress, risk badge, and rollback or continue actions."
+    },
+    {
+      "id": "calendar-follow-up-form",
+      "prompt": "A follow-up scheduling form with owner input, priority select, date picker, notification checkbox, notes textarea, and submit action."
+    },
+    {
+      "id": "incident-commander-brief",
+      "prompt": "An incident commander brief with severity badge, affected services, current status, mitigation note, and escalation action."
+    },
+    {
+      "id": "customer-health-panel",
+      "prompt": "A customer health panel with health score, renewal date, account owner, three risk factors, and view account action."
+    },
+    {
+      "id": "usage-quota-bars",
+      "prompt": "A usage quota widget with several labeled horizontal bars, percentages, remaining quota, and a warning badge."
+    },
+    {
+      "id": "team-task-list",
+      "prompt": "A team task list with four items, assignees, due dates, priority badges, and a limit showing only the top three."
+    },
+    {
+      "id": "meeting-agenda-card",
+      "prompt": "A meeting agenda card with title, time, attendees, three agenda items, and join or reschedule actions."
+    },
+    {
+      "id": "product-feedback-triage",
+      "prompt": "A product feedback triage widget with sentiment badge, user quote, category, impact score, and assign action."
+    },
+    {
+      "id": "bug-reproduction-form",
+      "prompt": "A bug reproduction form with platform select, version input, reproducible checkbox, severity radio group, and steps textarea."
+    },
+    {
+      "id": "release-readiness-checklist",
+      "prompt": "A release readiness checklist with signed off, docs complete, QA passed, launch owner, and approve launch action."
+    },
+    {
+      "id": "sales-pipeline-table",
+      "prompt": "A small sales pipeline table with company, stage, value, close date, and status badges."
+    },
+    {
+      "id": "security-alert-card",
+      "prompt": "A security alert card with alert name, severity badge, affected user count, recommended fix, and acknowledge action."
+    },
+    {
+      "id": "onboarding-progress",
+      "prompt": "An onboarding progress widget with user name, checklist steps, percent complete, next best action, and help action."
+    },
+    {
+      "id": "data-sync-status",
+      "prompt": "A data sync status widget with source, destination, records synced, error count, last run time, and retry action."
+    },
+    {
+      "id": "dark-mode-ops-summary",
+      "prompt": "A dark themed operations summary card with uptime, latency, error rate, colored badges, and compact action buttons."
+    },
+    {
+      "id": "warehouse-inventory-alert",
+      "prompt": "An inventory alert widget with SKU, quantity remaining, reorder threshold, warehouse, supplier, and create purchase order action."
+    },
+    {
+      "id": "travel-itinerary-card",
+      "prompt": "A travel itinerary card with flight, hotel, local time, confirmation codes, weather note, and check in action."
+    },
+    {
+      "id": "candidate-interview-panel",
+      "prompt": "A candidate interview panel with candidate name, role, stage badge, scorecard status, interviewers, and submit feedback action."
+    },
+    {
+      "id": "subscription-plan-comparison",
+      "prompt": "A subscription plan comparison with current plan, usage, upgrade benefits, price, and upgrade or keep plan actions."
+    },
+    {
+      "id": "expense-approval-card",
+      "prompt": "An expense approval card with employee, vendor, amount, policy status badge, receipt note, and approve or reject actions."
+    },
+    {
+      "id": "pull-request-review",
+      "prompt": "A pull request review card with PR title, author, checks summary, files changed, review status, and merge or request changes actions."
+    },
+    {
+      "id": "feature-flag-controls",
+      "prompt": "A feature flag control widget with flag name, environment radio group, rollout percentage, enabled checkbox, and save action."
+    },
+    {
+      "id": "course-progress-card",
+      "prompt": "A course progress card with learner, module list, quiz score, completion badge, and continue learning action."
+    },
+    {
+      "id": "restaurant-reservation",
+      "prompt": "A restaurant reservation widget with guest name, party size, date, seating preference, special requests, and confirm action."
+    },
+    {
+      "id": "clinic-appointment-intake",
+      "prompt": "A clinic appointment intake form with patient name, reason select, symptoms textarea, urgent checkbox, and book visit action."
+    },
+    {
+      "id": "loan-application-status",
+      "prompt": "A loan application status card with applicant, requested amount, document checklist, decision badge, and upload documents action."
+    },
+    {
+      "id": "delivery-tracking-card",
+      "prompt": "A delivery tracking card with package id, current location, ETA, carrier, progress steps, and contact carrier action."
+    },
+    {
+      "id": "content-calendar-list",
+      "prompt": "A content calendar list with scheduled posts, channels, publish dates, review badges, and edit schedule action."
+    },
+    {
+      "id": "ab-test-results",
+      "prompt": "An A/B test result widget with variant names, conversion rates, winner badge, confidence, and ship winner action."
+    },
+    {
+      "id": "budget-variance-bars",
+      "prompt": "A budget variance widget with department rows, planned vs actual values, colored bars, and investigate action."
+    },
+    {
+      "id": "server-capacity-card",
+      "prompt": "A server capacity card with CPU, memory, disk bars, region, saturation badge, and scale up action."
+    },
+    {
+      "id": "legal-contract-review",
+      "prompt": "A legal contract review widget with contract name, counterparty, redline count, risk badge, and request legal review action."
+    },
+    {
+      "id": "real-estate-listing",
+      "prompt": "A real estate listing card with address, price, bedrooms, days on market, offer deadline, and schedule showing action."
+    },
+    {
+      "id": "fundraising-donor-summary",
+      "prompt": "A donor summary widget with donor name, last gift, lifetime value, engagement badge, and send thank you action."
+    },
+    {
+      "id": "fleet-maintenance-alert",
+      "prompt": "A fleet maintenance alert with vehicle id, mileage, service due date, issue severity, and schedule maintenance action."
+    },
+    {
+      "id": "learning-quiz-results",
+      "prompt": "A quiz results card with score, missed topics, mastery badge, recommended lesson, and retake action."
+    },
+    {
+      "id": "procurement-vendor-score",
+      "prompt": "A vendor scorecard with delivery, quality, cost, compliance badges, and renew or review actions."
+    },
+    {
+      "id": "social-campaign-performance",
+      "prompt": "A social campaign performance widget with impressions, clicks, CTR, channel badges, and pause campaign action."
+    },
+    {
+      "id": "energy-usage-dashboard",
+      "prompt": "An energy usage dashboard card with today usage, peak hour, savings badge, hourly bars, and view details action."
+    },
+    {
+      "id": "hotel-room-upgrade",
+      "prompt": "A hotel room upgrade offer with guest name, current room, upgrade options, price, perks, and accept upgrade action."
+    },
+    {
+      "id": "support-sla-breach",
+      "prompt": "A support SLA breach warning with ticket count, oldest ticket, queue owner, breach badge, and reassign action."
+    },
+    {
+      "id": "fund-transfer-confirmation",
+      "prompt": "A fund transfer confirmation widget with sender, recipient, amount, scheduled date, risk note, and confirm or cancel actions."
+    },
+    {
+      "id": "smart-home-device-status",
+      "prompt": "A smart home device status card with device name, room, battery, connectivity badge, and troubleshoot action."
+    },
+    {
+      "id": "warehouse-pick-list",
+      "prompt": "A warehouse pick list with order id, item rows, bin locations, quantities, and mark picked action."
+    },
+    {
+      "id": "employee-pulse-survey",
+      "prompt": "An employee pulse survey form with mood radio group, team select, anonymous checkbox, comments textarea, and submit action."
+    },
+    {
+      "id": "multi-step-travel-checklist",
+      "prompt": "A travel checklist with passport, visa, vaccine, insurance steps, completion badge, and continue action."
+    },
+    {
+      "id": "ai-agent-run-summary",
+      "prompt": "An AI agent run summary with objective, tool calls, completed steps, warning badge, and view trace action."
+    },
+    {
+      "id": "knowledge-base-gap",
+      "prompt": "A knowledge base gap widget with missing article topic, search frequency, affected tickets, and draft article action."
+    },
+    {
+      "id": "moderation-queue-item",
+      "prompt": "A moderation queue item with reported content excerpt, policy category, confidence badge, and approve or remove actions."
+    },
+    {
+      "id": "crm-contact-enrichment",
+      "prompt": "A CRM contact enrichment card with name, company, missing fields, enrichment source, and apply updates action."
+    },
+    {
+      "id": "database-migration-plan",
+      "prompt": "A database migration plan card with phase list, risk badge, backup status, maintenance window, and start migration action."
+    },
+    {
+      "id": "gym-workout-plan",
+      "prompt": "A workout plan widget with exercises, sets, target muscles, difficulty badge, and start workout action."
+    },
+    {
+      "id": "meal-plan-shopping-list",
+      "prompt": "A meal plan shopping list with recipe names, ingredients, grocery sections, checked items, and add to cart action."
+    },
+    {
+      "id": "insurance-claim-status",
+      "prompt": "An insurance claim status card with claim id, adjuster, required documents, payout estimate, and upload evidence action."
+    },
+    {
+      "id": "manufacturing-line-status",
+      "prompt": "A manufacturing line status widget with line id, throughput, downtime, defect rate, status badge, and dispatch technician action."
+    },
+    {
+      "id": "nonprofit-volunteer-shift",
+      "prompt": "A volunteer shift card with event, role, location, time, staffing gap badge, and sign up action."
+    },
+    {
+      "id": "research-paper-review",
+      "prompt": "A research paper review widget with title, reviewers, decision badge, open comments, and submit decision action."
+    },
+    {
+      "id": "podcast-production-status",
+      "prompt": "A podcast production status card with episode, guest, edit status, publish date, checklist, and approve episode action."
+    },
+    {
+      "id": "conference-session-card",
+      "prompt": "A conference session card with title, speaker, room, time, track badge, and add to agenda action."
+    },
+    {
+      "id": "mobile-crash-report",
+      "prompt": "A mobile crash report widget with app version, device, crash count, stack fingerprint, severity, and open issue action."
+    },
+    {
+      "id": "ecommerce-return-request",
+      "prompt": "An ecommerce return request card with order id, customer, items, reason, refund estimate, and approve return action."
+    },
+    {
+      "id": "marketing-email-preview",
+      "prompt": "A marketing email preview widget with subject, audience segment, send time, approval badge, and send test action."
+    },
+    {
+      "id": "weather-risk-alert",
+      "prompt": "A weather risk alert with location, forecast, risk level badge, affected operations, and notify team action."
+    },
+    {
+      "id": "portfolio-performance",
+      "prompt": "A portfolio performance card with holdings summary, daily change, risk badge, allocation bars, and rebalance action."
+    },
+    {
+      "id": "teacher-gradebook-summary",
+      "prompt": "A gradebook summary with class, missing assignments, average score, at-risk students, and message students action."
+    },
+    {
+      "id": "app-store-review-triage",
+      "prompt": "An app store review triage card with star rating, review excerpt, version, sentiment badge, and reply action."
+    },
+    {
+      "id": "parking-permit-application",
+      "prompt": "A parking permit application form with vehicle plate, zone select, start date, terms checkbox, and submit action."
+    },
+    {
+      "id": "restaurant-kitchen-orders",
+      "prompt": "A kitchen order queue with table, items, allergies badge, elapsed time, and mark ready action."
+    },
+    {
+      "id": "video-render-job",
+      "prompt": "A video render job status card with project name, resolution, progress, queue position, error badge, and cancel action."
+    },
+    {
+      "id": "iot-sensor-readings",
+      "prompt": "An IoT sensor readings widget with temperature, humidity, battery, signal quality, alert badge, and calibrate action."
+    },
+    {
+      "id": "hr-time-off-request",
+      "prompt": "A time off request card with employee, dates, balance remaining, manager note, and approve or deny actions."
+    },
+    {
+      "id": "subscription-renewal-risk",
+      "prompt": "A subscription renewal risk card with account, renewal value, usage trend, champion status, and start save plan action."
+    },
+    {
+      "id": "call-center-live-queue",
+      "prompt": "A call center live queue widget with wait time, agents online, abandoned calls, queue bars, and add agents action."
+    },
+    {
+      "id": "field-service-route",
+      "prompt": "A field service route card with technician, stops, travel time, urgent job badge, and optimize route action."
+    },
+    {
+      "id": "lab-sample-tracking",
+      "prompt": "A lab sample tracking widget with sample id, chain of custody, test status, temperature warning, and release results action."
+    },
+    {
+      "id": "grant-application-review",
+      "prompt": "A grant application review card with applicant, requested amount, rubric scores, eligibility badge, and advance action."
+    },
+    {
+      "id": "construction-site-safety",
+      "prompt": "A construction site safety card with site name, incidents, inspections due, weather risk, and schedule inspection action."
+    },
+    {
+      "id": "translation-job-status",
+      "prompt": "A translation job status widget with source language, target language, word count, reviewer, and deliver action."
+    },
+    {
+      "id": "parking-garage-occupancy",
+      "prompt": "A parking garage occupancy widget with levels, available spaces, occupancy bars, alert badge, and view cameras action."
+    },
+    {
+      "id": "auction-bid-status",
+      "prompt": "An auction bid status card with item, current bid, bidder count, time left, reserve badge, and place bid action."
+    },
+    {
+      "id": "newsletter-subscriber-growth",
+      "prompt": "A newsletter subscriber growth card with new subscribers, churn, top source, bar rows, and view cohort action."
+    },
+    {
+      "id": "device-pairing-troubleshooter",
+      "prompt": "A device pairing troubleshooter with device id, connection state, checklist, error code, and retry pairing action."
+    },
+    {
+      "id": "board-vote-status",
+      "prompt": "A board vote status widget with motion title, yes no abstain counts, quorum badge, and close vote action."
+    },
+    {
+      "id": "support-macro-suggestion",
+      "prompt": "A support macro suggestion card with customer issue, recommended macro, confidence badge, preview text, and apply macro action."
+    },
+    {
+      "id": "seo-audit-summary",
+      "prompt": "An SEO audit summary with page URL, issues by severity, score badge, top recommendations, and open report action."
+    },
+    {
+      "id": "build-cache-health",
+      "prompt": "A build cache health widget with hit rate, storage used, slow keys, warning badge, and clear stale cache action."
+    },
+    {
+      "id": "returns-fraud-review",
+      "prompt": "A returns fraud review card with customer history, risk signals, order value, risk badge, and approve or investigate actions."
+    },
+    {
+      "id": "telemetry-anomaly-card",
+      "prompt": "A telemetry anomaly card with metric name, baseline, current value, affected hosts, anomaly badge, and open dashboard action."
+    },
+    {
+      "id": "creative-asset-approval",
+      "prompt": "A creative asset approval widget with campaign, asset type, reviewer comments, approval badge, and approve or request edits actions."
+    },
+    {
+      "id": "route-optimization-summary",
+      "prompt": "A route optimization summary with stops, miles saved, delayed stops, cost savings, and apply route action."
+    },
+    {
+      "id": "payment-dispute-case",
+      "prompt": "A payment dispute case card with cardholder, merchant, amount, evidence checklist, deadline, and submit evidence action."
+    },
+    {
+      "id": "data-quality-rules",
+      "prompt": "A data quality rules widget with failed rules, affected rows, severity badges, owner, and rerun checks action."
+    },
+    {
+      "id": "mobile-permission-rationale",
+      "prompt": "A mobile permission rationale card with permission name, benefit bullets, privacy note, and enable or skip actions."
+    },
+    {
+      "id": "event-capacity-warning",
+      "prompt": "An event capacity warning with registered guests, venue limit, waitlist count, risk badge, and open waitlist action."
+    },
+    {
+      "id": "warehouse-robot-status",
+      "prompt": "A warehouse robot status card with robot id, battery, task, blocked aisle warning, and reroute action."
+    },
+    {
+      "id": "clinical-trial-enrollment",
+      "prompt": "A clinical trial enrollment widget with site, target enrollment, screened patients, eligible count, and contact coordinator action."
+    },
+    {
+      "id": "api-key-rotation-reminder",
+      "prompt": "An API key rotation reminder with service name, age, owner, expiration risk badge, and rotate key action."
+    },
+    {
+      "id": "workspace-cleanup-suggestions",
+      "prompt": "A workspace cleanup suggestions widget with stale files, large folders, duplicate count, and clean up action."
+    },
+    {
+      "id": "long-copy-stress-card",
+      "prompt": "A dense card with a long title, long explanatory body copy, two badges, and buttons with long labels to test wrapping and truncation."
+    }
+  ]
+}

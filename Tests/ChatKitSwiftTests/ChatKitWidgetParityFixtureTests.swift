@@ -82,6 +82,8 @@ final class ChatKitWidgetParityFixtureTests: XCTestCase {
         XCTAssertTrue(script.contains("pixelFailuresAreBlocking"))
         XCTAssertTrue(script.contains("!options.visualReview && failed.length > 0"))
         XCTAssertTrue(script.contains("pass, ${counts.review} review, ${counts.fail} fail"))
+        XCTAssertTrue(script.contains("Failed JS capture"))
+        XCTAssertTrue(script.contains("jsError"))
     }
 
     func testWidgetParityScriptHandlesSingleObjectChildren() throws {
@@ -93,11 +95,60 @@ final class ChatKitWidgetParityFixtureTests: XCTestCase {
         XCTAssertTrue(script.contains("for (const child of widgetChildren(node))"))
     }
 
+    func testGeneratedWidgetFuzzHarnessUsesRealStudioCorpus() throws {
+        let script = try String(contentsOf: Self.repoRoot().appending(path: "scripts/widget-fuzz.js"), encoding: .utf8)
+        let promptCorpus = try Self.loadGeneratedPromptCorpus()
+        let generatedManifest = try Self.loadGeneratedWidgetManifest()
+
+        XCTAssertEqual(promptCorpus.version, 1)
+        XCTAssertGreaterThanOrEqual(promptCorpus.prompts.count, 100)
+        XCTAssertLessThanOrEqual(promptCorpus.prompts.count, 300)
+        XCTAssertEqual(Set(promptCorpus.prompts.map(\.id)).count, promptCorpus.prompts.count)
+        XCTAssertTrue(promptCorpus.prompts.allSatisfy { !$0.prompt.isEmpty })
+        XCTAssertEqual(generatedManifest.version, 1)
+        XCTAssertGreaterThanOrEqual(generatedManifest.fixtures.count, 100)
+        XCTAssertLessThanOrEqual(generatedManifest.fixtures.count, 300)
+        XCTAssertEqual(Set(generatedManifest.fixtures.map(\.id)).count, generatedManifest.fixtures.count)
+        XCTAssertTrue(generatedManifest.failures.isEmpty)
+        XCTAssertTrue(script.contains("https://widgets.chatkit.studio/create-widget"))
+        XCTAssertTrue(script.contains("https://widgets.chatkit.studio/convert-widget-to-file"))
+        XCTAssertTrue(script.contains("DEFAULT_COUNT = 100"))
+        XCTAssertTrue(script.contains("MAX_COUNT = 300"))
+        XCTAssertTrue(script.contains("DEFAULT_RETRIES = 2"))
+        XCTAssertTrue(script.contains("NUNJUCKS_VERSION = \"3.2.4\""))
+        XCTAssertTrue(script.contains("UNDEFINED_SENTINEL"))
+        XCTAssertTrue(script.contains("renderTemplate"))
+        XCTAssertTrue(script.contains("normalizeWidget"))
+        XCTAssertTrue(script.contains("key === \"key\""))
+        XCTAssertTrue(script.contains("child === UNDEFINED_SENTINEL"))
+        XCTAssertTrue(script.contains("normalizeStudioTemplate"))
+        XCTAssertTrue(script.contains("trimLeadingComma"))
+        XCTAssertTrue(script.contains("retryPromptIds"))
+        XCTAssertTrue(script.contains("unsupported state interpolation syntax"))
+        XCTAssertTrue(script.contains("WidgetParity/fixtures/generated-widgets.json"))
+        XCTAssertTrue(script.contains("--run-parity"))
+        XCTAssertFalse(script.contains("OPENAI_API_KEY"))
+    }
+
     private static func loadManifest() throws -> WidgetParityManifest {
         let url = repoRoot()
             .appending(path: "WidgetParity/fixtures/widgets.json")
         let data = try Data(contentsOf: url)
         return try JSONDecoder().decode(WidgetParityManifest.self, from: data)
+    }
+
+    private static func loadGeneratedPromptCorpus() throws -> WidgetFuzzPromptCorpus {
+        let url = repoRoot()
+            .appending(path: "WidgetParity/prompts/generated-widget-prompts.json")
+        let data = try Data(contentsOf: url)
+        return try JSONDecoder().decode(WidgetFuzzPromptCorpus.self, from: data)
+    }
+
+    private static func loadGeneratedWidgetManifest() throws -> GeneratedWidgetFuzzManifest {
+        let url = repoRoot()
+            .appending(path: "WidgetParity/fixtures/generated-widgets.json")
+        let data = try Data(contentsOf: url)
+        return try JSONDecoder().decode(GeneratedWidgetFuzzManifest.self, from: data)
     }
 
     private static func repoRoot() -> URL {
@@ -130,3 +181,25 @@ private struct WidgetParityViewport: Decodable {
     var width: Int
     var height: Int
 }
+
+private struct WidgetFuzzPromptCorpus: Decodable {
+    var version: Int
+    var prompts: [WidgetFuzzPrompt]
+}
+
+private struct WidgetFuzzPrompt: Decodable {
+    var id: String
+    var prompt: String
+}
+
+private struct GeneratedWidgetFuzzManifest: Decodable {
+    var version: Int
+    var fixtures: [GeneratedWidgetFuzzFixture]
+    var failures: [GeneratedWidgetFuzzFailure]
+}
+
+private struct GeneratedWidgetFuzzFixture: Decodable {
+    var id: String
+}
+
+private struct GeneratedWidgetFuzzFailure: Decodable {}
