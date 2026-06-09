@@ -21,20 +21,33 @@ const VISUAL_REVIEW_RESPONSE_FORMAT = {
     additionalProperties: false,
     properties: {
       verdict: { type: "string", enum: ["pass", "fail", "review"] },
-      severity: { type: "string", enum: ["none", "low", "medium", "high"] },
+      confidence: { type: "string", enum: ["low", "medium", "high"] },
       summary: { type: "string" },
       issues: {
         type: "array",
         maxItems: 8,
-        items: { type: "string" },
+        items: {
+          type: "object",
+          additionalProperties: false,
+          properties: {
+            severity: { type: "string", enum: ["minor", "moderate", "major"] },
+            category: {
+              type: "string",
+              enum: ["content", "layout", "theme", "typography", "controls", "actions", "clipping", "spacing", "crop", "other"],
+            },
+            description: { type: "string" },
+            swift_only: { type: "boolean" },
+          },
+          required: ["severity", "category", "description", "swift_only"],
+        },
       },
-      recommendedFixes: {
+      ignored_differences: {
         type: "array",
         maxItems: 8,
         items: { type: "string" },
       },
     },
-    required: ["verdict", "severity", "summary", "issues", "recommendedFixes"],
+    required: ["verdict", "confidence", "summary", "issues", "ignored_differences"],
   },
 };
 
@@ -696,15 +709,99 @@ async function runVisualReviews(report, paths, options) {
 async function requestVisualReview(result, paths, options) {
   const widgetPayload = JSON.stringify(result.widget);
   const prompt = [
-    "Goal: judge whether one ChatKitSwift native widget rendering is visually on par with the real chatkit-js reference.",
-    "Image 1 is the ChatKitSwift native crop. Image 2 is the chatkit-js reference crop. Image 3 is the diff heatmap; brighter pixels mean larger differences.",
-    "Use the JS reference image and fixture widget payload as ground truth. Do not infer expected styles from component names when the payload or reference image shows otherwise.",
-    "Pass when the Swift image preserves the same visible content, hierarchy, layout intent, theme, controls, and action styling. Minor font rasterization, antialiasing, subpixel offsets, and 1-2px crop padding are acceptable.",
-    "Return fail only for high-confidence product-quality regressions present in Swift but not the JS reference: missing content, wrong layout, clipping, wrong theme, wrong control primitive, unreadable overlap, or materially incorrect spacing.",
-    "Use review rather than fail when the evidence is ambiguous, when the difference also appears in the JS reference, or when the diff is mostly expected text rasterization/padding drift.",
-    `Fixture: ${result.name} (${result.id}). Numeric mean absolute error: ${result.score.toFixed(4)}. Threshold: ${result.threshold.toFixed(4)}. Pixel check result: ${result.passed ? "pass" : "fail"}.`,
-    `Swift crop: ${result.nativeSize.width}x${result.nativeSize.height}. JS crop: ${result.jsSize.width}x${result.jsSize.height}.`,
-    `Fixture widget payload: ${widgetPayload}`,
+    "You are a strict but conservative visual parity judge for ChatKit widget rendering.",
+    "Task:\nDetermine whether the ChatKitSwift native widget crop is visually on par with the chatkit-js reference crop for the same fixture.",
+    [
+      "Inputs:",
+      "- Image 1: ChatKitSwift native crop.",
+      "- Image 2: chatkit-js reference crop. This is the visual ground truth.",
+      "- Image 3: diff heatmap. Brighter pixels indicate larger pixel differences, but the heatmap is only diagnostic evidence, not the final authority.",
+      "- Fixture widget payload: source of truth for widget content, state, data, labels, actions, and semantic structure.",
+    ].join("\n"),
+    [
+      "Ground truth rules:",
+      "Use the JS reference image as the ground truth for realized visual appearance: layout, theme, spacing, typography scale, control styling, hierarchy, and visible rendering behavior.",
+      "Use the fixture payload as ground truth for expected content and semantic structure.",
+      "Do not infer expected styling from component names, fixture names, or design-system assumptions when the JS reference or payload shows otherwise.",
+      "Do not penalize the Swift image for matching the JS reference even if both appear visually imperfect.",
+    ].join("\n"),
+    [
+      "Evaluation scope:",
+      "Compare the visible widget rendering only. Ignore surrounding contact-sheet labels, column headers, row titles, metadata, crop annotations, and background outside the widget crop.",
+      "Compare Swift to JS directly before considering the diff heatmap.",
+      "Use the diff heatmap to locate possible issues, but do not fail solely because the heatmap is bright.",
+    ].join("\n"),
+    "Decision labels:\nReturn exactly one of: pass, review, fail.",
+    [
+      "Pass:",
+      "Return pass when the Swift crop preserves the same visible content, semantic hierarchy, layout intent, theme, control types, action styling, and approximate spacing as the JS reference.",
+      "Accept minor differences from font rasterization, antialiasing, subpixel positioning, platform text rendering, shadow softness, border rasterization, and 1-2 px crop or padding drift.",
+      "Accept small text wrapping differences only when all important content remains readable and the visual hierarchy is materially unchanged.",
+    ].join("\n"),
+    [
+      "Review:",
+      "Return review when there is a visible difference but it is ambiguous, low-severity, plausibly caused by crop size, font metrics, antialiasing, or expected platform rendering variance.",
+      "Return review when the same apparent issue also exists in the JS reference.",
+      "Return review when the diff is mostly text-edge noise, slight padding drift, shadow/border softness, or minor line-height variance.",
+      "Return review when the evidence is insufficient to say with high confidence that Swift has a product-quality regression.",
+    ].join("\n"),
+    [
+      "Fail:",
+      "Return fail only for high-confidence product-quality regressions in Swift that are not present in the JS reference. Examples:",
+      "- Missing, extra, or materially incorrect content.",
+      "- Incorrect visible state, value, label, badge, action, icon, or control.",
+      "- Wrong theme, background, color role, contrast, or emphasis that changes meaning.",
+      "- Wrong control primitive, such as a toggle rendered as a checkbox, segmented control rendered as buttons, or native picker rendered unlike the JS reference.",
+      "- Clipping, truncation, overlap, or compression that makes important content unreadable.",
+      "- Material layout breakage: wrong grouping, wrong hierarchy, misplaced actions, collapsed sections, excessive spacing, or materially different alignment.",
+      "- Incorrect enabled/disabled/selected/destructive/primary action styling.",
+      "- Large size or crop mismatch that changes the visible widget content or intended layout.",
+    ].join("\n"),
+    [
+      "Important calibration:",
+      "Pixel metrics are advisory. A failed pixel check or high mean absolute error does not automatically mean fail.",
+      "A passing pixel check does not automatically mean pass if there is a clear semantic or visual regression.",
+      "Prefer pass over review for harmless rendering noise.",
+      "Prefer review over fail unless the Swift-specific regression is clear and product-relevant.",
+    ].join("\n"),
+    [
+      "Fixture metadata:",
+      `Fixture: ${result.name} (${result.id})`,
+      `Numeric mean absolute error: ${result.score.toFixed(4)}`,
+      `Threshold: ${result.threshold.toFixed(4)}`,
+      `Pixel check result: ${result.passed ? "pass" : "fail"}`,
+      `Swift crop size: ${result.nativeSize.width}x${result.nativeSize.height}`,
+      `JS crop size: ${result.jsSize.width}x${result.jsSize.height}`,
+    ].join("\n"),
+    `Fixture widget payload:\n${widgetPayload}`,
+    [
+      "Required output format:",
+      "{",
+      '  "verdict": "pass | review | fail",',
+      '  "confidence": "low | medium | high",',
+      '  "summary": "One concise sentence explaining the decision.",',
+      '  "issues": [',
+      "    {",
+      '      "severity": "minor | moderate | major",',
+      '      "category": "content | layout | theme | typography | controls | actions | clipping | spacing | crop | other",',
+      '      "description": "Specific observed difference, if any.",',
+      '      "swift_only": true',
+      "    }",
+      "  ],",
+      '  "ignored_differences": [',
+      '    "Differences intentionally ignored, such as antialiasing, subpixel drift, or text rasterization."',
+      "  ]",
+      "}",
+    ].join("\n"),
+    [
+      "Output constraints:",
+      "- Do not include markdown.",
+      "- Do not mention component names as evidence unless the payload or image supports them.",
+      "- Do not speculate about implementation causes.",
+      "- Do not recommend fixes.",
+      "- If verdict is pass, issues must be an empty array.",
+      '- If verdict is fail, at least one issue must have severity "major" and swift_only true.',
+    ].join("\n"),
   ].join("\n\n");
 
   const body = {
@@ -802,19 +899,19 @@ function parseJSONish(text) {
 function normalizeVisualReview(result, parsed, rawText, options) {
   const object = parsed || {};
   const verdict = normalizeChoice(object.verdict, ["pass", "fail", "review"], result.passed ? "pass" : "review");
-  const severity = normalizeChoice(object.severity, ["none", "low", "medium", "high"], verdict === "pass" ? "none" : "medium");
+  const confidence = normalizeChoice(object.confidence, ["low", "medium", "high"], "medium");
   return {
     id: result.id,
     name: result.name,
     model: options.visualModel,
     detail: options.visualDetail,
     verdict,
-    severity,
+    confidence,
     summary: typeof object.summary === "string" && object.summary.trim()
       ? object.summary.trim()
       : "The visual model response could not be parsed into the expected summary.",
-    issues: normalizeStringArray(object.issues),
-    recommendedFixes: normalizeStringArray(object.recommendedFixes),
+    issues: normalizeIssueArray(object.issues),
+    ignoredDifferences: normalizeStringArray(object.ignored_differences),
     rawText: rawText.slice(0, 4000),
   };
 }
@@ -833,6 +930,30 @@ function normalizeStringArray(value) {
   }
   return value
     .map((entry) => String(entry).trim())
+    .filter(Boolean)
+    .slice(0, 8);
+}
+
+function normalizeIssueArray(value) {
+  if (!Array.isArray(value)) {
+    return [];
+  }
+  return value
+    .map((entry) => {
+      if (!entry || typeof entry !== "object" || Array.isArray(entry)) {
+        return null;
+      }
+      const description = typeof entry.description === "string" ? entry.description.trim() : "";
+      if (!description) {
+        return null;
+      }
+      return {
+        severity: normalizeChoice(entry.severity, ["minor", "moderate", "major"], "minor"),
+        category: normalizeChoice(entry.category, ["content", "layout", "theme", "typography", "controls", "actions", "clipping", "spacing", "crop", "other"], "other"),
+        description,
+        swiftOnly: entry.swift_only === true,
+      };
+    })
     .filter(Boolean)
     .slice(0, 8);
 }
@@ -861,22 +982,23 @@ function writeReport(report, outputRoot) {
     lines.push("");
     lines.push(`Model: \`${report.visualReview.model}\`; detail: \`${report.visualReview.detail}\`; reviewed at: \`${report.visualReview.reviewedAt}\`.`);
     lines.push("");
-    lines.push("| Fixture | Verdict | Severity | Summary |");
+    lines.push("| Fixture | Verdict | Confidence | Summary |");
     lines.push("| --- | --- | --- | --- |");
     for (const review of report.visualReviews) {
-      lines.push(`| ${markdownCell(review.name)} | ${review.verdict} | ${review.severity} | ${markdownCell(review.summary)} |`);
+      lines.push(`| ${markdownCell(review.name)} | ${review.verdict} | ${review.confidence} | ${markdownCell(review.summary)} |`);
     }
     for (const review of report.visualReviews) {
-      if (review.issues.length === 0 && review.recommendedFixes.length === 0) {
+      if (review.issues.length === 0 && review.ignoredDifferences.length === 0) {
         continue;
       }
       lines.push("");
       lines.push(`### ${review.name}`);
       for (const issue of review.issues) {
-        lines.push(`- Issue: ${issue}`);
+        const swiftOnly = issue.swiftOnly ? "Swift-only" : "Shared/ambiguous";
+        lines.push(`- Issue (${issue.severity}, ${issue.category}, ${swiftOnly}): ${issue.description}`);
       }
-      for (const fix of review.recommendedFixes) {
-        lines.push(`- Fix: ${fix}`);
+      for (const ignoredDifference of review.ignoredDifferences) {
+        lines.push(`- Ignored: ${ignoredDifference}`);
       }
     }
   }

@@ -71,6 +71,12 @@ final class ChatKitWidgetParityFixtureTests: XCTestCase {
         XCTAssertTrue(script.contains("json_schema"))
         XCTAssertTrue(script.contains("visualDetail: \"auto\""))
         XCTAssertTrue(script.contains("reasoning: { effort: \"low\" }"))
+        XCTAssertTrue(script.contains("Compare Swift to JS directly before considering the diff heatmap."))
+        XCTAssertTrue(script.contains("Pixel metrics are advisory."))
+        XCTAssertTrue(script.contains("A passing pixel check does not automatically mean pass"))
+        XCTAssertTrue(script.contains("confidence"))
+        XCTAssertTrue(script.contains("ignored_differences"))
+        XCTAssertFalse(script.contains("recommendedFixes"))
     }
 
     private static func loadManifest() throws -> WidgetParityManifest {
