@@ -82,6 +82,12 @@ final class ChatKitWidgetStyleTests: XCTestCase {
         XCTAssertEqual(ChatKitWidgetMetrics.defaultCardBackgroundHex(colorScheme: .dark), "#282828")
         XCTAssertEqual(ChatKitWidgetMetrics.defaultCardBorderHex(colorScheme: .light), "#E3E3E3")
         XCTAssertEqual(ChatKitWidgetMetrics.defaultCardBorderHex(colorScheme: .dark), "#4F4F4F")
+        XCTAssertEqual(ChatKitWidgetMetrics.cardMaxWidth("sm"), 360)
+        XCTAssertEqual(ChatKitWidgetMetrics.cardMaxWidth("md"), 480)
+        XCTAssertNil(ChatKitWidgetMetrics.cardMaxWidth(nil))
+
+        let smallCard = ChatKitWidgetNode(type: "Card", raw: ["type": .string("Card"), "size": .string("sm")])
+        XCTAssertEqual(smallCard.cardPadding, 16)
     }
 
     func testWidgetControlsUseReferenceFieldMetrics() {
@@ -90,6 +96,19 @@ final class ChatKitWidgetStyleTests: XCTestCase {
         XCTAssertEqual(ChatKitWidgetMetrics.textareaMinHeight(rows: 3), 72)
         XCTAssertEqual(ChatKitWidgetMetrics.selectionIndicatorSize, 16)
         XCTAssertEqual(ChatKitWidgetMetrics.checkboxIndicatorSize, 16)
+        XCTAssertEqual(ChatKitWidgetMetrics.defaultControlFieldBackgroundHex(colorScheme: .light), "#FFFFFF")
+        XCTAssertEqual(ChatKitWidgetMetrics.defaultControlFieldBackgroundHex(colorScheme: .dark), "#282828")
+        XCTAssertEqual(ChatKitWidgetMetrics.defaultControlFieldBorderHex(colorScheme: .light), "#D7D7D7")
+        XCTAssertEqual(ChatKitWidgetMetrics.defaultControlFieldBorderHex(colorScheme: .dark), "#5D5D5D")
+    }
+
+    func testDateOnlyWidgetValuesStayOnLocalCalendarDay() throws {
+        let date = try XCTUnwrap(ChatKitWidgetMetrics.date(from: "2026-06-09"))
+        let components = Calendar.current.dateComponents([.year, .month, .day], from: date)
+
+        XCTAssertEqual(components.year, 2026)
+        XCTAssertEqual(components.month, 6)
+        XCTAssertEqual(components.day, 9)
     }
 
     func testWidgetStackGapCollapsesForFlushReferenceRows() {
@@ -209,6 +228,33 @@ final class ChatKitWidgetStyleTests: XCTestCase {
         XCTAssertEqual(widthPercentage, CGFloat(0.72), accuracy: 0.001)
     }
 
+    func testRowsDetectSpacerChildren() {
+        let row = ChatKitWidgetNode(type: "Row", raw: [
+            "type": .string("Row"),
+            "children": .array([
+                .object(["type": .string("Badge"), "label": .string("Open")]),
+                .object(["type": .string("Spacer")]),
+                .object(["type": .string("Caption"), "value": .string("Impact 4/5")]),
+            ]),
+        ])
+
+        XCTAssertTrue(row.hasSpacerChildren)
+    }
+
+    func testProgressFillBoxesDecodePercentageDimensions() throws {
+        let fill = ChatKitWidgetNode(type: "Box", raw: [
+            "type": .string("Box"),
+            "height": .string("100%"),
+            "width": .string("72%"),
+            "background": .string("yellow-500"),
+        ])
+
+        let width = try XCTUnwrap(fill.widthPercentage)
+        let height = try XCTUnwrap(fill.heightPercentage)
+        XCTAssertEqual(width, CGFloat(0.72), accuracy: 0.001)
+        XCTAssertEqual(height, CGFloat(1), accuracy: 0.001)
+    }
+
     func testTransitionDecodesSingleChildObject() {
         let transition = ChatKitWidgetNode(type: "Transition", raw: [
             "type": .string("Transition"),
@@ -224,10 +270,20 @@ final class ChatKitWidgetStyleTests: XCTestCase {
 
     func testStudioColorTokensResolveToNativeColors() {
         XCTAssertNotNil(ChatKitWidgetColor.color("tertiary"))
+        XCTAssertNotNil(ChatKitWidgetColor.color("alpha-10"))
         XCTAssertNotNil(ChatKitWidgetColor.color("surface-tertiary"))
         XCTAssertNotNil(ChatKitWidgetColor.color("green-500"))
         XCTAssertNotNil(ChatKitWidgetColor.color("red-500"))
         XCTAssertNotNil(ChatKitWidgetColor.color("blue-500"))
+    }
+
+    func testSecondaryForegroundColorIsDarkAware() {
+        XCTAssertNotNil(ChatKitWidgetColor.color(.string("secondary"), colorScheme: .light))
+        XCTAssertNotNil(ChatKitWidgetColor.color(.string("secondary"), colorScheme: .dark))
+        XCTAssertNotEqual(
+            String(describing: ChatKitWidgetColor.color(.string("secondary"), colorScheme: .light)),
+            String(describing: ChatKitWidgetColor.color(.string("secondary"), colorScheme: .dark)),
+        )
     }
 
     func testChartDataExtractsLabelsValuesAndColors() {

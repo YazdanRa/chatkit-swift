@@ -50,7 +50,7 @@ private struct ChatKitWidgetNodeView: View {
                 cardBody
                 cardActions
             }
-            .frame(maxWidth: .infinity, alignment: .leading)
+            .frame(maxWidth: ChatKitWidgetMetrics.cardMaxWidth(node.string("size")) ?? .infinity, alignment: .leading)
         case "ListView":
             ChatKitWidgetListView(node: node, item: item, session: session)
         case "ListViewItem":
@@ -169,6 +169,9 @@ private struct ChatKitWidgetNodeView: View {
             HStack(alignment: node.verticalAlignment, spacing: node.gapOrDefault(0)) {
                 children
             }
+            .frame(maxWidth: node.hasSpacerChildren ? .infinity : nil, alignment: .leading)
+            .fixedSize(horizontal: parentType == "Row" && !node.hasSpacerChildren, vertical: false)
+            .layoutPriority(parentType == "Row" ? 1 : 0)
             .chatKitWidgetBoxStyle(node: node, colorScheme: colorScheme, parentType: parentType)
         }
     }
@@ -324,23 +327,21 @@ private struct ChatKitWidgetNodeView: View {
     private func text(_ value: String, pointSize: CGFloat, lineHeight: CGFloat, defaultColor: Color? = nil, defaultWeight: Font.Weight? = nil) -> some View {
         let color = node.color("color", colorScheme: colorScheme) ?? defaultColor
         let fontWeight = node.fontWeight ?? defaultWeight ?? .regular
+        let lineLimit = node.lineLimit
         let text = Text(value)
             .font(.system(size: pointSize, weight: fontWeight))
             .strikethrough(node.bool("lineThrough"))
             .italic(node.bool("italic"))
+            .multilineTextAlignment(node.textAlignment)
+            .lineLimit(lineLimit)
+            .lineSpacing(ChatKitWidgetMetrics.additionalLineSpacing(pointSize: pointSize, lineHeight: lineHeight))
+            .truncationMode(.tail)
+            .layoutPriority(parentType == "Row" ? 1 : 0)
 
         if let color {
             text.foregroundStyle(color)
-                .multilineTextAlignment(node.textAlignment)
-                .lineLimit(node.lineLimit)
-                .lineSpacing(ChatKitWidgetMetrics.additionalLineSpacing(pointSize: pointSize, lineHeight: lineHeight))
-                .truncationMode(.tail)
         } else {
             text
-                .multilineTextAlignment(node.textAlignment)
-                .lineLimit(node.lineLimit)
-                .lineSpacing(ChatKitWidgetMetrics.additionalLineSpacing(pointSize: pointSize, lineHeight: lineHeight))
-                .truncationMode(.tail)
         }
     }
 
@@ -758,15 +759,11 @@ private struct ChatKitWidgetControlField<Content: View>: View {
     }
 
     private var fieldBackground: Color {
-        colorScheme == .dark
-            ? (Color(chatKitHex: "#111827") ?? .clear)
-            : (Color(chatKitHex: "#FFFFFF") ?? .clear)
+        Color(chatKitHex: ChatKitWidgetMetrics.defaultControlFieldBackgroundHex(colorScheme: colorScheme)) ?? .clear
     }
 
     private var fieldBorder: Color {
-        colorScheme == .dark
-            ? (Color(chatKitHex: "#374151") ?? .secondary.opacity(0.25))
-            : (Color(chatKitHex: "#D7D7D7") ?? .secondary.opacity(0.25))
+        Color(chatKitHex: ChatKitWidgetMetrics.defaultControlFieldBorderHex(colorScheme: colorScheme)) ?? .secondary.opacity(0.25)
     }
 }
 
@@ -871,6 +868,11 @@ private struct ChatKitWidgetSelectView: View {
                     Text(selectedLabel)
                         .foregroundStyle(value.isEmpty ? .secondary : .primary)
                     Spacer(minLength: 8)
+                    if node.bool("clearable"), !value.isEmpty {
+                        Image(systemName: "xmark")
+                            .font(.system(size: 13, weight: .semibold))
+                            .foregroundStyle(.secondary)
+                    }
                     Image(systemName: "chevron.up.chevron.down")
                         .font(.system(size: 13, weight: .semibold))
                         .foregroundStyle(.secondary)
@@ -976,7 +978,7 @@ private struct ChatKitWidgetDatePickerView: View {
     }
 
     private static func parseDate(_ value: String) -> Date? {
-        ISO8601DateFormatter().date(from: value)
+        ChatKitWidgetMetrics.date(from: value)
     }
 
     private static func formatDate(_ date: Date) -> String {
@@ -1236,6 +1238,21 @@ private extension View {
             padding(node.containerInsets)
                 .frame(maxWidth: .infinity, minHeight: fixedHeight, maxHeight: fixedHeight, alignment: node.frameAlignment)
                 .chatKitWidgetDecoratedBoxStyle(node: node, colorScheme: colorScheme)
+        } else if let widthPercentage = node.widthPercentage,
+                  parentType == "Box",
+                  node.heightPercentage != nil || node.fixedHeight != nil
+        {
+            GeometryReader { proxy in
+                padding(node.containerInsets)
+                    .frame(
+                        width: max(0, proxy.size.width * widthPercentage),
+                        height: node.heightPercentage.map { max(0, proxy.size.height * $0) } ?? node.fixedHeight,
+                        alignment: node.frameAlignment,
+                    )
+                    .chatKitWidgetDecoratedBoxStyle(node: node, colorScheme: colorScheme)
+                    .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: node.frameAlignment)
+            }
+            .frame(height: node.fixedHeight)
         } else if let widthPercentage = node.widthPercentage, let fixedHeight = node.fixedHeight {
             GeometryReader { proxy in
                 padding(node.containerInsets)
@@ -1283,7 +1300,7 @@ extension ChatKitWidgetNode {
 
     var cardPadding: CGFloat {
         switch string("size") {
-        case "sm": 12
+        case "sm": 16
         case "lg", "full": 20
         default: 16
         }
@@ -1347,8 +1364,16 @@ extension ChatKitWidgetNode {
         ChatKitWidgetMetrics.percentage(raw["width"])
     }
 
+    var heightPercentage: CGFloat? {
+        ChatKitWidgetMetrics.percentage(raw["height"])
+    }
+
     var hasPercentageWidthChildren: Bool {
         children.contains { $0.widthPercentage != nil }
+    }
+
+    var hasSpacerChildren: Bool {
+        children.contains { $0.type == "Spacer" }
     }
 
     func fillsAvailableWidth(parentType: String?) -> Bool {

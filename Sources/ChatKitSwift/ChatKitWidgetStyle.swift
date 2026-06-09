@@ -373,6 +373,27 @@ enum ChatKitWidgetMetrics {
         Color(chatKitHex: defaultCardBorderHex(colorScheme: colorScheme)) ?? .secondary.opacity(0.22)
     }
 
+    static func cardMaxWidth(_ token: String?) -> CGFloat? {
+        switch token {
+        case "sm":
+            360
+        case "md":
+            480
+        case "lg":
+            640
+        default:
+            nil
+        }
+    }
+
+    static func defaultControlFieldBackgroundHex(colorScheme: SwiftUI.ColorScheme) -> String {
+        colorScheme == .dark ? "#282828" : "#FFFFFF"
+    }
+
+    static func defaultControlFieldBorderHex(colorScheme: SwiftUI.ColorScheme) -> String {
+        colorScheme == .dark ? "#5D5D5D" : "#D7D7D7"
+    }
+
     static func controlFieldHeight(_ token: String?) -> CGFloat {
         switch token {
         case "3xs", "2xs", "xs", "sm":
@@ -390,6 +411,21 @@ enum ChatKitWidgetMetrics {
 
     static let selectionIndicatorSize: CGFloat = 16
     static let checkboxIndicatorSize: CGFloat = 16
+
+    static func date(from value: String) -> Date? {
+        let trimmed = value.trimmingCharacters(in: .whitespacesAndNewlines)
+        if let match = trimmed.firstMatch(of: /^(\d{4})-(\d{2})-(\d{2})$/),
+           let year = Int(match.1),
+           let month = Int(match.2),
+           let day = Int(match.3)
+        {
+            var calendar = Calendar(identifier: .gregorian)
+            calendar.locale = Locale(identifier: "en_US_POSIX")
+            calendar.timeZone = .current
+            return calendar.date(from: DateComponents(year: year, month: month, day: day))
+        }
+        return ISO8601DateFormatter().date(from: trimmed)
+    }
 
     static func stackGap(_ value: JSONValue?, containerType: String, childTypes: [String]) -> CGFloat? {
         let gap = spacing(value)
@@ -639,10 +675,10 @@ enum ChatKitWidgetColor {
     static func color(_ value: JSONValue?, colorScheme: SwiftUI.ColorScheme) -> Color? {
         switch value {
         case let .string(token):
-            return color(token)
+            return color(token, colorScheme: colorScheme)
         case let .object(object):
             let themedValue = colorScheme == .dark ? object["dark"]?.stringValue : object["light"]?.stringValue
-            return color(themedValue)
+            return color(themedValue, colorScheme: colorScheme)
         default:
             return nil
         }
@@ -650,8 +686,21 @@ enum ChatKitWidgetColor {
 
     /// Resolves a semantic tone or CSS-style hex string into a SwiftUI color.
     static func color(_ token: String?) -> Color? {
+        color(token, colorScheme: nil)
+    }
+
+    static func color(_ token: String?, colorScheme: SwiftUI.ColorScheme?) -> Color? {
         guard let token else {
             return nil
+        }
+        if token == "primary" {
+            return .primary
+        }
+        if token == "secondary" {
+            if colorScheme == .dark {
+                return Color(chatKitHex: "#D4D4D4") ?? .secondary
+            }
+            return Color(chatKitHex: "#5D5D5D") ?? .secondary
         }
         if let tone = ChatKitWidgetTone(rawValue: token) {
             return tone.softForeground
@@ -666,6 +715,7 @@ enum ChatKitWidgetColor {
         "tertiary": .secondary.opacity(0.72),
         "text-secondary": .secondary,
         "text-tertiary": .secondary.opacity(0.72),
+        "alpha-10": .primary.opacity(0.10),
         "surface-secondary": .secondary.opacity(0.10),
         "surface-tertiary": .secondary.opacity(0.16),
         "gray-500": .gray,

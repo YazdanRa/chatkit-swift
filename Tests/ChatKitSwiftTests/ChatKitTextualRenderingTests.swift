@@ -73,6 +73,18 @@ final class ChatKitTextualRenderingTests: XCTestCase {
         XCTAssertTrue(readme.contains("src_1dg3fzj._.js"))
     }
 
+    func testWidgetRendererKeepsGeneratedFixtureParityDetailsVisible() throws {
+        let widgetView = try readRepositoryFile("Sources/ChatKitSwift/ChatKitWidgetView.swift")
+
+        XCTAssertTrue(widgetView.contains("ChatKitWidgetMetrics.cardMaxWidth(node.string(\"size\"))"))
+        XCTAssertTrue(widgetView.contains(".frame(maxWidth: node.hasSpacerChildren ? .infinity : nil"))
+        XCTAssertTrue(widgetView.contains(".fixedSize(horizontal: parentType == \"Row\" && !node.hasSpacerChildren, vertical: false)"))
+        XCTAssertTrue(widgetView.contains(".layoutPriority(parentType == \"Row\" ? 1 : 0)"))
+        XCTAssertTrue(widgetView.contains("Image(systemName: \"xmark\")"))
+        XCTAssertTrue(widgetView.contains("ChatKitWidgetMetrics.date(from: value)"))
+        XCTAssertTrue(widgetView.contains("node.heightPercentage.map"))
+    }
+
     private func readRepositoryFile(_ path: String) throws -> String {
         let testFile = URL(fileURLWithPath: #filePath)
         let repositoryRoot = testFile
