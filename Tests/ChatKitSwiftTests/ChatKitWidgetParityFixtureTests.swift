@@ -77,6 +77,8 @@ final class ChatKitWidgetParityFixtureTests: XCTestCase {
         XCTAssertTrue(script.contains("confidence"))
         XCTAssertTrue(script.contains("ignored_differences"))
         XCTAssertFalse(script.contains("recommendedFixes"))
+        XCTAssertTrue(script.contains("visualReviewCounts"))
+        XCTAssertTrue(script.contains("pass, ${counts.review} review, ${counts.fail} fail"))
     }
 
     private static func loadManifest() throws -> WidgetParityManifest {

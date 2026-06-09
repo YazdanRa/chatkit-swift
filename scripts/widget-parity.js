@@ -131,15 +131,28 @@ async function main() {
   writeReport(report, outputRoot);
 
   const failed = report.results.filter((result) => !result.passed);
-  const visualFailures = (report.visualReviews || []).filter((review) => review.verdict === "fail");
+  const counts = visualReviewCounts(report.visualReviews || []);
   console.log(`Widget parity: ${report.results.length - failed.length}/${report.results.length} fixtures within threshold.`);
   if (report.visualReviews) {
-    console.log(`Visual review: ${report.visualReviews.length - visualFailures.length}/${report.visualReviews.length} fixtures accepted by ${options.visualModel}.`);
+    console.log(`Visual review: ${counts.pass} pass, ${counts.review} review, ${counts.fail} fail by ${options.visualModel}.`);
   }
   console.log(`Report: ${path.join(outputRoot, "report.md")}`);
-  if ((failed.length > 0 || visualFailures.length > 0) && !options.allowFailures) {
+  if ((failed.length > 0 || counts.fail > 0) && !options.allowFailures) {
     process.exitCode = 1;
   }
+}
+
+function visualReviewCounts(reviews) {
+  return reviews.reduce((counts, review) => {
+    if (review.verdict === "pass") {
+      counts.pass += 1;
+    } else if (review.verdict === "review") {
+      counts.review += 1;
+    } else if (review.verdict === "fail") {
+      counts.fail += 1;
+    }
+    return counts;
+  }, { pass: 0, review: 0, fail: 0 });
 }
 
 function parseArguments(args) {
