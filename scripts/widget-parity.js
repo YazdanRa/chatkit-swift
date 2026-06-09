@@ -9,7 +9,7 @@ const zlib = require("zlib");
 const DEFAULT_CHATKIT_JS = "/Users/ericlewis/Developer/chatkit-js";
 const DEFAULT_FIXTURES = "WidgetParity/fixtures/widgets.json";
 const DEFAULT_OUTPUT = ".widget-parity";
-const DEFAULT_VISUAL_MODEL = process.env.OPENAI_VISION_MODEL || "gpt-5.4-nano-2026-03-17";
+const DEFAULT_VISUAL_MODEL = process.env.OPENAI_VISION_MODEL || "gpt-5.4-mini-2026-03-17";
 const PLAYWRIGHT_VERSION = "1.60.0";
 const RESPONSES_API_URL = "https://api.openai.com/v1/responses";
 const VISUAL_REVIEW_RESPONSE_FORMAT = {
@@ -140,7 +140,7 @@ function parseArguments(args) {
     allowFailures: false,
     visualReview: false,
     visualModel: DEFAULT_VISUAL_MODEL,
-    visualDetail: "high",
+    visualDetail: "auto",
     help: false,
   };
 
@@ -207,7 +207,7 @@ Options:
   --allow-failures       Generate the report without returning a failing exit code.
   --visual-review        Ask a visual model to review Swift, JS, and diff images.
   --visual-model <name>  OpenAI model for visual review. Default: ${DEFAULT_VISUAL_MODEL}
-  --visual-detail <mode> Image detail for visual review: low, auto, high. Default: high
+  --visual-detail <mode> Image detail for visual review: low, auto, high. Default: auto
 `);
 }
 

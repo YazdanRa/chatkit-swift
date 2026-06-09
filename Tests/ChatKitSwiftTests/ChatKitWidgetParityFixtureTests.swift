@@ -66,10 +66,10 @@ final class ChatKitWidgetParityFixtureTests: XCTestCase {
         XCTAssertTrue(script.contains("--visual-review"))
         XCTAssertTrue(script.contains("OPENAI_API_KEY"))
         XCTAssertTrue(script.contains("/v1/responses"))
-        XCTAssertTrue(script.contains("gpt-5.4-nano-2026-03-17"))
+        XCTAssertTrue(script.contains("gpt-5.4-mini-2026-03-17"))
         XCTAssertTrue(script.contains("VISUAL_REVIEW_RESPONSE_FORMAT"))
         XCTAssertTrue(script.contains("json_schema"))
-        XCTAssertTrue(script.contains("visualDetail: \"high\""))
+        XCTAssertTrue(script.contains("visualDetail: \"auto\""))
         XCTAssertTrue(script.contains("reasoning: { effort: \"low\" }"))
     }
 
