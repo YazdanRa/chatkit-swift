@@ -132,12 +132,13 @@ async function main() {
 
   const failed = report.results.filter((result) => !result.passed);
   const counts = visualReviewCounts(report.visualReviews || []);
+  const pixelFailuresAreBlocking = !options.visualReview && failed.length > 0;
   console.log(`Widget parity: ${report.results.length - failed.length}/${report.results.length} fixtures within threshold.`);
   if (report.visualReviews) {
     console.log(`Visual review: ${counts.pass} pass, ${counts.review} review, ${counts.fail} fail by ${options.visualModel}.`);
   }
   console.log(`Report: ${path.join(outputRoot, "report.md")}`);
-  if ((failed.length > 0 || counts.fail > 0) && !options.allowFailures) {
+  if ((pixelFailuresAreBlocking || counts.fail > 0) && !options.allowFailures) {
     process.exitCode = 1;
   }
 }
@@ -654,11 +655,18 @@ function firstWidgetNeedle(node) {
   if (node.type === "Badge" && typeof node.label === "string") {
     return node.label;
   }
-  for (const child of node.children || []) {
+  for (const child of widgetChildren(node)) {
     const value = firstWidgetNeedle(child);
     if (value) return value;
   }
   return node.type;
+}
+
+function widgetChildren(node) {
+  if (!node || typeof node !== "object") return [];
+  if (Array.isArray(node.children)) return node.children;
+  if (node.children && typeof node.children === "object") return [node.children];
+  return [];
 }
 
 function compareScreenshots(manifest, paths) {

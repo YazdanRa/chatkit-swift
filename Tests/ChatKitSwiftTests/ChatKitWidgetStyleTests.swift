@@ -79,9 +79,9 @@ final class ChatKitWidgetStyleTests: XCTestCase {
 
     func testWidgetCardDefaultsMatchReferencePalette() {
         XCTAssertEqual(ChatKitWidgetMetrics.defaultCardBackgroundHex(colorScheme: .light), "#FFFFFF")
-        XCTAssertEqual(ChatKitWidgetMetrics.defaultCardBackgroundHex(colorScheme: .dark), "#111827")
+        XCTAssertEqual(ChatKitWidgetMetrics.defaultCardBackgroundHex(colorScheme: .dark), "#282828")
         XCTAssertEqual(ChatKitWidgetMetrics.defaultCardBorderHex(colorScheme: .light), "#E3E3E3")
-        XCTAssertEqual(ChatKitWidgetMetrics.defaultCardBorderHex(colorScheme: .dark), "#374151")
+        XCTAssertEqual(ChatKitWidgetMetrics.defaultCardBorderHex(colorScheme: .dark), "#4F4F4F")
     }
 
     func testWidgetControlsUseReferenceFieldMetrics() {
@@ -125,6 +125,101 @@ final class ChatKitWidgetStyleTests: XCTestCase {
         XCTAssertTrue(box.fillsAvailableWidth(parentType: "Card"))
         XCTAssertFalse(box.fillsAvailableWidth(parentType: "Row"))
         XCTAssertFalse(plainBox.fillsAvailableWidth(parentType: "Card"))
+    }
+
+    func testBoxPaddingDoesNotInventReferenceRendererInsets() {
+        let box = ChatKitWidgetNode(type: "Box", raw: [
+            "type": .string("Box"),
+            "padding": .string("md"),
+        ])
+        let basic = ChatKitWidgetNode(type: "Basic", raw: [
+            "type": .string("Basic"),
+            "padding": .string("md"),
+        ])
+
+        XCTAssertEqual(box.containerInsets.top, 0)
+        XCTAssertEqual(box.containerInsets.leading, 0)
+        XCTAssertEqual(basic.containerInsets.top, 12)
+        XCTAssertEqual(basic.containerInsets.leading, 12)
+    }
+
+    func testVerticalContainersMakeButtonsFillAvailableWidth() {
+        let button = ChatKitWidgetNode(type: "Button", raw: [
+            "type": .string("Button"),
+            "label": .string("Open details"),
+        ])
+        let rowButton = ChatKitWidgetNode(type: "Button", raw: [
+            "type": .string("Button"),
+            "label": .string("Inline"),
+        ])
+        let explicitBlockButton = ChatKitWidgetNode(type: "Button", raw: [
+            "type": .string("Button"),
+            "label": .string("Block"),
+            "block": .bool(true),
+        ])
+
+        XCTAssertTrue(button.buttonFillsAvailableWidth(parentType: "Card"))
+        XCTAssertTrue(button.buttonFillsAvailableWidth(parentType: "Basic"))
+        XCTAssertTrue(button.buttonFillsAvailableWidth(parentType: "Form"))
+        XCTAssertTrue(button.buttonFillsAvailableWidth(parentType: "Col"))
+        XCTAssertFalse(rowButton.buttonFillsAvailableWidth(parentType: "Row"))
+        XCTAssertTrue(explicitBlockButton.buttonFillsAvailableWidth(parentType: "Row"))
+    }
+
+    func testRadioGroupDirectionFollowsWidgetContract() {
+        let defaultRadio = ChatKitWidgetNode(type: "RadioGroup", raw: ["type": .string("RadioGroup")])
+        let columnRadio = ChatKitWidgetNode(type: "RadioGroup", raw: [
+            "type": .string("RadioGroup"),
+            "direction": .string("col"),
+        ])
+
+        XCTAssertEqual(defaultRadio.widgetDirection(default: .row), .row)
+        XCTAssertEqual(columnRadio.widgetDirection(default: .row), .col)
+    }
+
+    func testListLimitProducesNativeDisclosureSummary() {
+        let list = ChatKitWidgetNode(type: "ListView", raw: [
+            "type": .string("ListView"),
+            "limit": .number(2),
+            "children": .array([
+                .object(["type": .string("ListViewItem"), "id": .string("first")]),
+                .object(["type": .string("ListViewItem"), "id": .string("second")]),
+                .object(["type": .string("ListViewItem"), "id": .string("third")]),
+            ]),
+        ])
+
+        XCTAssertEqual(list.visibleListChildren(isExpanded: false).map(\.id), ["first", "second"])
+        XCTAssertEqual(list.hiddenListChildCount, 1)
+        XCTAssertEqual(list.hiddenListDisclosureLabel, "Show 1 more")
+        XCTAssertEqual(list.visibleListChildren(isExpanded: true).map(\.id), ["first", "second", "third"])
+    }
+
+    func testRowsDetectPercentageWidthChildren() throws {
+        let row = ChatKitWidgetNode(type: "Row", raw: [
+            "type": .string("Row"),
+            "children": .array([
+                .object(["type": .string("Caption"), "value": .string("Direct")]),
+                .object(["type": .string("Box"), "width": .string("72%"), "height": .number(8)]),
+                .object(["type": .string("Caption"), "value": .string("42")]),
+            ]),
+        ])
+
+        XCTAssertTrue(row.hasPercentageWidthChildren)
+        let widthPercentage = try XCTUnwrap(row.children[1].widthPercentage)
+        XCTAssertEqual(widthPercentage, CGFloat(0.72), accuracy: 0.001)
+    }
+
+    func testTransitionDecodesSingleChildObject() {
+        let transition = ChatKitWidgetNode(type: "Transition", raw: [
+            "type": .string("Transition"),
+            "children": .object([
+                "type": .string("Text"),
+                "value": .string("Loaded"),
+            ]),
+        ])
+
+        XCTAssertEqual(transition.children.map(\.type), ["Text"])
+        XCTAssertEqual(transition.children.first?.value, "Loaded")
     }
 
     func testStudioColorTokensResolveToNativeColors() {

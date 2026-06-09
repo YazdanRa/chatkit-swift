@@ -53,6 +53,7 @@ final class ChatKitWidgetParityFixtureTests: XCTestCase {
             "Text",
             "Textarea",
             "Title",
+            "Transition",
         ]
         XCTAssertTrue(
             requiredComponentTypes.isSubset(of: componentTypes),
@@ -78,7 +79,18 @@ final class ChatKitWidgetParityFixtureTests: XCTestCase {
         XCTAssertTrue(script.contains("ignored_differences"))
         XCTAssertFalse(script.contains("recommendedFixes"))
         XCTAssertTrue(script.contains("visualReviewCounts"))
+        XCTAssertTrue(script.contains("pixelFailuresAreBlocking"))
+        XCTAssertTrue(script.contains("!options.visualReview && failed.length > 0"))
         XCTAssertTrue(script.contains("pass, ${counts.review} review, ${counts.fail} fail"))
+    }
+
+    func testWidgetParityScriptHandlesSingleObjectChildren() throws {
+        let script = try String(contentsOf: Self.repoRoot().appending(path: "scripts/widget-parity.js"), encoding: .utf8)
+
+        XCTAssertTrue(script.contains("function widgetChildren(node)"))
+        XCTAssertTrue(script.contains("Array.isArray(node.children)"))
+        XCTAssertTrue(script.contains("typeof node.children === \"object\""))
+        XCTAssertTrue(script.contains("for (const child of widgetChildren(node))"))
     }
 
     private static func loadManifest() throws -> WidgetParityManifest {

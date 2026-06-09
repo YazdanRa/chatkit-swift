@@ -121,6 +121,12 @@ enum ChatKitWidgetTone: Equatable {
     }
 }
 
+/// Direction token shared by widget layout components.
+enum ChatKitWidgetDirection: Equatable {
+    case row
+    case col
+}
+
 /// Converts backend widget size tokens into SwiftUI layout values.
 enum ChatKitWidgetMetrics {
     /// Resolves a JSON spacing token or numeric value into points.
@@ -352,11 +358,11 @@ enum ChatKitWidgetMetrics {
     }
 
     static func defaultCardBackgroundHex(colorScheme: SwiftUI.ColorScheme) -> String {
-        colorScheme == .dark ? "#111827" : "#FFFFFF"
+        colorScheme == .dark ? "#282828" : "#FFFFFF"
     }
 
     static func defaultCardBorderHex(colorScheme: SwiftUI.ColorScheme) -> String {
-        colorScheme == .dark ? "#374151" : "#E3E3E3"
+        colorScheme == .dark ? "#4F4F4F" : "#E3E3E3"
     }
 
     static func defaultCardBackground(colorScheme: SwiftUI.ColorScheme) -> Color {
@@ -525,6 +531,18 @@ struct ChatKitWidgetChartPoint: Equatable, Identifiable {
 }
 
 extension ChatKitWidgetNode {
+    /// Resolves the JS widget `direction` contract into a Swift-friendly value.
+    func widgetDirection(default fallback: ChatKitWidgetDirection) -> ChatKitWidgetDirection {
+        switch string("direction") {
+        case "row", "horizontal":
+            .row
+        case "col", "column", "vertical":
+            .col
+        default:
+            fallback
+        }
+    }
+
     /// Returns a raw string field from the widget payload.
     func string(_ key: String) -> String? {
         raw[key]?.stringValue
@@ -548,6 +566,47 @@ extension ChatKitWidgetNode {
     /// Returns a raw object field from the widget payload.
     func object(_ key: String) -> [String: JSONValue]? {
         raw[key]?.objectValue
+    }
+
+    /// Returns the list items that should be visible before or after expansion.
+    func visibleListChildren(isExpanded: Bool) -> [ChatKitWidgetNode] {
+        guard !isExpanded,
+              let limit = number("limit")
+        else {
+            return children
+        }
+
+        return Array(children.prefix(max(0, Int(limit))))
+    }
+
+    /// Number of list items hidden behind a ListView limit.
+    var hiddenListChildCount: Int {
+        guard let limit = number("limit") else {
+            return 0
+        }
+        return max(0, children.count - max(0, Int(limit)))
+    }
+
+    /// Native disclosure label for hidden list items.
+    var hiddenListDisclosureLabel: String? {
+        let count = hiddenListChildCount
+        guard count > 0 else {
+            return nil
+        }
+        return count == 1 ? "Show 1 more" : "Show \(count) more"
+    }
+
+    /// Buttons stretch when they are in vertical widget surfaces, matching the JS renderer's default block treatment.
+    func buttonFillsAvailableWidth(parentType: String?) -> Bool {
+        if bool("block") {
+            return true
+        }
+        return switch parentType {
+        case "Basic", "Card", "Col", "Form":
+            true
+        default:
+            false
+        }
     }
 
     /// Resolves a raw widget color field against the current SwiftUI color scheme.

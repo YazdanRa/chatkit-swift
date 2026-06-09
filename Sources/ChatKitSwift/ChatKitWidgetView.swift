@@ -27,7 +27,7 @@ private struct ChatKitWidgetNodeView: View {
     var body: some View {
         switch node.type {
         case "Basic", "Box", "Form":
-            directionalStack(defaultDirection: node.type == "Basic" ? node.string("direction") : node.string("direction")) {
+            directionalStack(direction: node.widgetDirection(default: .col)) {
                 if let status = node.object("status") {
                     ChatKitWidgetStatusView(status: status)
                 }
@@ -35,12 +35,9 @@ private struct ChatKitWidgetNodeView: View {
             }
             .chatKitWidgetBoxStyle(node: node, colorScheme: colorScheme, parentType: parentType)
         case "Row":
-            HStack(alignment: node.verticalAlignment, spacing: node.gap) {
-                children
-            }
-            .chatKitWidgetBoxStyle(node: node, colorScheme: colorScheme, parentType: parentType)
+            row
         case "Col":
-            VStack(alignment: node.horizontalAlignment, spacing: node.gap) {
+            VStack(alignment: node.horizontalAlignment, spacing: node.gapOrDefault(0)) {
                 children
             }
             .chatKitWidgetBoxStyle(node: node, colorScheme: colorScheme, parentType: parentType)
@@ -55,14 +52,7 @@ private struct ChatKitWidgetNodeView: View {
             }
             .frame(maxWidth: .infinity, alignment: .leading)
         case "ListView":
-            VStack(alignment: .leading, spacing: node.gapOrDefault(8)) {
-                if let status = node.object("status") {
-                    ChatKitWidgetStatusView(status: status)
-                }
-                ForEach(limitedChildren, id: \.stableID) { child in
-                    ChatKitWidgetNodeView(node: child, item: item, session: session, parentType: node.type)
-                }
-            }
+            ChatKitWidgetListView(node: node, item: item, session: session)
         case "ListViewItem":
             actionButtonOrContent {
                 HStack(alignment: node.verticalAlignment, spacing: node.gapOrDefault(8)) {
@@ -164,11 +154,22 @@ private struct ChatKitWidgetNodeView: View {
         }
     }
 
-    private var limitedChildren: [ChatKitWidgetNode] {
-        if let limit = node.number("limit") {
-            Array(node.children.prefix(Int(limit)))
+    @ViewBuilder
+    private var row: some View {
+        if node.hasPercentageWidthChildren {
+            ChatKitWidgetInlineRowLayout(alignment: node.verticalAlignment, spacing: node.gapOrDefault(0)) {
+                ForEach(node.children, id: \.stableID) { child in
+                    ChatKitWidgetNodeView(node: child, item: item, session: session, parentType: node.type)
+                        .layoutValue(key: ChatKitWidgetWidthPercentageKey.self, value: child.widthPercentage)
+                }
+            }
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .chatKitWidgetBoxStyle(node: node, colorScheme: colorScheme, parentType: parentType)
         } else {
-            node.children
+            HStack(alignment: node.verticalAlignment, spacing: node.gapOrDefault(0)) {
+                children
+            }
+            .chatKitWidgetBoxStyle(node: node, colorScheme: colorScheme, parentType: parentType)
         }
     }
 
@@ -210,7 +211,7 @@ private struct ChatKitWidgetNodeView: View {
         let tone = ChatKitWidgetTone(rawValue: node.string("color") ?? (node.string("style") == "primary" ? "primary" : "secondary"))
         let variant = node.string("variant") ?? (node.string("style") == "primary" ? "solid" : "outline")
         let buttonRadius = ChatKitWidgetMetrics.buttonCornerRadius(node.raw["radius"], pill: node.bool("pill"))
-        let fillWidth = node.bool("block") || parentType == "Col"
+        let fillWidth = node.buttonFillsAvailableWidth(parentType: parentType)
 
         Button {
             Task { await performActionIfPossible(node.action(named: actionKey) ?? node.action) }
@@ -299,11 +300,11 @@ private struct ChatKitWidgetNodeView: View {
     }
 
     @ViewBuilder
-    private func directionalStack(defaultDirection: String?, @ViewBuilder content: () -> some View) -> some View {
-        if defaultDirection == "row" {
-            HStack(alignment: node.verticalAlignment, spacing: node.gap, content: content)
+    private func directionalStack(direction: ChatKitWidgetDirection, @ViewBuilder content: () -> some View) -> some View {
+        if direction == .row {
+            HStack(alignment: node.verticalAlignment, spacing: node.gapOrDefault(0), content: content)
         } else {
-            VStack(alignment: node.horizontalAlignment, spacing: node.gap, content: content)
+            VStack(alignment: node.horizontalAlignment, spacing: node.gapOrDefault(0), content: content)
         }
     }
 
@@ -356,6 +357,141 @@ private struct ChatKitWidgetNodeView: View {
     }
 }
 
+private struct ChatKitWidgetListView: View {
+    let node: ChatKitWidgetNode
+    let item: ChatKitWidgetItem
+    let session: ChatKitSession
+
+    @State private var isExpanded = false
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: node.gapOrDefault(8)) {
+            if let status = node.object("status") {
+                ChatKitWidgetStatusView(status: status)
+            }
+            ForEach(node.visibleListChildren(isExpanded: isExpanded), id: \.stableID) { child in
+                ChatKitWidgetNodeView(node: child, item: item, session: session, parentType: node.type)
+            }
+            if !isExpanded, let label = node.hiddenListDisclosureLabel {
+                Button {
+                    withAnimation(.easeInOut(duration: 0.18)) {
+                        isExpanded = true
+                    }
+                } label: {
+                    Text(label)
+                }
+                .buttonStyle(ChatKitWidgetListDisclosureButtonStyle())
+                .accessibilityLabel(label)
+            }
+        }
+    }
+}
+
+private struct ChatKitWidgetWidthPercentageKey: LayoutValueKey {
+    static let defaultValue: CGFloat? = nil
+}
+
+private struct ChatKitWidgetInlineRowLayout: Layout {
+    let alignment: VerticalAlignment
+    let spacing: CGFloat
+
+    func sizeThatFits(proposal: ProposedViewSize, subviews: Subviews, cache: inout ()) -> CGSize {
+        let sizes = measuredSizes(proposal: proposal, subviews: subviews)
+        let width = sizes.reduce(0) { $0 + $1.width } + spacing * CGFloat(max(0, subviews.count - 1))
+        let height = sizes.map(\.height).max() ?? 0
+
+        return CGSize(width: width, height: height)
+    }
+
+    func placeSubviews(in bounds: CGRect, proposal: ProposedViewSize, subviews: Subviews, cache: inout ()) {
+        let sizes = measuredSizes(proposal: ProposedViewSize(width: bounds.width, height: proposal.height), subviews: subviews)
+        var x = bounds.minX
+
+        for (index, subview) in subviews.enumerated() {
+            let size = sizes[index]
+            subview.place(
+                at: CGPoint(x: x, y: yPosition(for: size, in: bounds)),
+                anchor: .topLeading,
+                proposal: ProposedViewSize(width: size.width, height: size.height),
+            )
+            x += size.width + spacing
+        }
+    }
+
+    private func measuredSizes(proposal: ProposedViewSize, subviews: Subviews) -> [CGSize] {
+        let naturalSizes = subviews.map { $0.sizeThatFits(.unspecified) }
+        let availableWidth = proposal.width ?? naturalSizes.map(\.width).reduce(0, +)
+        let spacingWidth = spacing * CGFloat(max(0, subviews.count - 1))
+        let fixedWidth = zip(subviews, naturalSizes)
+            .filter { subview, _ in subview[ChatKitWidgetWidthPercentageKey.self] == nil }
+            .map { _, size in size.width }
+            .reduce(0, +)
+        let remainingWidth = max(0, availableWidth - fixedWidth - spacingWidth)
+        let desiredPercentageWidths = subviews.map { subview in
+            subview[ChatKitWidgetWidthPercentageKey.self].map { max(0, availableWidth * $0) }
+        }
+        let totalDesiredPercentageWidth = desiredPercentageWidths.compactMap(\.self).reduce(0, +)
+        let percentageScale = totalDesiredPercentageWidth > remainingWidth && totalDesiredPercentageWidth > 0
+            ? remainingWidth / totalDesiredPercentageWidth
+            : 1
+
+        return subviews.enumerated().map { index, subview in
+            if let desiredWidth = desiredPercentageWidths[index] {
+                let width = desiredWidth * percentageScale
+                return subview.sizeThatFits(ProposedViewSize(width: width, height: proposal.height))
+            }
+            return naturalSizes[index]
+        }
+    }
+
+    private func yPosition(for size: CGSize, in bounds: CGRect) -> CGFloat {
+        switch alignment {
+        case .center:
+            bounds.midY - size.height / 2
+        case .bottom:
+            bounds.maxY - size.height
+        default:
+            bounds.minY
+        }
+    }
+}
+
+private struct ChatKitWidgetListDisclosureButtonStyle: ButtonStyle {
+    @Environment(\.colorScheme) private var colorScheme
+
+    func makeBody(configuration: Configuration) -> some View {
+        configuration.label
+            .font(.system(size: ChatKitWidgetMetrics.textPointSize("sm"), weight: .medium))
+            .foregroundStyle(foreground)
+            .padding(.horizontal, 24)
+            .frame(minHeight: 36, alignment: .center)
+            .background(background, in: Capsule())
+            .overlay {
+                Capsule()
+                    .stroke(border, lineWidth: 1)
+            }
+            .opacity(configuration.isPressed ? 0.82 : 1)
+    }
+
+    private var foreground: Color {
+        colorScheme == .dark
+            ? (Color(chatKitHex: "#D4D4D4") ?? .secondary)
+            : (Color(chatKitHex: "#5D5D5D") ?? .secondary)
+    }
+
+    private var background: Color {
+        colorScheme == .dark
+            ? (Color(chatKitHex: "#2F2F2F") ?? .clear)
+            : (Color(chatKitHex: "#FFFFFF") ?? .white)
+    }
+
+    private var border: Color {
+        colorScheme == .dark
+            ? (Color(chatKitHex: "#5D5D5D") ?? .secondary.opacity(0.45))
+            : (Color(chatKitHex: "#D7D7D7") ?? .secondary.opacity(0.25))
+    }
+}
+
 private struct ChatKitWidgetBadgeView: View {
     let node: ChatKitWidgetNode
 
@@ -395,12 +531,18 @@ private struct ChatKitWidgetBadgeView: View {
     }
 
     private func foreground(for tone: ChatKitWidgetTone) -> Color {
-        node.string("variant") == "solid" ? tone.foreground : lowEmphasisForeground(for: tone)
+        if tone == .primary, node.string("variant") == "solid" {
+            return lowEmphasisForeground(for: tone)
+        }
+        return node.string("variant") == "solid" ? tone.foreground : lowEmphasisForeground(for: tone)
     }
 
     private func background(for tone: ChatKitWidgetTone) -> Color {
         switch node.string("variant") {
         case "solid":
+            if tone == .primary {
+                return .clear
+            }
             return tone.solidBackground
         case "outline":
             return .clear
@@ -479,6 +621,7 @@ private struct ChatKitWidgetButtonStyle: ButtonStyle {
     let cornerRadius: CGFloat
 
     @Environment(\.isEnabled) private var isEnabled
+    @Environment(\.colorScheme) private var colorScheme
 
     func makeBody(configuration: Configuration) -> some View {
         let resolvedTone = tone ?? .secondary
@@ -498,13 +641,17 @@ private struct ChatKitWidgetButtonStyle: ButtonStyle {
     }
 
     private func foreground(tone: ChatKitWidgetTone) -> Color {
+        if colorScheme == .dark, variant == "solid", tone == .primary {
+            return Color(chatKitHex: "#0D0D0D") ?? .black
+        }
+
         switch variant {
         case "solid":
-            tone.foreground
+            return tone.foreground
         case "ghost", "outline", "soft":
-            tone.softForeground
+            return darkAwareSoftForeground(tone: tone)
         default:
-            tone.softForeground
+            return darkAwareSoftForeground(tone: tone)
         }
     }
 
@@ -512,6 +659,10 @@ private struct ChatKitWidgetButtonStyle: ButtonStyle {
         if !isEnabled {
             return variant == "ghost" ? .clear : disabledBackground
         }
+        if colorScheme == .dark, variant == "solid", tone == .primary {
+            return Color(chatKitHex: pressed ? "#DCDCDC" : "#F3F3F3") ?? .white
+        }
+
         switch variant {
         case "solid":
             return tone.solidBackground
@@ -533,9 +684,38 @@ private struct ChatKitWidgetButtonStyle: ButtonStyle {
     }
 
     private func outlineBorder(tone: ChatKitWidgetTone) -> Color {
-        tone == .secondary
+        if colorScheme == .dark {
+            return tone == .secondary
+                ? (Color(chatKitHex: "#5D5D5D") ?? .secondary.opacity(0.45))
+                : darkAwareSoftForeground(tone: tone)
+        }
+
+        return tone == .secondary
             ? (Color(chatKitHex: "#D7D7D7") ?? .secondary.opacity(0.25))
             : tone.softForeground
+    }
+
+    private func darkAwareSoftForeground(tone: ChatKitWidgetTone) -> Color {
+        guard colorScheme == .dark else {
+            return tone.softForeground
+        }
+        let hex = switch tone {
+        case .primary:
+            "#F3F3F3"
+        case .secondary:
+            "#D4D4D4"
+        case .info:
+            "#3DA1FF"
+        case .discovery:
+            "#B08CFF"
+        case .success:
+            "#41D67A"
+        case .warning:
+            "#FF7A2F"
+        case .danger:
+            "#FF6B66"
+        }
+        return Color(chatKitHex: hex) ?? tone.softForeground
     }
 }
 
@@ -917,7 +1097,7 @@ private struct ChatKitWidgetRadioGroupView: View {
 
     @ViewBuilder
     private func directionalStack(@ViewBuilder content: () -> some View) -> some View {
-        if node.string("direction") == "row" {
+        if node.widgetDirection(default: .row) == .row {
             HStack(spacing: 18, content: content)
         } else {
             VStack(alignment: .leading, spacing: 8, content: content)
@@ -1052,16 +1232,20 @@ private extension View {
 
     @ViewBuilder
     private func chatKitWidgetSizedBoxStyle(node: ChatKitWidgetNode, colorScheme: SwiftUI.ColorScheme, parentType: String?) -> some View {
-        if let widthPercentage = node.widthPercentage, let fixedHeight = node.fixedHeight {
+        if node.widthPercentage != nil, let fixedHeight = node.fixedHeight, parentType == "Row" {
+            padding(node.containerInsets)
+                .frame(maxWidth: .infinity, minHeight: fixedHeight, maxHeight: fixedHeight, alignment: node.frameAlignment)
+                .chatKitWidgetDecoratedBoxStyle(node: node, colorScheme: colorScheme)
+        } else if let widthPercentage = node.widthPercentage, let fixedHeight = node.fixedHeight {
             GeometryReader { proxy in
-                padding(ChatKitWidgetMetrics.insets(node.raw["padding"], fallback: 0))
+                padding(node.containerInsets)
                     .frame(width: max(0, proxy.size.width * widthPercentage), height: fixedHeight, alignment: node.frameAlignment)
                     .chatKitWidgetDecoratedBoxStyle(node: node, colorScheme: colorScheme)
                     .frame(maxWidth: .infinity, alignment: node.frameAlignment)
             }
             .frame(height: fixedHeight)
         } else {
-            padding(ChatKitWidgetMetrics.insets(node.raw["padding"], fallback: 0))
+            padding(node.containerInsets)
                 .frame(
                     width: node.fixedWidth,
                     height: node.fixedHeight,
@@ -1144,6 +1328,13 @@ extension ChatKitWidgetNode {
         return EdgeInsets(top: 12, leading: 0, bottom: 12, trailing: 0)
     }
 
+    var containerInsets: EdgeInsets {
+        if type == "Box" {
+            return EdgeInsets()
+        }
+        return ChatKitWidgetMetrics.insets(raw["padding"], fallback: 0)
+    }
+
     var fixedWidth: CGFloat? {
         ChatKitWidgetMetrics.fixedDimension(raw["width"])
     }
@@ -1154,6 +1345,10 @@ extension ChatKitWidgetNode {
 
     var widthPercentage: CGFloat? {
         ChatKitWidgetMetrics.percentage(raw["width"])
+    }
+
+    var hasPercentageWidthChildren: Bool {
+        children.contains { $0.widthPercentage != nil }
     }
 
     func fillsAvailableWidth(parentType: String?) -> Bool {
