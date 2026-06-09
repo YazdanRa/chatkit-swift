@@ -133,7 +133,7 @@ enum ChatKitWidgetMetrics {
     static func spacing(_ value: JSONValue?) -> CGFloat? {
         switch value {
         case let .number(number):
-            CGFloat(number)
+            CGFloat(number * 4)
         case let .string(string):
             spacing(string)
         default:
@@ -579,6 +579,18 @@ extension ChatKitWidgetNode {
         }
     }
 
+    /// Resolves per-widget theme overrides into SwiftUI's native color-scheme environment.
+    var widgetColorScheme: SwiftUI.ColorScheme? {
+        switch string("theme") {
+        case "dark":
+            .dark
+        case "light":
+            .light
+        default:
+            nil
+        }
+    }
+
     /// Returns a raw string field from the widget payload.
     func string(_ key: String) -> String? {
         raw[key]?.stringValue
@@ -643,6 +655,17 @@ extension ChatKitWidgetNode {
         default:
             false
         }
+    }
+
+    /// Resolves Studio's button style shorthands into the native widget style path.
+    var buttonVariant: String {
+        string("variant") ?? "solid"
+    }
+
+    /// Buttons default to primary solid in the reference renderer; lower-emphasis variants default to secondary.
+    var buttonTone: ChatKitWidgetTone? {
+        let fallback = buttonVariant == "solid" ? "primary" : "secondary"
+        return ChatKitWidgetTone(rawValue: string("color") ?? fallback)
     }
 
     /// Resolves a raw widget color field against the current SwiftUI color scheme.
@@ -718,6 +741,14 @@ enum ChatKitWidgetColor {
         "alpha-10": .primary.opacity(0.10),
         "surface-secondary": .secondary.opacity(0.10),
         "surface-tertiary": .secondary.opacity(0.16),
+        "surface-elevated-secondary": Color(chatKitHex: "#282828") ?? .secondary.opacity(0.16),
+        "blue": .blue,
+        "green": .green,
+        "red": .red,
+        "yellow": .yellow,
+        "orange": .orange,
+        "purple": .purple,
+        "pink": .pink,
         "gray-500": .gray,
         "slate-500": .secondary,
         "green-500": .green,

@@ -49,7 +49,7 @@ final class ChatKitStyleTests: XCTestCase {
             "lab": "flask",
             "images": "photo",
             "info": "info.circle",
-            "lifesaver": "questionmark.life",
+            "lifesaver": "lifepreserver",
             "lightbulb": "lightbulb",
             "mail": "envelope",
             "map-pin": "mappin",

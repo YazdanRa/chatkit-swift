@@ -92,7 +92,7 @@ enum ChatKitStyle {
         "exclamationmark.triangle": "exclamationmark.triangle",
         "info": "info.circle",
         "info.circle": "info.circle",
-        "lifesaver": "questionmark.life",
+        "lifesaver": "lifepreserver",
         "lightbulb": "lightbulb",
         "line.3.horizontal": "line.3.horizontal",
         "mail": "envelope",

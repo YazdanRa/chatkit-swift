@@ -3,7 +3,7 @@ import XCTest
 
 final class ChatKitWidgetStyleTests: XCTestCase {
     func testSpacingParsesNumbersPixelsAndNamedTokens() {
-        XCTAssertEqual(ChatKitWidgetMetrics.spacing(.number(7)), 7)
+        XCTAssertEqual(ChatKitWidgetMetrics.spacing(.number(7)), 28)
         XCTAssertEqual(ChatKitWidgetMetrics.spacing(.string("12px")), 12)
         XCTAssertEqual(ChatKitWidgetMetrics.spacing(.string("md")), 12)
         XCTAssertEqual(ChatKitWidgetMetrics.spacing(.string("2xl")), 24)
@@ -19,10 +19,10 @@ final class ChatKitWidgetStyleTests: XCTestCase {
 
         let insets = ChatKitWidgetMetrics.insets(value, fallback: 4)
 
-        XCTAssertEqual(insets.top, 2)
+        XCTAssertEqual(insets.top, 8)
         XCTAssertEqual(insets.bottom, 8)
-        XCTAssertEqual(insets.leading, 10)
-        XCTAssertEqual(insets.trailing, 10)
+        XCTAssertEqual(insets.leading, 40)
+        XCTAssertEqual(insets.trailing, 40)
     }
 
     func testRadiusTokensTranslateToNativeCornerRadii() {
@@ -69,12 +69,41 @@ final class ChatKitWidgetStyleTests: XCTestCase {
         XCTAssertEqual(ChatKitWidgetMetrics.buttonCornerRadius(nil, pill: false), 999)
     }
 
+    func testWidgetButtonsDefaultToReferencePrimarySolidStyle() {
+        let defaultButton = ChatKitWidgetNode(type: "Button", raw: [
+            "type": .string("Button"),
+            "label": .string("Open"),
+        ])
+        let outlineButton = ChatKitWidgetNode(type: "Button", raw: [
+            "type": .string("Button"),
+            "label": .string("Message"),
+            "variant": .string("outline"),
+        ])
+        let explicitInfoButton = ChatKitWidgetNode(type: "Button", raw: [
+            "type": .string("Button"),
+            "label": .string("Details"),
+            "variant": .string("outline"),
+            "color": .string("info"),
+        ])
+
+        XCTAssertEqual(defaultButton.buttonVariant, "solid")
+        XCTAssertEqual(defaultButton.buttonTone, .primary)
+        XCTAssertEqual(outlineButton.buttonVariant, "outline")
+        XCTAssertEqual(outlineButton.buttonTone, .secondary)
+        XCTAssertEqual(explicitInfoButton.buttonVariant, "outline")
+        XCTAssertEqual(explicitInfoButton.buttonTone, .info)
+    }
+
     func testWidgetToneReferencePaletteMatchesChatKitJS() {
         XCTAssertEqual(ChatKitWidgetTone.primary.solidHex, "#181818")
         XCTAssertEqual(ChatKitWidgetTone.secondary.softHex, "#EDEDED")
         XCTAssertEqual(ChatKitWidgetTone.info.accentHex, "#0169CC")
         XCTAssertEqual(ChatKitWidgetTone.success.accentHex, "#008635")
         XCTAssertEqual(ChatKitWidgetTone.danger.accentHex, "#E02E2A")
+    }
+
+    func testWidgetIconAliasesResolveToAvailableNativeSymbols() {
+        XCTAssertEqual(ChatKitStyle.systemImage(for: "lifesaver"), "lifepreserver")
     }
 
     func testWidgetCardDefaultsMatchReferencePalette() {
@@ -130,7 +159,7 @@ final class ChatKitWidgetStyleTests: XCTestCase {
         )
         XCTAssertEqual(
             ChatKitWidgetMetrics.stackGap(.number(8), containerType: "Col", childTypes: ["Button", "Button"]),
-            8,
+            32,
         )
     }
 
@@ -194,6 +223,22 @@ final class ChatKitWidgetStyleTests: XCTestCase {
 
         XCTAssertEqual(defaultRadio.widgetDirection(default: .row), .row)
         XCTAssertEqual(columnRadio.widgetDirection(default: .row), .col)
+    }
+
+    func testWidgetThemeOverridesResolveToNativeColorSchemes() {
+        let darkCard = ChatKitWidgetNode(type: "Card", raw: [
+            "type": .string("Card"),
+            "theme": .string("dark"),
+        ])
+        let lightCard = ChatKitWidgetNode(type: "Card", raw: [
+            "type": .string("Card"),
+            "theme": .string("light"),
+        ])
+        let defaultCard = ChatKitWidgetNode(type: "Card", raw: ["type": .string("Card")])
+
+        XCTAssertEqual(darkCard.widgetColorScheme, .dark)
+        XCTAssertEqual(lightCard.widgetColorScheme, .light)
+        XCTAssertNil(defaultCard.widgetColorScheme)
     }
 
     func testListLimitProducesNativeDisclosureSummary() {
@@ -272,6 +317,8 @@ final class ChatKitWidgetStyleTests: XCTestCase {
         XCTAssertNotNil(ChatKitWidgetColor.color("tertiary"))
         XCTAssertNotNil(ChatKitWidgetColor.color("alpha-10"))
         XCTAssertNotNil(ChatKitWidgetColor.color("surface-tertiary"))
+        XCTAssertNotNil(ChatKitWidgetColor.color("surface-elevated-secondary"))
+        XCTAssertNotNil(ChatKitWidgetColor.color("blue"))
         XCTAssertNotNil(ChatKitWidgetColor.color("green-500"))
         XCTAssertNotNil(ChatKitWidgetColor.color("red-500"))
         XCTAssertNotNil(ChatKitWidgetColor.color("blue-500"))

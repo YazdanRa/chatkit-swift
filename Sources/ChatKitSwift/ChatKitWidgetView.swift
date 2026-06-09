@@ -24,6 +24,10 @@ private struct ChatKitWidgetNodeView: View {
         self.parentType = parentType
     }
 
+    private var effectiveColorScheme: SwiftUI.ColorScheme {
+        node.widgetColorScheme ?? colorScheme
+    }
+
     var body: some View {
         switch node.type {
         case "Basic", "Box", "Form":
@@ -33,14 +37,14 @@ private struct ChatKitWidgetNodeView: View {
                 }
                 children
             }
-            .chatKitWidgetBoxStyle(node: node, colorScheme: colorScheme, parentType: parentType)
+            .chatKitWidgetBoxStyle(node: node, colorScheme: effectiveColorScheme, parentType: parentType)
         case "Row":
             row
         case "Col":
             VStack(alignment: node.horizontalAlignment, spacing: node.gapOrDefault(0)) {
                 children
             }
-            .chatKitWidgetBoxStyle(node: node, colorScheme: colorScheme, parentType: parentType)
+            .chatKitWidgetBoxStyle(node: node, colorScheme: effectiveColorScheme, parentType: parentType)
         case "Card":
             VStack(alignment: .leading, spacing: node.gapOrDefault(12)) {
                 if let status = node.object("status") {
@@ -51,6 +55,7 @@ private struct ChatKitWidgetNodeView: View {
                 cardActions
             }
             .frame(maxWidth: ChatKitWidgetMetrics.cardMaxWidth(node.string("size")) ?? .infinity, alignment: .leading)
+            .environment(\.colorScheme, effectiveColorScheme)
         case "ListView":
             ChatKitWidgetListView(node: node, item: item, session: session)
         case "ListViewItem":
@@ -89,7 +94,7 @@ private struct ChatKitWidgetNodeView: View {
         case "Icon":
             Image(systemName: ChatKitStyle.systemImage(for: node.name ?? node.value ?? "sparkle"))
                 .font(ChatKitWidgetMetrics.iconFont(node.string("size")))
-                .foregroundStyle(node.color("color", colorScheme: colorScheme) ?? .primary)
+                .foregroundStyle(node.color("color", colorScheme: effectiveColorScheme) ?? .primary)
                 .accessibilityHidden(true)
         case "Image":
             widgetImage
@@ -97,11 +102,11 @@ private struct ChatKitWidgetNodeView: View {
             widgetButton(label: node.label ?? "Action", actionKey: "onClickAction")
         case "Divider":
             Rectangle()
-                .fill(node.color("color", colorScheme: colorScheme) ?? Color.secondary.opacity(0.25))
-                .frame(height: ChatKitWidgetMetrics.spacing(node.raw["size"]) ?? 1)
+                .fill(node.color("color", colorScheme: effectiveColorScheme) ?? Color.secondary.opacity(0.25))
+                .frame(height: ChatKitWidgetMetrics.fixedDimension(node.raw["size"]) ?? ChatKitWidgetMetrics.spacing(node.raw["size"]) ?? 1)
                 .padding(.vertical, ChatKitWidgetMetrics.spacing(node.raw["spacing"]) ?? 4)
         case "Spacer":
-            Spacer(minLength: ChatKitWidgetMetrics.spacing(node.raw["minSize"]) ?? 8)
+            Spacer(minLength: ChatKitWidgetMetrics.fixedDimension(node.raw["minSize"]) ?? ChatKitWidgetMetrics.spacing(node.raw["minSize"]) ?? 8)
         case "Input":
             ChatKitWidgetTextInputView(node: node, item: item, session: session, axis: .horizontal)
         case "Textarea":
@@ -137,7 +142,7 @@ private struct ChatKitWidgetNodeView: View {
             children
                 .animation(.default, value: node.stableID)
         case "Chart", "BarChart":
-            ChatKitWidgetChartView(node: node, colorScheme: colorScheme)
+            ChatKitWidgetChartView(node: node, colorScheme: effectiveColorScheme)
         default:
             VStack(alignment: .leading, spacing: 8) {
                 Text(node.type)
@@ -164,7 +169,7 @@ private struct ChatKitWidgetNodeView: View {
                 }
             }
             .frame(maxWidth: .infinity, alignment: .leading)
-            .chatKitWidgetBoxStyle(node: node, colorScheme: colorScheme, parentType: parentType)
+            .chatKitWidgetBoxStyle(node: node, colorScheme: effectiveColorScheme, parentType: parentType)
         } else {
             HStack(alignment: node.verticalAlignment, spacing: node.gapOrDefault(0)) {
                 children
@@ -172,7 +177,7 @@ private struct ChatKitWidgetNodeView: View {
             .frame(maxWidth: node.hasSpacerChildren ? .infinity : nil, alignment: .leading)
             .fixedSize(horizontal: parentType == "Row" && !node.hasSpacerChildren, vertical: false)
             .layoutPriority(parentType == "Row" ? 1 : 0)
-            .chatKitWidgetBoxStyle(node: node, colorScheme: colorScheme, parentType: parentType)
+            .chatKitWidgetBoxStyle(node: node, colorScheme: effectiveColorScheme, parentType: parentType)
         }
     }
 
@@ -211,8 +216,8 @@ private struct ChatKitWidgetNodeView: View {
     private func widgetButton(label: String, actionKey: String) -> some View {
         let iconStart = node.string("iconStart")
         let iconEnd = node.string("iconEnd")
-        let tone = ChatKitWidgetTone(rawValue: node.string("color") ?? (node.string("style") == "primary" ? "primary" : "secondary"))
-        let variant = node.string("variant") ?? (node.string("style") == "primary" ? "solid" : "outline")
+        let tone = node.buttonTone
+        let variant = node.buttonVariant
         let buttonRadius = ChatKitWidgetMetrics.buttonCornerRadius(node.raw["radius"], pill: node.bool("pill"))
         let fillWidth = node.buttonFillsAvailableWidth(parentType: parentType)
 
@@ -258,13 +263,13 @@ private struct ChatKitWidgetNodeView: View {
         .padding(ChatKitWidgetMetrics.insets(node.raw["padding"], fallback: node.cardPadding))
         .frame(maxWidth: .infinity, alignment: .leading)
         .background(
-            node.color("background", colorScheme: colorScheme) ?? ChatKitWidgetMetrics.defaultCardBackground(colorScheme: colorScheme),
+            node.color("background", colorScheme: effectiveColorScheme) ?? ChatKitWidgetMetrics.defaultCardBackground(colorScheme: effectiveColorScheme),
             in: RoundedRectangle(cornerRadius: node.cornerRadius),
         )
         .overlay {
             RoundedRectangle(cornerRadius: node.cornerRadius)
                 .stroke(
-                    node.borderColor(colorScheme: colorScheme) ?? ChatKitWidgetMetrics.defaultCardBorder(colorScheme: colorScheme),
+                    node.borderColor(colorScheme: effectiveColorScheme) ?? ChatKitWidgetMetrics.defaultCardBorder(colorScheme: effectiveColorScheme),
                     lineWidth: node.borderWidth ?? 1,
                 )
         }
@@ -325,7 +330,7 @@ private struct ChatKitWidgetNodeView: View {
 
     @ViewBuilder
     private func text(_ value: String, pointSize: CGFloat, lineHeight: CGFloat, defaultColor: Color? = nil, defaultWeight: Font.Weight? = nil) -> some View {
-        let color = node.color("color", colorScheme: colorScheme) ?? defaultColor
+        let color = node.color("color", colorScheme: effectiveColorScheme) ?? defaultColor
         let fontWeight = node.fontWeight ?? defaultWeight ?? .regular
         let lineLimit = node.lineLimit
         let text = Text(value)
@@ -940,14 +945,18 @@ private struct ChatKitWidgetDatePickerView: View {
             ChatKitWidgetControlField(
                 minHeight: ChatKitWidgetMetrics.controlFieldHeight(node.string("size")),
                 isDisabled: node.isDisabled,
+                horizontalPadding: 10,
             ) {
-                HStack(spacing: 12) {
+                HStack(spacing: 8) {
                     Image(systemName: "calendar")
-                        .font(.system(size: 18, weight: .regular))
+                        .font(.system(size: 16, weight: .regular))
                         .foregroundStyle(.primary)
                     Text(Self.displayFormatter.string(from: date))
                         .foregroundStyle(.primary)
-                    Spacer(minLength: 8)
+                        .lineLimit(1)
+                        .minimumScaleFactor(0.82)
+                        .layoutPriority(1)
+                    Spacer(minLength: 4)
                     Image(systemName: "chevron.up.chevron.down")
                         .font(.system(size: 13, weight: .semibold))
                         .foregroundStyle(.secondary)
