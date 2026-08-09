@@ -115,6 +115,13 @@ public struct ChatKitConversationState: Equatable, Sendable {
         upsertThread(thread)
     }
 
+    public mutating func replaceThread(_ thread: ChatKitThread) {
+        if currentThread?.id == thread.id {
+            currentThread = thread
+        }
+        upsertThread(thread)
+    }
+
     public mutating func replaceItems(_ items: [ChatKitThreadItem]) {
         self.items = items.sorted { $0.createdAt < $1.createdAt }
     }

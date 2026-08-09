@@ -36,7 +36,7 @@ public enum ChatKitUserMessageContent: Codable, Equatable, Sendable {
         case "input_tag":
             self = try .inputTag(ChatKitJSON.decoder.decode(ChatKitInputTagContent.self, from: data))
         default:
-            self = .unknown(type: type, raw: raw)
+            self = .unknown(type: type, raw: raw.chatKitProtocolKeyedObject)
         }
     }
 
@@ -173,7 +173,7 @@ public enum ChatKitAttachment: Codable, Equatable, Identifiable, Sendable {
         case "image":
             self = try .image(ChatKitJSON.decoder.decode(Image.self, from: data))
         default:
-            self = .unknown(id: raw["id"]?.stringValue ?? UUID().uuidString, type: type, raw: raw)
+            self = .unknown(id: raw["id"]?.stringValue ?? UUID().uuidString, type: type, raw: raw.chatKitProtocolKeyedObject)
         }
     }
 

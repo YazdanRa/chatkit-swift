@@ -51,7 +51,7 @@ public enum ChatKitEvent: Codable, Equatable, Sendable {
         case "notice":
             self = try .notice(ChatKitJSON.decoder.decode(Notice.self, from: data))
         default:
-            self = .unknown(type: type, raw: raw)
+            self = .unknown(type: type, raw: raw.chatKitProtocolKeyedObject)
         }
     }
 
@@ -225,6 +225,7 @@ public enum ChatKitThreadItemUpdate: Codable, Equatable, Sendable {
     case widgetComponentUpdated(WidgetComponentUpdated)
     case workflowTaskAdded(GenericIndexedUpdate)
     case workflowTaskUpdated(GenericIndexedUpdate)
+    case imageGenerationPreviewUpdated(ImageGenerationPreviewUpdated)
     case generatedImageUpdated(GeneratedImageUpdated)
     case unknown(type: String, raw: [String: JSONValue])
 
@@ -252,10 +253,12 @@ public enum ChatKitThreadItemUpdate: Codable, Equatable, Sendable {
             self = try .workflowTaskAdded(ChatKitJSON.decoder.decode(GenericIndexedUpdate.self, from: data))
         case "workflow.task.updated":
             self = try .workflowTaskUpdated(ChatKitJSON.decoder.decode(GenericIndexedUpdate.self, from: data))
+        case "image_generation.preview.updated":
+            self = try .imageGenerationPreviewUpdated(ChatKitJSON.decoder.decode(ImageGenerationPreviewUpdated.self, from: data))
         case "generated_image.updated":
             self = try .generatedImageUpdated(ChatKitJSON.decoder.decode(GeneratedImageUpdated.self, from: data))
         default:
-            self = .unknown(type: type, raw: raw)
+            self = .unknown(type: type, raw: raw.chatKitProtocolKeyedObject)
         }
     }
 
@@ -276,6 +279,8 @@ public enum ChatKitThreadItemUpdate: Codable, Equatable, Sendable {
         case let .widgetComponentUpdated(value):
             try value.encode(to: encoder)
         case let .workflowTaskAdded(value), let .workflowTaskUpdated(value):
+            try value.encode(to: encoder)
+        case let .imageGenerationPreviewUpdated(value):
             try value.encode(to: encoder)
         case let .generatedImageUpdated(value):
             try value.encode(to: encoder)
@@ -351,6 +356,17 @@ public enum ChatKitThreadItemUpdate: Codable, Equatable, Sendable {
         public var type: String
         public var taskIndex: Int
         public var task: [String: JSONValue]
+    }
+
+    public struct ImageGenerationPreviewUpdated: Codable, Equatable, Sendable {
+        public var type = "image_generation.preview.updated"
+        public var image: ChatKitGeneratedImageItem.GeneratedImage
+        public var progress: Double?
+
+        public init(image: ChatKitGeneratedImageItem.GeneratedImage, progress: Double? = nil) {
+            self.image = image
+            self.progress = progress
+        }
     }
 
     public struct GeneratedImageUpdated: Codable, Equatable, Sendable {

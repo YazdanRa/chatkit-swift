@@ -1,19 +1,13 @@
 import ChatKitSwift
 import Foundation
 
-struct OpenAIHostedChatKitConfiguration {
+struct BackendHostedChatKitConfiguration {
     private let environment = DemoEnvironment()
 
     func options() -> Result<ChatKitOptions, Error> {
         do {
-            let apiKey = try environment.requiredValue(named: "OPENAI_API_KEY")
-            let workflowID = try environment.requiredValue(named: "OPENAI_CHATKIT_WORKFLOW_ID")
-            let userID = environment.value(named: "OPENAI_CHATKIT_USER_ID") ?? "chatkitswift-demo-user"
-            let clientSecretProvider = OpenAIHostedClientSecretProvider(
-                apiKey: apiKey,
-                workflowID: workflowID,
-                userID: userID,
-            )
+            let sessionEndpoint = try environment.requiredURL(named: "OPENAI_CHATKIT_SESSION_ENDPOINT")
+            let clientSecretProvider = BackendHostedClientSecretProvider(sessionEndpoint: sessionEndpoint)
 
             return .success(
                 ChatKitOptions(
@@ -46,22 +40,18 @@ struct OpenAIHostedChatKitConfiguration {
     }
 }
 
-private actor OpenAIHostedClientSecretProvider {
-    private let apiKey: String
-    private let workflowID: String
-    private let userID: String
-    private var cachedSession: CreateChatKitSessionResponse?
+private actor BackendHostedClientSecretProvider {
+    private let sessionEndpoint: URL
+    private var cachedSession: BackendChatKitSessionResponse?
 
-    init(apiKey: String, workflowID: String, userID: String) {
-        self.apiKey = apiKey
-        self.workflowID = workflowID
-        self.userID = userID
+    init(sessionEndpoint: URL) {
+        self.sessionEndpoint = sessionEndpoint
     }
 
     func clientSecret(currentClientSecret: String?) async throws -> String {
         if let cachedSession,
            cachedSession.clientSecret == currentClientSecret,
-           cachedSession.expiresAt > Date().addingTimeInterval(60)
+           cachedSession.expiresAt.map({ $0 > Date().addingTimeInterval(60) }) == true
         {
             return cachedSession.clientSecret
         }
@@ -71,19 +61,15 @@ private actor OpenAIHostedClientSecretProvider {
         return session.clientSecret
     }
 
-    private func createClientSecret() async throws -> CreateChatKitSessionResponse {
-        var request = URLRequest(url: URL(string: "https://api.openai.com/v1/chatkit/sessions")!)
+    private func createClientSecret() async throws -> BackendChatKitSessionResponse {
+        var request = URLRequest(url: sessionEndpoint)
         request.httpMethod = "POST"
-        request.setValue("Bearer \(apiKey)", forHTTPHeaderField: "Authorization")
         request.setValue("application/json", forHTTPHeaderField: "Content-Type")
-        request.setValue("chatkit_beta=v1", forHTTPHeaderField: "OpenAI-Beta")
+        request.setValue("application/json", forHTTPHeaderField: "Accept")
 
-        request.httpBody = try JSONEncoder().encode(
-            CreateChatKitSessionRequest(
-                workflow: .init(id: workflowID),
-                user: userID,
-            ),
-        )
+        if let cachedSession {
+            request.setValue(cachedSession.clientSecret, forHTTPHeaderField: "X-Current-Client-Secret")
+        }
 
         let (data, response) = try await URLSession.shared.data(for: request)
         guard let httpResponse = response as? HTTPURLResponse else {
@@ -95,49 +81,65 @@ private actor OpenAIHostedClientSecretProvider {
             throw DemoConfigurationError.sessionRequestFailed(statusCode: httpResponse.statusCode, message: message)
         }
 
-        return try JSONDecoder().decode(CreateChatKitSessionResponse.self, from: data)
+        return try JSONDecoder().decode(BackendChatKitSessionResponse.self, from: data)
     }
 }
 
-private struct CreateChatKitSessionRequest: Encodable {
-    var workflow: Workflow
-    var user: String
-
-    struct Workflow: Encodable {
-        var id: String
-    }
-}
-
-private struct CreateChatKitSessionResponse: Decodable {
+private struct BackendChatKitSessionResponse: Decodable {
     var clientSecret: String
-    var expiresAt: Date
+    var expiresAt: Date?
 
     enum CodingKeys: String, CodingKey {
+        case clientSecretCamel = "clientSecret"
         case clientSecret = "client_secret"
+        case expiresAtCamel = "expiresAt"
         case expiresAt = "expires_at"
     }
 
     init(from decoder: any Decoder) throws {
         let container = try decoder.container(keyedBy: CodingKeys.self)
-        clientSecret = try container.decode(String.self, forKey: .clientSecret)
-        let expiresAtTimestamp = try container.decode(TimeInterval.self, forKey: .expiresAt)
-        expiresAt = Date(timeIntervalSince1970: expiresAtTimestamp)
+        clientSecret = try container.decodeIfPresent(String.self, forKey: .clientSecret)
+            ?? container.decode(String.self, forKey: .clientSecretCamel)
+        expiresAt = Self.decodeDate(from: container, snakeKey: .expiresAt, camelKey: .expiresAtCamel)
+    }
+
+    private static func decodeDate(
+        from container: KeyedDecodingContainer<CodingKeys>,
+        snakeKey: CodingKeys,
+        camelKey: CodingKeys,
+    ) -> Date? {
+        if let timestamp = try? container.decodeIfPresent(TimeInterval.self, forKey: snakeKey) {
+            return Date(timeIntervalSince1970: timestamp)
+        }
+        if let timestamp = try? container.decodeIfPresent(TimeInterval.self, forKey: camelKey) {
+            return Date(timeIntervalSince1970: timestamp)
+        }
+        if let iso8601 = try? container.decodeIfPresent(String.self, forKey: snakeKey) {
+            return ISO8601DateFormatter().date(from: iso8601)
+        }
+        if let iso8601 = try? container.decodeIfPresent(String.self, forKey: camelKey) {
+            return ISO8601DateFormatter().date(from: iso8601)
+        }
+        return nil
     }
 }
 
 enum DemoConfigurationError: LocalizedError {
     case missingValue(String)
+    case invalidURL(String)
     case invalidSessionResponse
     case sessionRequestFailed(statusCode: Int, message: String)
 
     var errorDescription: String? {
         switch self {
         case let .missingValue(name):
-            "Missing \(name). Add it to Example/ChatKitSwiftDemo/.env or provide it as a process environment variable."
+            "Missing \(name). Set it in the Xcode scheme or process environment."
+        case let .invalidURL(name):
+            "\(name) must be an absolute URL for your backend ChatKit session endpoint."
         case .invalidSessionResponse:
-            "OpenAI returned a non-HTTP session response."
+            "The ChatKit session endpoint returned a non-HTTP response."
         case let .sessionRequestFailed(statusCode, message):
-            "OpenAI ChatKit session request failed with HTTP \(statusCode): \(message)"
+            "ChatKit session request failed with HTTP \(statusCode): \(message)"
         }
     }
 }

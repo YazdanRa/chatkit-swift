@@ -71,7 +71,7 @@ public enum ChatKitThreadStatus: Codable, Equatable, Sendable {
         case "closed":
             self = try .closed(ChatKitJSON.decoder.decode(Closed.self, from: data))
         default:
-            self = .unknown(type: type, raw: raw)
+            self = .unknown(type: type, raw: raw.chatKitProtocolKeyedObject)
         }
     }
 
@@ -106,6 +106,7 @@ public enum ChatKitThreadItem: Codable, Equatable, Identifiable, Sendable {
     case assistantMessage(ChatKitAssistantMessageItem)
     case clientToolCall(ChatKitClientToolCallItem)
     case widget(ChatKitWidgetItem)
+    case imageGeneration(ChatKitImageGenerationItem)
     case generatedImage(ChatKitGeneratedImageItem)
     case structuredInput(ChatKitStructuredInputItem)
     case task(ChatKitTaskItem)
@@ -121,6 +122,7 @@ public enum ChatKitThreadItem: Codable, Equatable, Identifiable, Sendable {
         case let .assistantMessage(item): item.id
         case let .clientToolCall(item): item.id
         case let .widget(item): item.id
+        case let .imageGeneration(item): item.id
         case let .generatedImage(item): item.id
         case let .structuredInput(item): item.id
         case let .task(item): item.id
@@ -137,6 +139,7 @@ public enum ChatKitThreadItem: Codable, Equatable, Identifiable, Sendable {
         case let .assistantMessage(item): item.threadID
         case let .clientToolCall(item): item.threadID
         case let .widget(item): item.threadID
+        case let .imageGeneration(item): item.threadID
         case let .generatedImage(item): item.threadID
         case let .structuredInput(item): item.threadID
         case let .task(item): item.threadID
@@ -153,6 +156,7 @@ public enum ChatKitThreadItem: Codable, Equatable, Identifiable, Sendable {
         case let .assistantMessage(item): item.createdAt
         case let .clientToolCall(item): item.createdAt
         case let .widget(item): item.createdAt
+        case let .imageGeneration(item): item.createdAt
         case let .generatedImage(item): item.createdAt
         case let .structuredInput(item): item.createdAt
         case let .task(item): item.createdAt
@@ -185,6 +189,8 @@ public enum ChatKitThreadItem: Codable, Equatable, Identifiable, Sendable {
             self = try .clientToolCall(ChatKitJSON.decoder.decode(ChatKitClientToolCallItem.self, from: data))
         case "widget":
             self = try .widget(ChatKitJSON.decoder.decode(ChatKitWidgetItem.self, from: data))
+        case "image_generation":
+            self = try .imageGeneration(ChatKitJSON.decoder.decode(ChatKitImageGenerationItem.self, from: data))
         case "generated_image":
             self = try .generatedImage(ChatKitJSON.decoder.decode(ChatKitGeneratedImageItem.self, from: data))
         case "structured_input":
@@ -213,6 +219,8 @@ public enum ChatKitThreadItem: Codable, Equatable, Identifiable, Sendable {
         case let .clientToolCall(item):
             try item.encode(to: encoder)
         case let .widget(item):
+            try item.encode(to: encoder)
+        case let .imageGeneration(item):
             try item.encode(to: encoder)
         case let .generatedImage(item):
             try item.encode(to: encoder)
@@ -244,9 +252,13 @@ public enum ChatKitThreadItem: Codable, Equatable, Identifiable, Sendable {
         case let (.widget(widget), .widgetRootUpdated(update)):
             .widget(widget.replacingWidget(update.widget))
         case let (.widget(widget), .widgetStreamingTextValueDelta(update)):
-            .widget(widget.appendingWidgetText(update.delta, componentID: update.componentID))
+            .widget(widget.appendingWidgetText(update.delta, componentID: update.componentID, done: update.done))
         case let (.widget(widget), .widgetComponentUpdated(update)):
             .widget(widget.replacingComponent(update.component, componentID: update.componentID))
+        case let (.imageGeneration(item), .imageGenerationPreviewUpdated(update)):
+            .imageGeneration(item.updatingPreview(image: update.image, progress: update.progress))
+        case let (.generatedImage(item), .generatedImageUpdated(update)):
+            .generatedImage(item.updatingImage(update.image, progress: update.progress))
         default:
             self
         }

@@ -9,17 +9,21 @@
 /* Begin PBXBuildFile section */
 		2060824ACA42DC88ACD90CCC /* ChatKitSwiftDemoApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = A131C27EC0702FD9AD4182DE /* ChatKitSwiftDemoApp.swift */; };
 		2BF9E370A1FCF9677522F0A2 /* ChatKitSwift in Frameworks */ = {isa = PBXBuildFile; productRef = 34C6FFF4929AD1C1519C42E9 /* ChatKitSwift */; };
-		3A5A7D2C31FA8BA3314778F0 /* OpenAIHostedChatKitConfiguration.swift in Sources */ = {isa = PBXBuildFile; fileRef = A9549390084E06C44C5ED179 /* OpenAIHostedChatKitConfiguration.swift */; };
+		3A5A7D2C31FA8BA3314778F0 /* BackendHostedChatKitConfiguration.swift in Sources */ = {isa = PBXBuildFile; fileRef = A9549390084E06C44C5ED179 /* BackendHostedChatKitConfiguration.swift */; };
 		676C07EF6A547E07028B11C4 /* ChatScreen.swift in Sources */ = {isa = PBXBuildFile; fileRef = 910516B42A2BB1AFEDCE0D76 /* ChatScreen.swift */; };
+		C9A99521A525BE5F557B86E4 /* WidgetStudioClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3FC06ABC7C81399E5429BCB6 /* WidgetStudioClient.swift */; };
+		CC2B67DF6D5A26A758F6C0E2 /* WidgetStudioSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7C383116720359990CBEF15D /* WidgetStudioSheet.swift */; };
 		EB41BD6705994F7E1736D74A /* DemoEnvironment.swift in Sources */ = {isa = PBXBuildFile; fileRef = 61474C797307BC6913DD868C /* DemoEnvironment.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
+		3FC06ABC7C81399E5429BCB6 /* WidgetStudioClient.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WidgetStudioClient.swift; sourceTree = "<group>"; };
 		61474C797307BC6913DD868C /* DemoEnvironment.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DemoEnvironment.swift; sourceTree = "<group>"; };
+		7C383116720359990CBEF15D /* WidgetStudioSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WidgetStudioSheet.swift; sourceTree = "<group>"; };
 		910516B42A2BB1AFEDCE0D76 /* ChatScreen.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChatScreen.swift; sourceTree = "<group>"; };
 		A131C27EC0702FD9AD4182DE /* ChatKitSwiftDemoApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChatKitSwiftDemoApp.swift; sourceTree = "<group>"; };
 		A26BC2F38C2A81ACB31276D1 /* ChatKitSwiftDemo.app */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.application; path = ChatKitSwiftDemo.app; sourceTree = BUILT_PRODUCTS_DIR; };
-		A9549390084E06C44C5ED179 /* OpenAIHostedChatKitConfiguration.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OpenAIHostedChatKitConfiguration.swift; sourceTree = "<group>"; };
+		A9549390084E06C44C5ED179 /* BackendHostedChatKitConfiguration.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BackendHostedChatKitConfiguration.swift; sourceTree = "<group>"; };
 		C816776162716A22562F3284 /* chatkit-swift */ = {isa = PBXFileReference; lastKnownFileType = folder; name = "chatkit-swift"; path = ../..; sourceTree = SOURCE_ROOT; };
 /* End PBXFileReference section */
 
@@ -57,7 +61,9 @@
 				A131C27EC0702FD9AD4182DE /* ChatKitSwiftDemoApp.swift */,
 				910516B42A2BB1AFEDCE0D76 /* ChatScreen.swift */,
 				61474C797307BC6913DD868C /* DemoEnvironment.swift */,
-				A9549390084E06C44C5ED179 /* OpenAIHostedChatKitConfiguration.swift */,
+				A9549390084E06C44C5ED179 /* BackendHostedChatKitConfiguration.swift */,
+				3FC06ABC7C81399E5429BCB6 /* WidgetStudioClient.swift */,
+				7C383116720359990CBEF15D /* WidgetStudioSheet.swift */,
 			);
 			path = ChatKitSwiftDemo;
 			sourceTree = "<group>";
@@ -78,7 +84,6 @@
 			isa = PBXNativeTarget;
 			buildConfigurationList = 9E38B497507F765BA02AFE43 /* Build configuration list for PBXNativeTarget "ChatKitSwiftDemo" */;
 			buildPhases = (
-				C301141784E54FAA6D324605 /* Copy Local Env */,
 				968811735B113F90CA2AC2A4 /* Sources */,
 				19ADECC757E5675E873AB5D6 /* Frameworks */,
 			);
@@ -130,29 +135,6 @@
 		};
 /* End PBXProject section */
 
-/* Begin PBXShellScriptBuildPhase section */
-		C301141784E54FAA6D324605 /* Copy Local Env */ = {
-			isa = PBXShellScriptBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-			);
-			inputFileListPaths = (
-			);
-			inputPaths = (
-				"$(PROJECT_DIR)/.env",
-			);
-			name = "Copy Local Env";
-			outputFileListPaths = (
-			);
-			outputPaths = (
-				"$(BUILT_PRODUCTS_DIR)/$(UNLOCALIZED_RESOURCES_FOLDER_PATH)/.env",
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-			shellPath = /bin/sh;
-			shellScript = "set -euo pipefail\n\nenv_file=\"${PROJECT_DIR}/.env\"\nresources_dir=\"${BUILT_PRODUCTS_DIR}/${UNLOCALIZED_RESOURCES_FOLDER_PATH}\"\nbundled_env=\"${resources_dir}/.env\"\n\nmkdir -p \"${resources_dir}\"\nrm -f \"${bundled_env}\"\n\nif [ -f \"${env_file}\" ]; then\n  cp \"${env_file}\" \"${bundled_env}\"\nfi\n";
-		};
-/* End PBXShellScriptBuildPhase section */
-
 /* Begin PBXSourcesBuildPhase section */
 		968811735B113F90CA2AC2A4 /* Sources */ = {
 			isa = PBXSourcesBuildPhase;
@@ -161,7 +143,9 @@
 				2060824ACA42DC88ACD90CCC /* ChatKitSwiftDemoApp.swift in Sources */,
 				676C07EF6A547E07028B11C4 /* ChatScreen.swift in Sources */,
 				EB41BD6705994F7E1736D74A /* DemoEnvironment.swift in Sources */,
-				3A5A7D2C31FA8BA3314778F0 /* OpenAIHostedChatKitConfiguration.swift in Sources */,
+				3A5A7D2C31FA8BA3314778F0 /* BackendHostedChatKitConfiguration.swift in Sources */,
+				C9A99521A525BE5F557B86E4 /* WidgetStudioClient.swift in Sources */,
+				CC2B67DF6D5A26A758F6C0E2 /* WidgetStudioSheet.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

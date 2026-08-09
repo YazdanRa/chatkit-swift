@@ -34,58 +34,97 @@ enum ChatKitWidgetTone: Equatable {
 
     /// Foreground color for solid controls and badges.
     var foreground: Color {
-        switch self {
-        case .primary, .discovery, .success, .warning, .danger:
-            .white
-        case .secondary, .info:
-            .primary
-        }
+        color(hex: foregroundHex)
     }
 
     /// Background color for solid controls and badges.
     var solidBackground: Color {
-        switch self {
-        case .primary:
-            .accentColor
-        case .secondary:
-            .secondary.opacity(0.18)
-        case .info:
-            .blue
-        case .discovery:
-            .purple
-        case .success:
-            .green
-        case .warning:
-            .orange
-        case .danger:
-            .red
-        }
+        color(hex: solidHex)
     }
 
     /// Low-emphasis background color for outline and soft widget treatments.
     var softBackground: Color {
-        solidBackground.opacity(0.16)
+        color(hex: softHex)
     }
 
     /// Low-emphasis foreground color for outline and soft widget treatments.
     var softForeground: Color {
+        color(hex: accentHex)
+    }
+
+    var foregroundHex: String {
         switch self {
-        case .primary:
-            .accentColor
-        case .secondary:
-            .secondary
-        case .info:
-            .blue
-        case .discovery:
-            .purple
-        case .success:
-            .green
-        case .warning:
-            .orange
-        case .danger:
-            .red
+        case .primary, .secondary, .info, .discovery, .success, .warning, .danger:
+            "#FFFFFF"
         }
     }
+
+    var solidHex: String {
+        switch self {
+        case .primary:
+            "#181818"
+        case .secondary:
+            "#5D5D5D"
+        case .info:
+            "#0285FF"
+        case .discovery:
+            "#924FF7"
+        case .success:
+            "#00A240"
+        case .warning:
+            "#E25507"
+        case .danger:
+            "#E02E2A"
+        }
+    }
+
+    var softHex: String {
+        switch self {
+        case .primary:
+            "#F3F3F3"
+        case .secondary:
+            "#EDEDED"
+        case .info:
+            "#E5F3FF"
+        case .discovery:
+            "#EFE5FE"
+        case .success:
+            "#D9F4E4"
+        case .warning:
+            "#FFE7D9"
+        case .danger:
+            "#FFD9D9"
+        }
+    }
+
+    var accentHex: String {
+        switch self {
+        case .primary:
+            "#0D0D0D"
+        case .secondary:
+            "#282828"
+        case .info:
+            "#0169CC"
+        case .discovery:
+            "#8046D9"
+        case .success:
+            "#008635"
+        case .warning:
+            "#B9480D"
+        case .danger:
+            "#E02E2A"
+        }
+    }
+
+    private func color(hex: String) -> Color {
+        Color(chatKitHex: hex) ?? .primary
+    }
+}
+
+/// Direction token shared by widget layout components.
+enum ChatKitWidgetDirection: Equatable {
+    case row
+    case col
 }
 
 /// Converts backend widget size tokens into SwiftUI layout values.
@@ -94,7 +133,7 @@ enum ChatKitWidgetMetrics {
     static func spacing(_ value: JSONValue?) -> CGFloat? {
         switch value {
         case let .number(number):
-            CGFloat(number)
+            CGFloat(number * 4)
         case let .string(string):
             spacing(string)
         default:
@@ -124,6 +163,43 @@ enum ChatKitWidgetMetrics {
         case "4xl": 40
         default: nil
         }
+    }
+
+    /// Resolves fixed dimensions from numeric values, pixel strings, and numeric strings.
+    static func fixedDimension(_ value: JSONValue?) -> CGFloat? {
+        switch value {
+        case let .number(number):
+            CGFloat(number)
+        case let .string(string):
+            fixedDimension(string)
+        default:
+            nil
+        }
+    }
+
+    /// Resolves percentage strings such as `"68%"` into unit fractions.
+    static func percentage(_ value: JSONValue?) -> CGFloat? {
+        guard case let .string(string)? = value else {
+            return nil
+        }
+        let trimmed = string.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard trimmed.hasSuffix("%"),
+              let number = Double(trimmed.dropLast())
+        else {
+            return nil
+        }
+        return CGFloat(number / 100)
+    }
+
+    private static func fixedDimension(_ token: String) -> CGFloat? {
+        let trimmed = token.trimmingCharacters(in: .whitespacesAndNewlines)
+        if trimmed.hasSuffix("%") {
+            return nil
+        }
+        if trimmed.hasSuffix("px") {
+            return Double(trimmed.dropLast(2)).map { CGFloat($0) }
+        }
+        return Double(trimmed).map { CGFloat($0) }
     }
 
     /// Resolves scalar or directional padding objects into edge insets.
@@ -183,21 +259,269 @@ enum ChatKitWidgetMetrics {
         }
     }
 
+    static func titlePointSize(_ token: String?) -> CGFloat {
+        switch token {
+        case "sm":
+            18
+        case "lg":
+            24
+        case "xl":
+            32
+        case "2xl":
+            36
+        case "3xl":
+            48
+        case "4xl":
+            60
+        case "5xl":
+            72
+        default:
+            20
+        }
+    }
+
+    static func titleLineHeight(_ token: String?) -> CGFloat {
+        switch token {
+        case "sm":
+            26
+        case "lg":
+            28
+        case "xl":
+            38
+        case "2xl":
+            42
+        case "3xl":
+            48
+        case "4xl":
+            60
+        case "5xl":
+            72
+        default:
+            26
+        }
+    }
+
+    static func textPointSize(_ token: String?) -> CGFloat {
+        switch token {
+        case "xs":
+            12
+        case "sm":
+            14
+        case "lg":
+            18
+        case "xl":
+            20
+        default:
+            16
+        }
+    }
+
+    static func textLineHeight(_ token: String?) -> CGFloat {
+        switch token {
+        case "xs":
+            18
+        case "sm":
+            20
+        case "lg":
+            29
+        case "xl":
+            26
+        default:
+            24
+        }
+    }
+
+    static func captionPointSize(_ token: String?) -> CGFloat {
+        switch token {
+        case "md":
+            14
+        case "lg":
+            16
+        default:
+            12
+        }
+    }
+
+    static func captionLineHeight(_ token: String?) -> CGFloat {
+        switch token {
+        case "md":
+            20
+        case "lg":
+            24
+        default:
+            15.6
+        }
+    }
+
+    static func additionalLineSpacing(pointSize: CGFloat, lineHeight: CGFloat) -> CGFloat {
+        max(0, lineHeight - pointSize - 4)
+    }
+
+    static func defaultCardBackgroundHex(colorScheme: SwiftUI.ColorScheme) -> String {
+        colorScheme == .dark ? "#282828" : "#FFFFFF"
+    }
+
+    static func defaultCardBorderHex(colorScheme: SwiftUI.ColorScheme) -> String {
+        colorScheme == .dark ? "#4F4F4F" : "#E3E3E3"
+    }
+
+    static func defaultCardBackground(colorScheme: SwiftUI.ColorScheme) -> Color {
+        Color(chatKitHex: defaultCardBackgroundHex(colorScheme: colorScheme)) ?? .clear
+    }
+
+    static func defaultCardBorder(colorScheme: SwiftUI.ColorScheme) -> Color {
+        Color(chatKitHex: defaultCardBorderHex(colorScheme: colorScheme)) ?? .secondary.opacity(0.22)
+    }
+
+    static func cardMaxWidth(_ token: String?) -> CGFloat? {
+        switch token {
+        case "sm":
+            360
+        case "md":
+            480
+        case "lg":
+            640
+        default:
+            nil
+        }
+    }
+
+    static func defaultControlFieldBackgroundHex(colorScheme: SwiftUI.ColorScheme) -> String {
+        colorScheme == .dark ? "#282828" : "#FFFFFF"
+    }
+
+    static func defaultControlFieldBorderHex(colorScheme: SwiftUI.ColorScheme) -> String {
+        colorScheme == .dark ? "#5D5D5D" : "#D7D7D7"
+    }
+
+    static func controlFieldHeight(_ token: String?) -> CGFloat {
+        switch token {
+        case "3xs", "2xs", "xs", "sm":
+            28
+        case "lg", "xl", "2xl", "3xl":
+            36
+        default:
+            32
+        }
+    }
+
+    static func textareaMinHeight(rows: Int) -> CGFloat {
+        CGFloat(max(rows, 1)) * 16 + 24
+    }
+
+    static let selectionIndicatorSize: CGFloat = 16
+    static let checkboxIndicatorSize: CGFloat = 16
+
+    static func date(from value: String) -> Date? {
+        let trimmed = value.trimmingCharacters(in: .whitespacesAndNewlines)
+        if let match = trimmed.firstMatch(of: /^(\d{4})-(\d{2})-(\d{2})$/),
+           let year = Int(match.1),
+           let month = Int(match.2),
+           let day = Int(match.3)
+        {
+            var calendar = Calendar(identifier: .gregorian)
+            calendar.locale = Locale(identifier: "en_US_POSIX")
+            calendar.timeZone = .current
+            return calendar.date(from: DateComponents(year: year, month: month, day: day))
+        }
+        return ISO8601DateFormatter().date(from: trimmed)
+    }
+
+    static func stackGap(_ value: JSONValue?, containerType: String, childTypes: [String]) -> CGFloat? {
+        let gap = spacing(value)
+        guard let gap else {
+            return nil
+        }
+        if case .string? = value {
+            if containerType == "Col", childTypes.allSatisfy({ $0 == "Button" }) {
+                return 0
+            }
+            if containerType == "Row", childTypes.allSatisfy({ $0 == "Box" }) {
+                return 0
+            }
+            if containerType == "Row", childTypes.allSatisfy({ $0 == "Badge" }) {
+                return 0
+            }
+        }
+        return gap
+    }
+
+    static func buttonHeight(_ token: String?) -> CGFloat {
+        switch token {
+        case "3xs":
+            22
+        case "2xs":
+            24
+        case "xs":
+            26
+        case "sm":
+            28
+        case "md":
+            32
+        case "xl":
+            40
+        case "2xl":
+            44
+        case "3xl":
+            48
+        default:
+            36
+        }
+    }
+
+    static func buttonFontPointSize(_ token: String?) -> CGFloat {
+        switch token {
+        case "2xl", "3xl":
+            16
+        case "3xs", "2xs":
+            12
+        default:
+            14
+        }
+    }
+
+    static func buttonHorizontalPadding(_ token: String?, pill: Bool) -> CGFloat {
+        let base = switch token {
+        case "3xs":
+            CGFloat(6)
+        case "2xs", "xs":
+            CGFloat(8)
+        case "sm":
+            CGFloat(10)
+        case "xl", "2xl":
+            CGFloat(14)
+        case "3xl":
+            CGFloat(16)
+        default:
+            CGFloat(12)
+        }
+        return pill ? base * 1.33 : base
+    }
+
+    static func buttonCornerRadius(_ value: JSONValue?, pill: Bool) -> CGFloat {
+        if value != nil {
+            return radius(value)
+        }
+        return 999
+    }
+
     /// Maps widget icon size tokens to native SwiftUI fonts.
     static func iconFont(_ token: String?) -> Font {
         switch token {
         case "xs":
-            .caption2
+            .system(size: 12)
         case "sm":
-            .caption
+            .system(size: 14)
         case "lg":
-            .title3
+            .system(size: 20)
         case "xl":
-            .title2
-        case "2xl", "3xl":
-            .title
+            .system(size: 22)
+        case "2xl":
+            .system(size: 24)
+        case "3xl":
+            .system(size: 26)
         default:
-            .body
+            .system(size: 18)
         }
     }
 }
@@ -243,6 +567,30 @@ struct ChatKitWidgetChartPoint: Equatable, Identifiable {
 }
 
 extension ChatKitWidgetNode {
+    /// Resolves the JS widget `direction` contract into a Swift-friendly value.
+    func widgetDirection(default fallback: ChatKitWidgetDirection) -> ChatKitWidgetDirection {
+        switch string("direction") {
+        case "row", "horizontal":
+            .row
+        case "col", "column", "vertical":
+            .col
+        default:
+            fallback
+        }
+    }
+
+    /// Resolves per-widget theme overrides into SwiftUI's native color-scheme environment.
+    var widgetColorScheme: SwiftUI.ColorScheme? {
+        switch string("theme") {
+        case "dark":
+            .dark
+        case "light":
+            .light
+        default:
+            nil
+        }
+    }
+
     /// Returns a raw string field from the widget payload.
     func string(_ key: String) -> String? {
         raw[key]?.stringValue
@@ -266,6 +614,58 @@ extension ChatKitWidgetNode {
     /// Returns a raw object field from the widget payload.
     func object(_ key: String) -> [String: JSONValue]? {
         raw[key]?.objectValue
+    }
+
+    /// Returns the list items that should be visible before or after expansion.
+    func visibleListChildren(isExpanded: Bool) -> [ChatKitWidgetNode] {
+        guard !isExpanded,
+              let limit = number("limit")
+        else {
+            return children
+        }
+
+        return Array(children.prefix(max(0, Int(limit))))
+    }
+
+    /// Number of list items hidden behind a ListView limit.
+    var hiddenListChildCount: Int {
+        guard let limit = number("limit") else {
+            return 0
+        }
+        return max(0, children.count - max(0, Int(limit)))
+    }
+
+    /// Native disclosure label for hidden list items.
+    var hiddenListDisclosureLabel: String? {
+        let count = hiddenListChildCount
+        guard count > 0 else {
+            return nil
+        }
+        return count == 1 ? "Show 1 more" : "Show \(count) more"
+    }
+
+    /// Buttons stretch when they are in vertical widget surfaces, matching the JS renderer's default block treatment.
+    func buttonFillsAvailableWidth(parentType: String?) -> Bool {
+        if bool("block") {
+            return true
+        }
+        return switch parentType {
+        case "Basic", "Card", "Col", "Form":
+            true
+        default:
+            false
+        }
+    }
+
+    /// Resolves Studio's button style shorthands into the native widget style path.
+    var buttonVariant: String {
+        string("variant") ?? "solid"
+    }
+
+    /// Buttons default to primary solid in the reference renderer; lower-emphasis variants default to secondary.
+    var buttonTone: ChatKitWidgetTone? {
+        let fallback = buttonVariant == "solid" ? "primary" : "secondary"
+        return ChatKitWidgetTone(rawValue: string("color") ?? fallback)
     }
 
     /// Resolves a raw widget color field against the current SwiftUI color scheme.
@@ -298,10 +698,10 @@ enum ChatKitWidgetColor {
     static func color(_ value: JSONValue?, colorScheme: SwiftUI.ColorScheme) -> Color? {
         switch value {
         case let .string(token):
-            return color(token)
+            return color(token, colorScheme: colorScheme)
         case let .object(object):
             let themedValue = colorScheme == .dark ? object["dark"]?.stringValue : object["light"]?.stringValue
-            return color(themedValue)
+            return color(themedValue, colorScheme: colorScheme)
         default:
             return nil
         }
@@ -309,14 +709,56 @@ enum ChatKitWidgetColor {
 
     /// Resolves a semantic tone or CSS-style hex string into a SwiftUI color.
     static func color(_ token: String?) -> Color? {
+        color(token, colorScheme: nil)
+    }
+
+    static func color(_ token: String?, colorScheme: SwiftUI.ColorScheme?) -> Color? {
         guard let token else {
             return nil
+        }
+        if token == "primary" {
+            return .primary
+        }
+        if token == "secondary" {
+            if colorScheme == .dark {
+                return Color(chatKitHex: "#D4D4D4") ?? .secondary
+            }
+            return Color(chatKitHex: "#5D5D5D") ?? .secondary
         }
         if let tone = ChatKitWidgetTone(rawValue: token) {
             return tone.softForeground
         }
+        if let color = studioTokenColors[token] {
+            return color
+        }
         return Color(chatKitHex: token)
     }
+
+    private static let studioTokenColors: [String: Color] = [
+        "tertiary": .secondary.opacity(0.72),
+        "text-secondary": .secondary,
+        "text-tertiary": .secondary.opacity(0.72),
+        "alpha-10": .primary.opacity(0.10),
+        "surface-secondary": .secondary.opacity(0.10),
+        "surface-tertiary": .secondary.opacity(0.16),
+        "surface-elevated-secondary": Color(chatKitHex: "#282828") ?? .secondary.opacity(0.16),
+        "blue": .blue,
+        "green": .green,
+        "red": .red,
+        "yellow": .yellow,
+        "orange": .orange,
+        "purple": .purple,
+        "pink": .pink,
+        "gray-500": .gray,
+        "slate-500": .secondary,
+        "green-500": .green,
+        "red-500": .red,
+        "blue-500": .blue,
+        "yellow-500": .yellow,
+        "orange-500": .orange,
+        "purple-500": .purple,
+        "pink-500": .pink,
+    ]
 }
 
 extension Color {

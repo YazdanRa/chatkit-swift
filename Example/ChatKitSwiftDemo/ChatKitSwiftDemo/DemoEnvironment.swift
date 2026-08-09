@@ -28,6 +28,18 @@ struct DemoEnvironment {
         return value
     }
 
+    func requiredURL(named name: String) throws -> URL {
+        let rawValue = try requiredValue(named: name)
+        guard let url = URL(string: rawValue),
+              url.scheme != nil,
+              url.host != nil
+        else {
+            throw DemoConfigurationError.invalidURL(name)
+        }
+
+        return url
+    }
+
     private static func loadDotEnv(from bundle: Bundle) -> [String: String] {
         guard let url = bundle.resourceURL?.appendingPathComponent(".env"),
               let contents = try? String(contentsOf: url, encoding: .utf8)

@@ -53,7 +53,15 @@ Widget colors accept semantic tones such as `primary`, `secondary`, `info`, `suc
 { "background": { "light": "#FFFFFF", "dark": "#111827" } }
 ```
 
+Common generated-widget tokens such as `surface-tertiary`, `tertiary`, `green-500`, `red-500`, and `blue-500` resolve to native SwiftUI colors.
+
 The surrounding chat surface still uses ``ChatKitTheme`` for its preferred color scheme, background, foreground, radius, density, and typography settings.
+
+## Generated Widget Tooling
+
+Use ``ChatKitWidgetPreview`` to render a standalone ``ChatKitWidgetNode`` in a demo, fixture, or local test harness. It reuses the same native renderer as transcript widget items without requiring a live conversation.
+
+Use ``ChatKitWidgetTemplate`` with Widget Studio-style template JSON. It replaces `{{ (name) | tojson }}` placeholders with supplied state values and decodes the rendered JSON into a ``ChatKitWidgetNode``.
 
 ## Example Payload
 

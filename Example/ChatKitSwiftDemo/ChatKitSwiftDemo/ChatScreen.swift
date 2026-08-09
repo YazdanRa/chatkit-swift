@@ -4,7 +4,7 @@ import SwiftUI
 struct ChatScreen: View {
     private let optionsResult: Result<ChatKitOptions, Error>
 
-    init(configuration: OpenAIHostedChatKitConfiguration = .init()) {
+    init(configuration: BackendHostedChatKitConfiguration = .init()) {
         optionsResult = configuration.options()
     }
 
@@ -34,7 +34,12 @@ private struct DemoChatSurface: View {
             ChatKitView(session: session)
                 .navigationTitle(session.options.frameTitle)
                 .toolbar {
-                    ToolbarItem(placement: .topBarTrailing) {
+                    ToolbarItemGroup(placement: .topBarTrailing) {
+                        Button("Widget Studio", systemImage: "wand.and.sparkles") {
+                            sheet = .widgetStudio
+                        }
+                        .labelStyle(.iconOnly)
+
                         Button("ChatKit Options", systemImage: "slider.horizontal.3") {
                             sheet = .options(.init(options: session.options))
                         }
@@ -48,6 +53,8 @@ private struct DemoChatSurface: View {
                 DemoChatKitOptionsSheet(draft: draft) { draft in
                     session.setOptions(draft.applying(to: session.options))
                 }
+            case .widgetStudio:
+                WidgetStudioSheet(theme: session.options.theme)
             }
         }
     }
@@ -55,11 +62,14 @@ private struct DemoChatSurface: View {
 
 private enum DemoSheet: Identifiable {
     case options(DemoChatKitOptionsDraft)
+    case widgetStudio
 
     var id: String {
         switch self {
         case .options:
             "options"
+        case .widgetStudio:
+            "widgetStudio"
         }
     }
 }

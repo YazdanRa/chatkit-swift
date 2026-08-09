@@ -57,9 +57,9 @@ public struct ChatKitWidgetItem: Codable, Equatable, Sendable {
         return copy
     }
 
-    public func appendingWidgetText(_ text: String, componentID: String) -> ChatKitWidgetItem {
+    public func appendingWidgetText(_ text: String, componentID: String, done: Bool) -> ChatKitWidgetItem {
         var copy = self
-        copy.widget = copy.widget.appendingText(text, componentID: componentID)
+        copy.widget = copy.widget.appendingText(text, componentID: componentID, done: done)
         return copy
     }
 
@@ -79,6 +79,45 @@ public struct ChatKitWidgetItem: Codable, Equatable, Sendable {
     }
 }
 
+public struct ChatKitImageGenerationItem: Codable, Equatable, Sendable {
+    public var type = "image_generation"
+    public var id: String
+    public var threadID: String
+    public var createdAt: Date
+    public var image: ChatKitGeneratedImageItem.GeneratedImage?
+    public var progress: Double?
+
+    public init(
+        id: String,
+        threadID: String,
+        createdAt: Date,
+        image: ChatKitGeneratedImageItem.GeneratedImage? = nil,
+        progress: Double? = nil,
+    ) {
+        self.id = id
+        self.threadID = threadID
+        self.createdAt = createdAt
+        self.image = image
+        self.progress = progress
+    }
+
+    public func updatingPreview(image: ChatKitGeneratedImageItem.GeneratedImage, progress: Double?) -> ChatKitImageGenerationItem {
+        var copy = self
+        copy.image = image
+        copy.progress = progress
+        return copy
+    }
+
+    private enum CodingKeys: String, CodingKey {
+        case type
+        case id
+        case threadID = "threadId"
+        case createdAt
+        case image
+        case progress
+    }
+}
+
 public struct ChatKitGeneratedImageItem: Codable, Equatable, Sendable {
     public var type = "generated_image"
     public var id: String
@@ -89,6 +128,26 @@ public struct ChatKitGeneratedImageItem: Codable, Equatable, Sendable {
     public struct GeneratedImage: Codable, Equatable, Identifiable, Sendable {
         public var id: String
         public var url: URL
+        public var progress: Double?
+
+        public init(id: String, url: URL, progress: Double? = nil) {
+            self.id = id
+            self.url = url
+            self.progress = progress
+        }
+    }
+
+    public init(id: String, threadID: String, createdAt: Date, image: GeneratedImage? = nil) {
+        self.id = id
+        self.threadID = threadID
+        self.createdAt = createdAt
+        self.image = image
+    }
+
+    public func updatingImage(_ image: GeneratedImage, progress: Double?) -> ChatKitGeneratedImageItem {
+        var copy = self
+        copy.image = .init(id: image.id, url: image.url, progress: progress ?? image.progress)
+        return copy
     }
 
     private enum CodingKeys: String, CodingKey {
@@ -228,7 +287,7 @@ public struct ChatKitUnknownThreadItem: Codable, Equatable, Sendable {
     public var raw: [String: JSONValue]
 
     public init(from decoder: Decoder) throws {
-        raw = try [String: JSONValue](from: decoder)
+        raw = try [String: JSONValue](from: decoder).chatKitProtocolKeyedObject
         type = raw["type"]?.stringValue ?? "unknown"
         id = raw["id"]?.stringValue ?? UUID().uuidString
         threadID = raw["thread_id"]?.stringValue ?? ""

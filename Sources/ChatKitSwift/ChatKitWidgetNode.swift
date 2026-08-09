@@ -90,20 +90,30 @@ public struct ChatKitWidgetNode: Codable, Equatable, Identifiable, Sendable {
     /// Non-object child values are ignored so partially forward-compatible payloads
     /// can still render their supported descendants.
     public var children: [ChatKitWidgetNode] {
-        guard case let .array(values)? = raw["children"] else {
-            return []
-        }
-
-        return values.compactMap { value in
-            guard case let .object(object) = value else {
-                return nil
+        switch raw["children"] {
+        case let .array(values):
+            return values.compactMap { value in
+                guard case let .object(object) = value else {
+                    return nil
+                }
+                return ChatKitWidgetNode(
+                    type: object["type"]?.stringValue ?? "Unknown",
+                    key: object["key"]?.stringValue,
+                    id: object["id"]?.stringValue,
+                    raw: object,
+                )
             }
-            return ChatKitWidgetNode(
-                type: object["type"]?.stringValue ?? "Unknown",
-                key: object["key"]?.stringValue,
-                id: object["id"]?.stringValue,
-                raw: object,
-            )
+        case let .object(object):
+            return [
+                ChatKitWidgetNode(
+                    type: object["type"]?.stringValue ?? "Unknown",
+                    key: object["key"]?.stringValue,
+                    id: object["id"]?.stringValue,
+                    raw: object,
+                ),
+            ]
+        default:
+            return []
         }
     }
 

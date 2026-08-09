@@ -204,10 +204,74 @@ Supported request types include:
 - `items.list`
 - `items.feedback`
 - `attachments.create`
+- `attachments.process`
+- `attachments.get_preview`
 - `attachments.delete`
 - `input.transcribe`
 
 Do not put an OpenAI API key in an iOS, macOS, or visionOS app. The recommended production setup is a custom backend endpoint that validates the user, calls OpenAI server-side, and streams ChatKit events back to the app.
+
+## ChatKit.js 1.7.0 Parity
+
+This package is derived from the `@openai/chatkit` 1.7.0 client concepts, but it is a native SwiftUI implementation rather than a web component in an iframe. The table below maps the public JS type surface to the current Swift surface.
+
+| JS surface | Swift status | Notes |
+| --- | --- | --- |
+| `ChatKitOptions.api.custom.url` | Supported | `ChatKitAPI.custom(url:domainKey:uploadStrategy:additionalHeaders:)` posts ChatKit envelopes to one backend endpoint. |
+| `api.custom.domainKey` | Supported | Sent as `OpenAI-Domain-Key` by the built-in transport for custom backends that require one. |
+| `api.custom.fetch` | Native-only alternative | Inject a custom `ChatKitTransport` instead of a JS `fetch` override. |
+| `api.custom.uploadStrategy` | Modeled | `ChatKitUploadStrategy` is exposed for host upload policy; file bytes are still owned by the host app. |
+| `api.hosted.getClientSecret` | Supported | `ChatKitAPI.hosted(getClientSecret:endpoint:)` refreshes short-lived client secrets. Mint them on your server. |
+| `locale` | Modeled, not localized | Stored on `ChatKitOptions`; built-in SwiftUI copy is currently English. |
+| `theme.colorScheme` | Supported | Applies SwiftUI preferred color scheme. Swift adds `.system`; JS 1.7.0 exposes `light` and `dark`. |
+| `theme.color.surface` | Supported | Applies top-level chat background and foreground colors. |
+| `theme.color.accent`, `grayscale`, `radius`, `density`, `typography` | Modeled, partially applied | Values are part of `ChatKitTheme` and the demo controls, but the native view tree does not yet globally restyle every control from them. |
+| `frameTitle` | Supported | Used for accessibility and demo navigation title. |
+| `initialThread` | Supported | Loads a thread on session initialization; `nil` starts a new thread. |
+| `onClientTool` | Supported | Swift callback receives `id`, `callID`, `name`, and `params`; output requests include `item_id` and `call_id` for backend correlation. |
+| `header.enabled`, `title`, custom actions | Supported | JS custom button aliases map to `Header.leftAction` and `rightAction` with SF Symbol names. |
+| `history.enabled`, `showDelete`, `showRename` | Supported | Native history supports load, select, delete, and editable rename. |
+| `startScreen.greeting`, `prompts` | Supported | Prompts send text or structured content. |
+| `threadItemActions.feedback`, `retry` | Supported | Feedback posts `items.feedback`; retry streams `threads.retry_after_item`. |
+| `composer.placeholder` | Supported | Placeholder is rendered in the native composer. |
+| `composer.attachments` | Supported for uploaded attachments | Attachment button calls the host `onRequest`; send requests include uploaded attachment IDs. `maxCount` gates the native composer, while `maxSize` and `accept` are exposed for host picker/upload enforcement. Swift models `attachments.create`, `attachments.process`, `attachments.get_preview`, and `attachments.delete` for custom backends. |
+| `composer.tools` | Supported | Tool menu, pinned tools, placeholder override, and persistent selection behavior are implemented. |
+| `composer.models` | Supported | Model selection updates composer inference options; disabled options are visible but not selectable. |
+| `composer.dictation` | Modeled, native-scoped | Configuration exists; microphone permission, audio capture, and transcription UI are host-owned. |
+| `disclaimer` | Supported | Renders markdown-like disclaimer text below the composer. |
+| `entities.onTagSearch`, `showComposerMenu`, `onClick`, `onRequestPreview` | Partially supported | Tag search and composer insertion are implemented. Entity click/preview hooks are modeled for host integrations; full JS-style preview behavior remains scoped. |
+| `widgets.onAction` | Supported | Native widget controls call `widgets.onAction` or fall back to `threads.custom_action`. |
+| `thread.autoScroll` | Supported | Auto-scrolls near-bottom message lists while streaming. |
+| `setOptions(options)` | Supported | `ChatKitSession.setOptions(_:)` replaces options; callers should pass the full intended configuration. |
+| `focusComposer()` | Supported | `await session.focusComposer()` requests composer focus. |
+| `setThreadId(threadId)` | Supported | `try await session.setThreadId(_:)`; pass `nil` for a new thread view. |
+| `sendCustomAction(action, itemId)` | Supported | `try await session.sendCustomAction(_:itemID:)`. |
+| `sendUserMessage(params)` | Supported | `try await session.sendUserMessage(...)` supports text, structured content, reply, uploaded attachments, new thread, tool choice, and model. |
+| `setComposerValue(params)` | Supported | `await session.setComposerValue(...)`; omitted `selectedToolID` preserves selection and explicit `nil` clears it, matching JS `selectedToolId?: string \| null`. |
+| `showHistory()` / `hideHistory()` | Supported | `await session.showHistory()` and `await session.hideHistory()`. |
+| `fetchUpdates()` | Supported | `try await session.fetchUpdates()` reloads current thread items. |
+| `addEventListener` / `removeEventListener` | Native-only alternative | Use `ChatKitEventHandlers` closures instead of DOM events. |
+| `chatkit.ready` | Supported | `events.onReady`. |
+| `chatkit.error` | Supported | `events.onError`. |
+| `chatkit.effect` | Supported | `events.onEffect`. |
+| `chatkit.deeplink` | Supported | `events.onDeeplink`. |
+| `chatkit.response.start` / `chatkit.response.end` | Supported | `events.onResponseStart` and `events.onResponseEnd`. |
+| `chatkit.thread.change` | Supported | `events.onThreadChange`. |
+| `chatkit.thread.load.start` / `chatkit.thread.load.end` | Supported | `events.onThreadLoadStart` and `events.onThreadLoadEnd`. |
+| `chatkit.tool.change` | Supported | `events.onToolChange`. |
+| `chatkit.log` | Modeled | `events.onLog` exists; backend diagnostic event coverage should be expanded with golden tests as the protocol evolves. |
+| `thread.item.image_generation`, `image_generation.preview.updated` | Supported | Decodes image generation items, applies preview/progress updates, and renders native image previews. |
+| `thread.item.generated_image`, `generated_image.updated` | Supported | Decodes generated image items and applies final image/progress updates. |
+
+CSS bundle parity note: the remote CSS references are useful for visual comparison, but ChatKitSwift does not attempt one-to-one CSS variable parity. `index-D9b2ZX6j.css` contains the web component's full design-token system, including variables such as `--chat-background-color`, `--composer-radius`, `--composer-gutter`, `--user-message-background-color`, control/menu/input tokens, and typography scales. `%5Broot-of-the-server%5D__0sigp1o._.css` is primarily app/global CSS, Tailwind output, React Flow `--xy-*` tokens, and Geist font faces. Swift maps the public `theme` options into native SwiftUI equivalents where practical; token-level CSS styling remains web-specific unless explicitly modeled in Swift.
+
+`src_1dg3fzj._.js` is an app-specific Turbopack reference around `useChatKit`, not the core `@openai/chatkit` bundle. It confirms integration behavior for custom `fetch`, `domainKey`, dark/round/compact theme configuration, composer tools/models, entity search, `sendUserMessage`, and `setComposerValue`, but it is treated as integration evidence rather than a separate public API surface.
+
+Runtime-only JS operations observed in the 1.7.0 bundle are intentionally scoped:
+
+- `threads.create_from_shared`, `threads.share`, `threads.stop`, and `threads.init` are ChatGPT-shell/runtime flows, not part of the public `OpenAIChatKit` type surface. ChatKitSwift does not expose them as first-class session methods; custom transports can still send app-specific equivalents.
+- `command.shareThread`, `command.setTrainingOptOut`, `chatkit.response.stop`, history open/close, toast, image download, message share, and thread restore events are iframe/shell affordances. Native apps should model those flows in host UI if needed.
+- `assistant_message.content_part.inline_widget_added` and `assistant_message.content_part.inline_widget_done` are preserved as unknown item updates. Native inline widget rendering inside Textual assistant markdown is intentionally not implemented yet; top-level `widget` items remain supported.
 
 ## API Configuration
 
@@ -334,7 +398,7 @@ let events = ChatKitEventHandlers(
 
 ### Client Tools
 
-When the backend emits a pending `client_tool_call` item, ChatKitSwift calls `onClientTool` and sends the result back through `threads.add_client_tool_output`.
+When the backend emits a pending `client_tool_call` item, ChatKitSwift calls `onClientTool` and sends the result back through `threads.add_client_tool_output`. The Swift callback exposes `id` and `callID` in addition to JS-compatible `name` and `params`, and the output request includes `item_id` and `call_id` so your backend can correlate the result with the pending tool call.
 
 ```swift
 let options = ChatKitOptions(
@@ -415,7 +479,8 @@ Colors can be semantic tokens such as `primary`, `secondary`, `info`,
 `discovery`, `success`, `warning`, and `danger`, or hex values. Widget color
 fields can also be light/dark objects, for example `{ "light": "#111827",
 "dark": "#F9FAFB" }`, and ChatKitSwift resolves them against the current SwiftUI
-color scheme.
+color scheme. The renderer also resolves common Widget Studio tokens such as
+`surface-tertiary`, `tertiary`, and `green-500` for generated-widget previews.
 
 Forms and controls use native SwiftUI controls. Buttons, list items, card
 confirm/cancel actions, form submit actions, and control change actions are sent
@@ -430,6 +495,82 @@ The official ChatKit component set does not currently include a dedicated chart
 component, but some backends send chart-like custom payloads. ChatKitSwift
 includes a simple native bar-chart renderer for `Chart` or `BarChart` nodes with
 `data` or `points` arrays containing labels and numeric values.
+
+For local tooling, `ChatKitWidgetPreview` renders a standalone
+`ChatKitWidgetNode` without inserting it into a live conversation. If you use
+Widget Studio's `convert-widget-to-file` endpoint, `ChatKitWidgetTemplate`
+renders the returned `{{ (name) | tojson }}` placeholders with state values and
+decodes the result into a native widget node. The iOS demo app includes a Widget
+Studio sheet that exercises this flow.
+
+### Widget Screenshot Parity
+
+`WidgetParity/fixtures/widgets.json` contains representative official ChatKit
+widget payloads used for native-vs-web screenshot comparison. The fixtures are
+fed to both `ChatKitWidgetPreview` and the real ChatKit JS iframe from a local
+`chatkit-js` checkout.
+
+Run the full parity workflow from the package root:
+
+```sh
+node scripts/widget-parity.js
+```
+
+The script renders Swift screenshots with `ChatKitWidgetSnapshot`, starts a
+local server for the JS runtime, captures the real iframe with Playwright, crops
+both sides to visible widget content, and writes PNG diffs plus
+`.widget-parity/report.md`. Generated artifacts, Playwright's local install, and
+cached JS chunks stay under `.widget-parity/` and are ignored by git.
+
+Useful variants:
+
+```sh
+node scripts/widget-parity.js --allow-failures
+node scripts/widget-parity.js --skip-swift
+node scripts/widget-parity.js --chatkit-js /Users/ericlewis/Developer/chatkit-js
+OPENAI_API_KEY=... node scripts/widget-parity.js --visual-review --visual-detail auto
+```
+
+`--visual-review` sends each Swift crop, JS crop, and diff heatmap to the
+OpenAI Responses API and appends a fixture-by-fixture model review to
+`.widget-parity/report.md` and `.widget-parity/report.json`. Use
+`OPENAI_VISION_MODEL` or `--visual-model` to choose a different model.
+
+### Generated Widget Fuzzing
+
+`WidgetParity/prompts/generated-widget-prompts.json` contains the checked-in
+prompt corpus for live Widget Studio fuzzing. `scripts/widget-fuzz.js` calls the
+real `https://widgets.chatkit.studio/create-widget` and
+`https://widgets.chatkit.studio/convert-widget-to-file` endpoints, renders the
+returned Studio template with its generated state, normalizes React-only `key`
+props out of the payload, and writes a standard widget parity manifest.
+
+Generate the default 100-widget corpus:
+
+```sh
+node scripts/widget-fuzz.js --allow-failures
+```
+
+The default output is `WidgetParity/fixtures/generated-widgets.json`; the
+checked-in copy was produced from a successful 100-widget run. Use
+`--output .widget-parity/generated-100.json` for ignored local experiments,
+`--count <n>` for 1-300 widgets, and `--resume` to retry missing or previously
+failed prompts without regenerating completed fixtures.
+
+Run generated fixtures through screenshot parity:
+
+```sh
+node scripts/widget-fuzz.js --run-parity --allow-failures
+OPENAI_API_KEY=... node scripts/widget-fuzz.js --run-parity --visual-review --allow-failures
+```
+
+`--allow-failures` is useful for fuzzing because some generated widgets can be
+valid Swift payloads while the JS reference rejects a generated prop shape. Those
+cases are kept in the parity report instead of aborting the batch.
+
+The default asset fallback is `https://cdn.platform.openai.com` for dynamic
+`/assets/ck1/*` chunks that are referenced by the saved JS bundle but not present
+in `remote_references_to`.
 
 ```swift
 let options = ChatKitOptions(
@@ -454,6 +595,7 @@ try await session.sendUserMessage(text: "Continue this thread")
 try await session.retry(after: "item_123")
 try await session.addFeedback(itemIDs: ["item_123"], kind: .positive)
 try await session.updateCurrentThreadTitle("Planning")
+try await session.updateThreadTitle("Planning", threadID: "thread_123")
 try await session.deleteThread("thread_123")
 await session.showHistory()
 await session.hideHistory()
@@ -467,6 +609,9 @@ await session.setComposerValue(
     selectedToolID: "search",
     selectedModelID: "gpt-5.1"
 )
+
+await session.setComposerValue(text: "Rewrite this") // preserves the selected tool
+await session.setComposerValue(selectedToolID: nil) // clears the selected tool
 ```
 
 ## Custom Transport
@@ -504,16 +649,27 @@ ChatKitView(
 )
 ```
 
-## Attachments and Dictation
+## Attachments, Files, and Dictation
 
-The package models attachments, local file state, attachment request types, and dictation configuration. Host apps still own platform permission flows, file picking, audio capture, upload byte transfer, and backend storage policy. Use `AttachmentConfiguration.onRequest` to present the host file picker, then pass `ChatKitAttachment` values into the session when sending messages. The protocol request sends their IDs.
+The package models attachments, local file state, attachment request types, and dictation configuration. Host apps still own platform permission flows, file picking, audio capture, upload byte transfer, and backend storage policy.
+
+Attachment request envelopes follow the JS runtime names:
+
+- `attachments.create` uses `name`, `size`, and `mime_type`.
+- `attachments.process` uses `attachment_id`, `name`, and optional image `width` / `height`.
+- `attachments.get_preview` uses `attachment_id` plus either `conversation_id` or `shared_conversation_id`.
+- `attachments.delete` uses `attachment_id`.
+
+Use `AttachmentConfiguration.onRequest` to present the host file picker, upload the bytes through your app/backend, then pass uploaded `ChatKitAttachment` values into the session. The built-in composer can send an attachment-only message once uploaded attachments are present, and protocol requests send their IDs.
+
+`ChatKitLocalFile` values are intentionally local composer state. They are useful while your host app is picking or uploading files, but ChatKitSwift does not upload raw bytes or send local file paths to the backend.
 
 ## Development
 
 From the repository root:
 
 ```bash
-swift test -Xswiftc -warnings-as-errors
+xcrun swift test -Xswiftc -warnings-as-errors
 ```
 
 See [CONTRIBUTING.md](CONTRIBUTING.md) for setup, project conventions, and the pull request checklist.
